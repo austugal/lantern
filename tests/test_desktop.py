@@ -38,9 +38,13 @@ def pair(a: DesktopSession, b: DesktopSession) -> None:
 
 
 def pump(a: DesktopSession, b: DesktopSession) -> None:
-    for _ in range(4):
+    # UDP arrival is asynchronous, even on loopback (notably on macOS).
+    # Match the running worker rather than assuming four immediate polls suffice.
+    deadline = time.monotonic() + 0.25
+    while time.monotonic() < deadline:
         a.pump()
         b.pump()
+        time.sleep(0.01)
 
 
 def test_real_udp_message_receipt_and_consent(
