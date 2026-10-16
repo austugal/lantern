@@ -164,3 +164,7 @@ Mobile uses Flutter 3.35.7; see [mobile build instructions](mobile/README.md). G
 Copyright © 2026 Tiago Fitas (austugal). Lantern is distributed under the [MIT License](LICENSE). Existing third-party notices remain in place, including [Flutter scaffold attribution](mobile/docs/FLUTTER-LICENSE). This notice does not represent a copyright or trademark registration.
 
 [Roadmap](docs/ROADMAP.md) · [Community introduction](docs/COMMUNITY-INTRODUCTION.md)
+
+### Web reading on mobile
+
+Open **Field tools → Web & saved pages** for basic HTTPS browsing while online. Explicitly save up to 20 text snapshots for offline reading: useful for staff instructions, equipment guides and prepared reference material. Offline reading does not fetch new pages or preserve images, videos, forms or live services. JavaScript is disabled; interactive websites may not work. Saved text stays on the device until deleted and is not an encrypted vault. See [mobile instructions](mobile/README.md).

@@ -5,6 +5,7 @@ import 'services.dart';
 import 'offline_guide.dart';
 import 'media_service.dart';
 import 'device_tools.dart';
+import 'web_screen.dart';
 import 'map_screen.dart';
 
 const ink = Color(0xFF182E2B);
@@ -391,7 +392,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       ),
       const SizedBox(height: 18),
       const Text(
-        'Only your display name is saved. Messages and locations stay in memory for the current connection. No account needed.',
+        'Your display name and explicitly saved offline content stay on this device. Conversations stay in memory for the current connection. No account needed.',
         style: TextStyle(height: 1.5),
       ),
     ],
@@ -1083,6 +1084,16 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
         ),
         icon: const Icon(Icons.map_outlined),
         label: const Text('Open maps'),
+      ),
+      Tooltip(
+        message: 'Browse online or read pages you deliberately saved offline.',
+        child: OutlinedButton.icon(
+          onPressed: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute<void>(builder: (_) => const WebScreen())),
+          icon: const Icon(Icons.public),
+          label: const Text('Web & saved pages'),
+        ),
       ),
       _heading(
         'WHILE YOU ARE HERE',
