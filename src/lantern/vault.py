@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import secrets
+import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
@@ -24,6 +25,7 @@ from lantern.wire import b64d, b64e, canonical
 
 MAGIC = b"LNTRN1"
 SCRYPT_N = 2**15
+MAX_VAULT_BYTES = 4 * 1024 * 1024
 
 
 class VaultError(Exception):
@@ -35,6 +37,8 @@ def _key(passphrase: str, salt: bytes, n: int) -> bytes:
 
 
 def save(node: LanternNode, path: Path, passphrase: str, n: int = SCRYPT_N) -> None:
+    if n < 2**12 or n > 2**16 or n & (n - 1):
+        raise ValueError("unsupported scrypt cost")
     if len(passphrase) < 8:
         raise ValueError("passphrase must be at least 8 characters")
     sign_seed, kx_secret = node.identity.export_private()
@@ -49,17 +53,23 @@ def save(node: LanternNode, path: Path, passphrase: str, n: int = SCRYPT_N) -> N
         "seen": list(node._seen),
         "relay": node.relay,
         "mesh_ttl": node.mesh_ttl,
+        "pending_revocations": sorted(node.pending_revocations),
     }
     salt, nonce = secrets.token_bytes(16), secrets.token_bytes(12)
     header = MAGIC + n.to_bytes(4, "big") + salt + nonce
     ct = ChaCha20Poly1305(_key(passphrase, salt, n)).encrypt(nonce, canonical(state), header)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "wb") as fh:
-        fh.write(header + ct)
-        fh.flush()
-        os.fsync(fh.fileno())
-    os.replace(tmp, path)
+    if len(header) + len(ct) > MAX_VAULT_BYTES:
+        raise VaultError("vault exceeds size limit")
+    fd, filename = tempfile.mkstemp(prefix=".lantern-", dir=path.parent)
+    tmp = Path(filename)
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(header + ct)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def load(
@@ -68,12 +78,15 @@ def load(
     make_transport: Callable[[Identity], Transport],
     clock: Callable[[], float] | None = None,
 ) -> LanternNode:
-    blob = path.read_bytes()
+    with path.open("rb") as fh:
+        blob = fh.read(MAX_VAULT_BYTES + 1)
+    if len(blob) > MAX_VAULT_BYTES:
+        raise VaultError("vault exceeds size limit")
     if len(blob) < len(MAGIC) + 4 + 16 + 12 + 16 or not blob.startswith(MAGIC):
         raise VaultError("not a Lantern vault")
     o = len(MAGIC)
     n = int.from_bytes(blob[o : o + 4], "big")
-    if not 2**12 <= n <= 2**22:
+    if not 2**12 <= n <= 2**16 or n & (n - 1):
         raise VaultError("not a Lantern vault")
     salt, nonce = blob[o + 4 : o + 20], blob[o + 20 : o + 32]
     header, ct = blob[: o + 32], blob[o + 32 :]
@@ -94,6 +107,7 @@ def load(
     node.ledger.revoked = set(s["revoked"])
     node._seen = dict.fromkeys(s["seen"])
     node.relay, node.mesh_ttl = bool(s["relay"]), int(s["mesh_ttl"])
+    node.pending_revocations = set(s.get("pending_revocations", []))
     return node
 
 

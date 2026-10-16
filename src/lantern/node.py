@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import secrets
 import time
 from collections.abc import Callable
@@ -36,6 +37,8 @@ MAX_MESH_TTL = 16
 DEFAULT_MESH_TTL = 8
 MAX_NOTE_CHARS = 200
 SOS_PRECISION_M = 1.0
+HISTORY_LIMIT = 500
+MAX_FIX_AGE_S = 120
 
 
 @dataclass(frozen=True)
@@ -44,6 +47,15 @@ class Message:
     text: str
     received_at: float
     expires_at: float | None = None
+    frame_id: str = ""
+
+
+@dataclass
+class Delivery:
+    peer: str
+    kind: str
+    at: float
+    status: str = "awaiting_receipt"
 
 
 @dataclass
@@ -74,6 +86,9 @@ class LanternNode:
     relay: bool = False
     mesh_ttl: int = DEFAULT_MESH_TTL
     safe_walk: SafeWalk | None = None
+    deliveries: dict[str, Delivery] = field(default_factory=dict)
+    pending_revocations: set[str] = field(default_factory=set)
+    location_grants: dict[str, str] = field(default_factory=dict)
     _relay_seen: dict[str, None] = field(default_factory=dict)
     _peers: dict[str, _Peer] = field(default_factory=dict)
     _seen: dict[str, None] = field(default_factory=dict)
@@ -114,6 +129,12 @@ class LanternNode:
         self._peers.pop(fp, None)
         self.locations.pop(fp, None)
         self.fix_times.pop(fp, None)
+        self.location_grants.pop(fp, None)
+        self.inbox[:] = [m for m in self.inbox if m.sender != fp]
+        self.alerts[:] = [a for a in self.alerts if a.sender != fp]
+        for gid, grant in list(self.ledger.held.items()):
+            if grant.grantor == fp:
+                self.ledger.revoke(gid)
         self._log("unpair", fp)
 
     # consent ---------------------------------------------------------------
@@ -140,6 +161,7 @@ class LanternNode:
             raise KeyError(grant_id)
         self.ledger.revoke(grant_id)
         self._log("revoke", g.grantee, g.scope.value)
+        self.pending_revocations.add(grant_id)
         if g.grantee in self._peers:
             self._send(g.grantee, "revoke", {"id": grant_id})
 
@@ -168,12 +190,14 @@ class LanternNode:
             body["ttl"] = disappear_s
         return self._send(peer_fp, "msg", body)
 
-    def share_location(self, peer_fp: str, lat: float, lon: float) -> bool:
+    def share_location(
+        self, peer_fp: str, lat: float, lon: float, *, accuracy_m: float = 0.0
+    ) -> bool:
         self._peer(peer_fp)
         g = self.ledger.valid_issued(peer_fp, Scope.LOCATION, self.clock())
         if g is None or g.precision_m is None:
             raise ConsentError("you have not granted this peer your location")
-        fix = coarsen(lat, lon, g.precision_m)
+        fix = coarsen(lat, lon, max(g.precision_m, accuracy_m))
         return self._send(
             peer_fp,
             "loc",
@@ -188,24 +212,31 @@ class LanternNode:
                 sent += int(self.share_location(fp, lat, lon))
         return sent
 
-    def trigger_sos(self, lat: float, lon: float, note: str = "") -> int:
+    def trigger_sos(
+        self, lat: float, lon: float, note: str = "", *, accuracy_m: float = 1.0
+    ) -> int:
         """Send your exact position to every guardian you pre-authorised with Scope.SOS.
 
-        Returns how many guardians were reached. Peers without a live SOS grant get nothing.
+        Returns how many submissions the transport accepted, NOT delivery confirmations.
+        Peers without a live SOS grant get nothing.
         """
         if len(note) > MAX_NOTE_CHARS:
             raise ValueError(f"note must be at most {MAX_NOTE_CHARS} characters")
-        fix = coarsen(lat, lon, SOS_PRECISION_M)
+        fix = coarsen(lat, lon, max(SOS_PRECISION_M, accuracy_m))
         sent = 0
         for fp in list(self._peers):
             if self.ledger.valid_issued(fp, Scope.SOS, self.clock()) is not None:
                 body = {"lat": fix.lat, "lon": fix.lon, "prec": fix.precision_m, "note": note}
                 sent += int(self._send(fp, "sos", body))
-        self._log("sos_sent", "*", f"guardians_reached={sent}")
+        self._log("sos_sent", "*", f"guardian_submissions={sent}")
         return sent
 
     def start_safe_walk(self, minutes: float, note: str = "Safe walk overdue") -> SafeWalk:
         """Arm a dead-man timer. Call safe_walk.check_in() on arrival."""
+        if not math.isfinite(minutes) or not 1 <= minutes <= 24 * 60:
+            raise ValueError("safe walk must be between 1 minute and 24 hours")
+        if len(note) > MAX_NOTE_CHARS:
+            raise ValueError("safe walk note is too long")
         self.safe_walk = SafeWalk(self.clock() + minutes * 60.0, note)
         self._log("safe_walk_start", "*", f"{minutes} min")
         return self.safe_walk
@@ -225,7 +256,30 @@ class LanternNode:
         keep = [m for m in self.inbox if m.expires_at is None or m.expires_at > now]
         removed = len(self.inbox) - len(keep)
         self.inbox[:] = keep
+        for fp in list(self.locations):
+            grant = self.ledger.held.get(self.location_grants.get(fp, ""))
+            if (
+                grant is None
+                or not grant.active(now)
+                or grant.grant_id in self.ledger.revoked
+                or now - self.fix_times.get(fp, 0) > MAX_FIX_AGE_S
+            ):
+                self.locations.pop(fp, None)
+                self.fix_times.pop(fp, None)
+                self.location_grants.pop(fp, None)
+        self.alerts[:] = [a for a in self.alerts if now - a.received_at < 3600]
         return removed
+
+    def retry_revocations(self) -> int:
+        """Resend pending revocations until acknowledged or the grant expires."""
+        sent = 0
+        for gid in list(self.pending_revocations):
+            grant = self.ledger.issued.get(gid)
+            if grant is None or not grant.active(self.clock()) or grant.grantee not in self._peers:
+                self.pending_revocations.discard(gid)
+                continue
+            sent += int(self._send(grant.grantee, "revoke", {"id": gid}))
+        return sent
 
     # receive path ----------------------------------------------------------
 
@@ -273,9 +327,25 @@ class LanternNode:
         body = json.loads(plain)
         kind = str(env["t"])
         reason = self._dispatch(kind, sender, body, now)
+        if reason is None and kind in {"msg", "sos", "revoke"}:
+            self._send(
+                sender,
+                "receipt",
+                {"id": env["id"], "revoke": body.get("id") if kind == "revoke" else None},
+            )
         return f"ok:{kind}" if reason is None else self._reject(sender, reason, kind)
 
     def _dispatch(self, kind: str, sender: str, body: dict[str, Any], now: float) -> str | None:
+        if kind == "receipt":
+            delivery = self.deliveries.get(str(body.get("id", "")))
+            if delivery is None or delivery.peer != sender:
+                return "unknown_receipt"
+            delivery.status = "received"
+            gid = body.get("revoke")
+            grant = self.ledger.issued.get(str(gid))
+            if delivery.kind == "revoke" and grant is not None and grant.grantee == sender:
+                self.pending_revocations.discard(grant.grant_id)
+            return None
         if kind == "grant":
             g = Grant.from_dict(body["grant"])
             if not g.verify() or g.grantor != sender or g.grantee != self.fp:
@@ -299,12 +369,13 @@ class LanternNode:
         if kind == "msg":
             if self.ledger.valid_issued(sender, Scope.MESSAGE, now) is None:
                 return "no_consent"
-            text = str(body["text"])
-            if not text or len(text) > MAX_TEXT_CHARS:
+            text = body["text"]
+            if not isinstance(text, str) or not text or len(text) > MAX_TEXT_CHARS:
                 return "bad_text"
             ttl = body.get("ttl")
             expires = now + min(max(int(ttl), 1), 7 * 24 * 3600) if ttl is not None else None
             self.inbox.append(Message(sender, text, now, expires))
+            del self.inbox[:-HISTORY_LIMIT]
             return None
         if kind == "loc":
             held = self.ledger.valid_held(sender, Scope.LOCATION, now)
@@ -315,6 +386,7 @@ class LanternNode:
                 return "precision_exceeds_grant"
             self.locations[sender] = fix
             self.fix_times[sender] = now
+            self.location_grants[sender] = held.grant_id
             return None
         if kind == "sos":
             if self.ledger.valid_held(sender, Scope.SOS, now) is None:
@@ -322,6 +394,7 @@ class LanternNode:
             fix = Fix(float(body["lat"]), float(body["lon"]), float(body["prec"]))
             note = str(body.get("note", ""))[:MAX_NOTE_CHARS]
             self.alerts.append(Alert(sender, fix, note, now))
+            del self.alerts[:-HISTORY_LIMIT]
             self._log("sos_received", sender, note)
             return None
         return "unknown_type"
@@ -361,6 +434,12 @@ class LanternNode:
         header["n"], header["c"] = b64e(nonce), b64e(ct)
         sig = self.identity.sign(b"lantern/env/1" + canonical(header))
         frame = canonical({**header, "s": b64e(sig)})
+        if len(frame) > MAX_FRAME_BYTES:
+            raise ValueError("encrypted frame exceeds transport size limit")
+        if kind in {"msg", "sos", "revoke"}:
+            self.deliveries[header["id"]] = Delivery(peer_fp, kind, self.clock())
+            while len(self.deliveries) > HISTORY_LIMIT:
+                self.deliveries.pop(next(iter(self.deliveries)))
         if self.transport.send(peer_fp, frame):
             return True
         if self.mesh_ttl <= 0:
@@ -379,6 +458,19 @@ class LanternNode:
 
     def _mesh(self, pkt: dict[str, Any]) -> str:
         """Relay or deliver a flooded packet. Relays only ever see ciphertext."""
+        frame = b64d(pkt["f"])
+        inner = json.loads(frame)
+        if (
+            not isinstance(inner, dict)
+            or inner.get("v") != PROTOCOL_VERSION
+            or "m" in inner
+            or inner.get("id") != pkt.get("id")
+            or inner.get("to") != pkt.get("to")
+            or len(frame) > MAX_FRAME_BYTES
+        ):
+            return self._reject("?", "mesh_envelope")
+        if type(pkt.get("ttl")) is not int or not 1 <= pkt["ttl"] <= MAX_MESH_TTL:
+            return self._reject("?", "mesh_ttl")
         pid = str(pkt["id"])
         if pid in self._relay_seen:
             return "dropped:duplicate"
@@ -400,3 +492,4 @@ class LanternNode:
 
     def _log(self, event: str, peer: str, detail: str = "") -> None:
         self.audit.append(AuditEntry(self.clock(), event, peer, detail))
+        del self.audit[:-HISTORY_LIMIT]

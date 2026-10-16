@@ -19,7 +19,7 @@ from lantern.location import Fix, distance_m
 from lantern.safety import drifted
 from lantern.transport import RADIO_PROFILES, hops_needed, reach_m
 from lantern.vault import VaultError, load, save, wipe
-from lantern.wire import canonical
+from lantern.wire import b64e, canonical
 
 
 class Clock:
@@ -94,7 +94,15 @@ def test_mesh_duplicate_dropped() -> None:
     a, z = nodes[0], nodes[-1]
     z.grant(a.fp, Scope.MESSAGE)
     relay = nodes[1]
-    pkt = canonical({"m": 1, "ttl": 4, "to": z.fp, "id": "dup", "f": ""})
+    pkt = canonical(
+        {
+            "m": 1,
+            "ttl": 4,
+            "to": z.fp,
+            "id": "dup",
+            "f": b64e(canonical({"v": 1, "to": z.fp, "id": "dup"})),
+        }
+    )
     relay.handle(pkt)
     assert relay.handle(pkt) == "dropped:duplicate"
 
@@ -247,7 +255,7 @@ def test_guide_describes_with_uncertainty() -> None:
     me = Fix(38.7223, -9.1393, 10.0)
     them = destination(Fix(38.7223, -9.1393, 100.0), 90.0, 500.0)
     h = guide(me, them)
-    assert "E" in h.describe() and h.uncertainty_m == 55.0
+    assert "E" in h.describe() and h.uncertainty_m == 110.0
 
 
 def test_trail_backtrack_returns_to_start() -> None:

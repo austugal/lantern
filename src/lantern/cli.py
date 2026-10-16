@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Sequence
+from pathlib import Path
 
 from lantern.consent import Scope
 from lantern.identity import Identity, safety_number
@@ -45,8 +46,17 @@ def demo() -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="lantern")
-    parser.add_argument("command", choices=["demo"])
+    parser.add_argument("command", choices=["demo", "app"], nargs="?", default="app")
+    parser.add_argument("--data-dir", type=Path, default=Path.home() / ".lantern")
+    parser.add_argument(
+        "--port", type=int, default=0, help="Local UI port; 0 chooses an available port"
+    )
+    parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args(argv)
     if args.command == "demo":
         demo()
+    else:
+        from lantern.webapp import serve
+
+        serve(args.data_dir, args.port, not args.no_browser)
     return 0

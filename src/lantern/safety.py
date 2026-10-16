@@ -24,15 +24,15 @@ class Drift:
 
 
 def drifted(own: Fix, others: dict[str, Fix], limit_m: float) -> list[Drift]:
-    """Peers who are provably beyond limit_m, allowing for each fix's imprecision.
+    """Peers beyond limit_m after conservatively allowing for reported imprecision.
 
     A peer is flagged only when the distance minus both precisions still exceeds the
-    limit, so a coarse fix never causes a false alarm.
+    limit, assuming the reported imprecision bounds are reliable. GPS estimates are not guarantees.
     """
     out: list[Drift] = []
     for peer, fix in others.items():
         d = distance_m(own, fix)
-        if d - (own.precision_m + fix.precision_m) / 2.0 > limit_m:
+        if d - (own.precision_m + fix.precision_m) > limit_m:
             out.append(Drift(peer, d))
     return sorted(out, key=lambda x: -x.distance_m)
 
