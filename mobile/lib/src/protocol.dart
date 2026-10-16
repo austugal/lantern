@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 String newId() {
   final random = Random.secure();
@@ -7,6 +8,96 @@ String newId() {
     16,
     (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
   ).join();
+}
+
+const maxAttachmentBytes = 1024 * 1024;
+const attachmentChunkBytes = 4096;
+const attachmentMimes = {'image/jpeg', 'image/png', 'audio/mp4'};
+
+/// Checks container signatures and image dimensions before passing bytes to a
+/// media decoder. This is not a complete multimedia decoder or malware scanner.
+bool validAttachment(Uint8List bytes, String mime) {
+  if (bytes.isEmpty || bytes.length > maxAttachmentBytes) {
+    return false;
+  }
+  bool dimensions(int width, int height) =>
+      width > 0 &&
+      height > 0 &&
+      width <= 2048 &&
+      height <= 2048 &&
+      width * height <= 4000000;
+  if (mime == 'image/png') {
+    if (bytes.length < 33) {
+      return false;
+    }
+    const signature = [137, 80, 78, 71, 13, 10, 26, 10];
+    for (var i = 0; i < signature.length; i++) {
+      if (bytes[i] != signature[i]) {
+        return false;
+      }
+    }
+    final data = ByteData.sublistView(bytes);
+    return data.getUint32(8) == 13 &&
+        ascii.decode(bytes.sublist(12, 16), allowInvalid: true) == 'IHDR' &&
+        dimensions(data.getUint32(16), data.getUint32(20));
+  }
+  if (mime == 'image/jpeg') {
+    if (bytes.length < 12 ||
+        bytes[0] != 255 ||
+        bytes[1] != 216 ||
+        bytes[bytes.length - 2] != 255 ||
+        bytes.last != 217) {
+      return false;
+    }
+    var offset = 2;
+    while (offset + 4 <= bytes.length) {
+      if (bytes[offset++] != 255) {
+        return false;
+      }
+      while (offset < bytes.length && bytes[offset] == 255) {
+        offset++;
+      }
+      if (offset + 3 > bytes.length) {
+        return false;
+      }
+      final marker = bytes[offset++];
+      if (marker == 218 || marker == 217) {
+        return false;
+      }
+      final length = (bytes[offset] << 8) + bytes[offset + 1];
+      if (length < 2 || offset + length > bytes.length) {
+        return false;
+      }
+      if ({192, 193, 194}.contains(marker)) {
+        if (length < 8) {
+          return false;
+        }
+        return dimensions(
+          (bytes[offset + 5] << 8) + bytes[offset + 6],
+          (bytes[offset + 3] << 8) + bytes[offset + 4],
+        );
+      }
+      offset += length;
+    }
+    return false;
+  }
+  if (mime == 'audio/mp4') {
+    if (bytes.length < 16) {
+      return false;
+    }
+    final data = ByteData.sublistView(bytes);
+    final size = data.getUint32(0);
+    return size >= 16 &&
+        size <= bytes.length &&
+        ascii.decode(bytes.sublist(4, 8), allowInvalid: true) == 'ftyp' &&
+        {
+          'M4A ',
+          'mp42',
+          'isom',
+          'iso2',
+        }.contains(ascii.decode(bytes.sublist(8, 12), allowInvalid: true));
+  }
+  return false;
 }
 
 /// Strict, bounded wire format. Identity always comes from the native endpoint,
@@ -45,6 +136,37 @@ class Packet {
           if (body.containsKey('ttl') &&
               (body['ttl'] is! int ||
                   ![60, 300, 900, 3600].contains(body['ttl']))) {
+            return null;
+          }
+        case 'attachmentStart':
+          if (body['mime'] is! String ||
+              !attachmentMimes.contains(body['mime']) ||
+              body['size'] is! int ||
+              body['size'] < 1 ||
+              body['size'] > maxAttachmentBytes ||
+              body['chunks'] is! int ||
+              body['chunks'] !=
+                  ((body['size'] as int) + attachmentChunkBytes - 1) ~/
+                      attachmentChunkBytes) {
+            return null;
+          }
+          if (body.containsKey('ttl') &&
+              (body['ttl'] is! int ||
+                  ![60, 300, 900, 3600].contains(body['ttl']))) {
+            return null;
+          }
+        case 'attachmentChunk':
+          if (body['transfer'] is! String ||
+              !RegExp(r'^[a-f0-9]{32}$').hasMatch(body['transfer']) ||
+              body['index'] is! int ||
+              body['index'] < 0 ||
+              body['index'] >= 256 ||
+              body['data'] is! String ||
+              (body['data'] as String).length > 5464) {
+            return null;
+          }
+          final chunk = base64Decode(body['data'] as String);
+          if (chunk.isEmpty || chunk.length > attachmentChunkBytes) {
             return null;
           }
         case 'guardianRequest':

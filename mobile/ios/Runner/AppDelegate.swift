@@ -1,20 +1,41 @@
 import Flutter
 import UIKit
 import MultipeerConnectivity
+import AVFoundation
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
   private var nearby: LanternNearby?
+  private var device: LanternDevice?
   override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     if let controller = window?.rootViewController as? FlutterViewController {
       nearby = LanternNearby(messenger: controller.binaryMessenger)
+      device = LanternDevice(messenger: controller.binaryMessenger)
+      UNUserNotificationCenter.current().delegate = self
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
   override func applicationDidEnterBackground(_ application: UIApplication) {
     nearby?.stop()
+    device?.background()
     super.applicationDidEnterBackground(application)
+  }
+  override func applicationWillEnterForeground(_ application: UIApplication) {
+    device?.foreground = true
+    super.applicationWillEnterForeground(application)
+  }
+  override func applicationWillTerminate(_ application: UIApplication) {
+    device?.background()
+    super.applicationWillTerminate(application)
+  }
+  override func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    if notification.request.identifier == "lantern-message" {
+      completionHandler([.alert, .sound])
+    } else {
+      super.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
+    }
   }
 }
 
@@ -215,4 +236,115 @@ final class LanternNearby: NSObject, FlutterStreamHandler, MCSessionDelegate, MC
   func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) { stream.close() }
   func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) { progress.cancel() }
   func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {}
+}
+
+
+/// Device helpers are independent of nearby transport and never request permission at launch.
+final class LanternDevice {
+  var foreground = true
+  private var torchDevice: AVCaptureDevice?
+  private var torchEpoch = 0
+  private var requestingCamera = false
+  private var requestingNotifications = false
+
+  init(messenger: FlutterBinaryMessenger) {
+    FlutterMethodChannel(name: "org.austugal.lantern/device", binaryMessenger: messenger).setMethodCallHandler { [weak self] call, result in
+      guard let self = self else { result(FlutterError(code: "unavailable", message: "Device channel closed", details: nil)); return }
+      self.handle(call, result: result)
+    }
+  }
+  private func failure(_ result: FlutterResult, _ code: String, _ message: String) {
+    result(FlutterError(code: code, message: message, details: nil))
+  }
+  private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    let args = call.arguments as? [String: Any] ?? [:]
+    switch call.method {
+    case "setTorch":
+      let enabled = args["enabled"] as? Bool ?? false
+      if !enabled {
+        if let error = turnOff() { failure(result, "unavailable", "Could not switch off torch: \(error.localizedDescription)") }
+        else { result(nil) }
+        return
+      }
+      guard foreground else { failure(result, "state", "Keep Lantern open to use the torch"); return }
+      guard !requestingCamera else { failure(result, "busy", "Camera permission request already open"); return }
+      guard let camera = AVCaptureDevice.default(for: .video), camera.hasTorch else { failure(result, "unavailable", "This device has no torch"); return }
+      if AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined {
+        requestingCamera = true
+        let epoch = torchEpoch
+        AVCaptureDevice.requestAccess(for: .video) { [weak self] allowed in
+          DispatchQueue.main.async {
+            guard let self = self else { result(FlutterError(code: "cancelled", message: "Torch request cancelled", details: nil)); return }
+            self.requestingCamera = false
+            guard self.foreground, epoch == self.torchEpoch else { self.failure(result, "cancelled", "Torch request cancelled"); return }
+            if allowed { self.enableTorch(camera, result: result) }
+            else { self.failure(result, "permission", "Camera permission is required for the torch. Enable it in app settings.") }
+          }
+        }
+      } else if AVCaptureDevice.authorizationStatus(for: .video) == .authorized {
+        enableTorch(camera, result: result)
+      } else { failure(result, "permission", "Camera permission is required for the torch. Enable it in app settings.") }
+    case "requestNotifications":
+      guard !requestingNotifications else { failure(result, "busy", "Notification permission request already open"); return }
+      requestingNotifications = true
+      UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { [weak self] granted, error in
+        DispatchQueue.main.async {
+          self?.requestingNotifications = false
+          if let error = error { result(FlutterError(code: "notifications", message: error.localizedDescription, details: nil)) }
+          else { result(granted) }
+        }
+      }
+    case "notifyMessage":
+      let center = UNUserNotificationCenter.current()
+      center.getNotificationSettings { settings in
+        guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else { DispatchQueue.main.async { result(false) }; return }
+        let content = UNMutableNotificationContent()
+        content.title = "New Lantern message"
+        content.body = "Open Lantern to view it."
+        content.sound = .default
+        center.add(UNNotificationRequest(identifier: "lantern-message", content: content, trigger: nil)) { error in
+          DispatchQueue.main.async {
+            if let error = error { result(FlutterError(code: "notifications", message: error.localizedDescription, details: nil)) }
+            else { result(true) }
+          }
+        }
+      }
+    case "clearNotifications":
+      let center = UNUserNotificationCenter.current()
+      center.removePendingNotificationRequests(withIdentifiers: ["lantern-message"])
+      center.removeDeliveredNotifications(withIdentifiers: ["lantern-message"])
+      result(nil)
+    case "openAppSettings":
+      guard let url = URL(string: UIApplication.openSettingsURLString) else { failure(result, "unavailable", "App settings unavailable"); return }
+      UIApplication.shared.open(url) { success in
+        if success { result(nil) }
+        else { result(FlutterError(code: "unavailable", message: "App settings could not be opened", details: nil)) }
+      }
+    default: result(FlutterMethodNotImplemented)
+    }
+  }
+  private func enableTorch(_ camera: AVCaptureDevice, result: FlutterResult) {
+    guard camera.isTorchAvailable else { failure(result, "unavailable", "Torch is busy or unavailable"); return }
+    do {
+      try camera.lockForConfiguration()
+      defer { camera.unlockForConfiguration() }
+      try camera.setTorchModeOn(level: AVCaptureDevice.maxAvailableTorchLevel)
+      torchDevice = camera
+      result(nil)
+    } catch { failure(result, "unavailable", "Torch unavailable: \(error.localizedDescription)") }
+  }
+  @discardableResult
+  private func turnOff() -> Error? {
+    torchEpoch += 1
+    guard let camera = torchDevice else { return nil }
+    do {
+      try camera.lockForConfiguration()
+      defer { camera.unlockForConfiguration() }
+      camera.torchMode = .off
+    } catch { return error }
+    torchDevice = nil
+    return nil
+  }
+  func background() { foreground = false; turnOff() }
+  deinit { turnOff() }
 }

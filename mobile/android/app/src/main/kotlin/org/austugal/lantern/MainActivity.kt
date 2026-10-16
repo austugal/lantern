@@ -3,6 +3,15 @@ package org.austugal.lantern
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
+import android.net.Uri
+import android.provider.Settings
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
 import io.flutter.embedding.android.FlutterActivity
@@ -23,12 +32,19 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private var connected: String? = null
     private val names = mutableMapOf<String, String>()
     private var permissionResult: MethodChannel.Result? = null
+    private var torchPermissionResult: MethodChannel.Result? = null
+    private var torchPermissionPending = false
+    private var notificationPermissionResult: MethodChannel.Result? = null
+    private var torchCamera: String? = null
+    private var foreground = true
+    private val notificationChannel = "lantern_messages"
     private val service = "org.austugal.lantern.v1"
 
     override fun configureFlutterEngine(engine: FlutterEngine) {
         super.configureFlutterEngine(engine)
         EventChannel(engine.dartExecutor.binaryMessenger, "org.austugal.lantern/events").setStreamHandler(this)
         MethodChannel(engine.dartExecutor.binaryMessenger, "org.austugal.lantern/nearby").setMethodCallHandler(::handle)
+        MethodChannel(engine.dartExecutor.binaryMessenger, "org.austugal.lantern/device").setMethodCallHandler(::handleDevice)
     }
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) { sink = events }
     override fun onCancel(arguments: Any?) { shutdown(); sink = null }
@@ -50,7 +66,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         val id = call.argument<String>("id") ?: ""
         when (call.method) {
             "start" -> {
-                if (permissionResult != null) { result.error("busy", "A permission request is already open", null); return }
+                if (permissionBusy()) { result.error("busy", "A permission request is already open", null); return }
                 shutdown()
                 displayName = (call.argument<String>("name") ?: "").trim().take(24)
                 if (displayName.isBlank()) { result.error("name", "Choose a display name first", null); return }
@@ -94,6 +110,20 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 903) {
+            torchPermissionPending = false
+            val result = torchPermissionResult ?: return
+            torchPermissionResult = null
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED } && foreground) setTorch(true, result)
+            else result.error("permission", "Camera permission is required for the torch. Enable it in app settings.", null)
+            return
+        }
+        if (requestCode == 904) {
+            val result = notificationPermissionResult ?: return
+            notificationPermissionResult = null
+            result.success(notificationsEnabled())
+            return
+        }
         if (requestCode != 902) return
         val result = permissionResult ?: return
         permissionResult = null
@@ -162,6 +192,82 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
             if (epoch == generation && update.status == PayloadTransferUpdate.Status.FAILURE) emit("error", id, mapOf("message" to "A message could not be transferred. Check its delivery status."))
         }
     }
+    private fun permissionBusy() = permissionResult != null || torchPermissionPending || notificationPermissionResult != null
+    private fun notificationsEnabled(): Boolean {
+        val manager = getSystemService(NotificationManager::class.java)
+        if (!manager.areNotificationsEnabled()) return false
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return false
+        return Build.VERSION.SDK_INT < 26 || manager.getNotificationChannel(notificationChannel)?.importance != NotificationManager.IMPORTANCE_NONE
+    }
+    private fun handleDevice(call: MethodCall, result: MethodChannel.Result) {
+        try {
+            when (call.method) {
+                "setTorch" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    if (!enabled) {
+                        val error = turnTorchOff()
+                        if (error == null) result.success(null) else result.error("unavailable", "Could not switch off torch: ${error.localizedMessage}", null)
+                        return
+                    }
+                    if (!foreground) { result.error("state", "Keep Lantern open to use the torch", null); return }
+                    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        if (permissionBusy()) { result.error("busy", "Finish the current permission request first", null); return }
+                        torchPermissionResult = result
+                        torchPermissionPending = true
+                        requestPermissions(arrayOf(Manifest.permission.CAMERA), 903)
+                    } else setTorch(true, result)
+                }
+                "requestNotifications" -> {
+                    val manager = getSystemService(NotificationManager::class.java)
+                    if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(NotificationChannel(notificationChannel, "Lantern messages", NotificationManager.IMPORTANCE_DEFAULT))
+                    if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        if (permissionBusy()) { result.error("busy", "Finish the current permission request first", null); return }
+                        notificationPermissionResult = result
+                        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 904)
+                    } else result.success(notificationsEnabled())
+                }
+                "notifyMessage" -> {
+                    if (!notificationsEnabled()) { result.success(false); return }
+                    val manager = getSystemService(NotificationManager::class.java)
+                    if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(NotificationChannel(notificationChannel, "Lantern messages", NotificationManager.IMPORTANCE_DEFAULT))
+                    val intent = Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    val launch = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                    val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, notificationChannel) else Notification.Builder(this)
+                    val notification = builder.setSmallIcon(android.R.drawable.ic_dialog_email)
+                        .setContentTitle("New Lantern message").setContentText("Open Lantern to view it.")
+                        .setVisibility(Notification.VISIBILITY_PRIVATE).setAutoCancel(true)
+                        .setContentIntent(launch).build()
+                    manager.notify(1701, notification)
+                    result.success(true)
+                }
+                "clearNotifications" -> { getSystemService(NotificationManager::class.java).cancel(1701); result.success(null) }
+                "openAppSettings" -> { startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))); result.success(null) }
+                else -> result.notImplemented()
+            }
+        } catch (e: Exception) { result.error("device", e.localizedMessage ?: "Device operation unavailable", null) }
+    }
+    private fun setTorch(enabled: Boolean, result: MethodChannel.Result) {
+        try {
+            val manager = getSystemService(CameraManager::class.java)
+            val id = torchCamera ?: manager.cameraIdList.firstOrNull {
+                manager.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+            }
+            if (id == null) { result.error("unavailable", "This device has no available torch", null); return }
+            manager.setTorchMode(id, enabled)
+            torchCamera = if (enabled) id else null
+            result.success(null)
+        } catch (e: Exception) { result.error("unavailable", "Torch unavailable: ${e.localizedMessage}", null) }
+    }
+    private fun turnTorchOff(): Exception? {
+        torchPermissionResult?.error("cancelled", "Torch request cancelled", null)
+        torchPermissionResult = null
+        val id = torchCamera ?: return null
+        return try {
+            getSystemService(CameraManager::class.java).setTorchMode(id, false)
+            torchCamera = null
+            null
+        } catch (error: Exception) { error }
+    }
     private fun expireInvitation(id: String, epoch: Int) {
         val invitationEpoch = ++invitationGeneration
         window.decorView.postDelayed({
@@ -186,6 +292,14 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         permissionResult?.error("cancelled", "Discovery was cancelled", null)
         permissionResult = null
     }
-    override fun onStop() { shutdown(); emit("stopped"); super.onStop() }
-    override fun onDestroy() { shutdown(); super.onDestroy() }
+    override fun onStart() { super.onStart(); foreground = true }
+    override fun onStop() { foreground = false; turnTorchOff(); shutdown(); emit("stopped"); super.onStop() }
+    override fun onDestroy() {
+        foreground = false
+        turnTorchOff()
+        notificationPermissionResult?.error("cancelled", "Notification request cancelled", null)
+        notificationPermissionResult = null
+        shutdown()
+        super.onDestroy()
+    }
 }

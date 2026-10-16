@@ -22,4 +22,7 @@
 <key>NSBonjourServices</key><array><string>_lantern-v1._tcp</string></array>
 <key>NSBluetoothAlwaysUsageDescription</key><string>Connect with nearby people without mobile data.</string>
 <key>NSLocationWhenInUseUsageDescription</key><string>Share your precise location with your connected person only when you choose, while Lantern is open.</string>
+<key>NSCameraUsageDescription</key><string>Use the torch or attach a photo when you choose. Lantern never opens the camera in the background.</string>
+<key>NSPhotoLibraryUsageDescription</key><string>Choose a photo to attach. Lantern sends only the photo you select after you confirm the recipient.</string>
+<key>NSMicrophoneUsageDescription</key><string>Record a voice note only when you choose to record.</string>
 </dict></plist>

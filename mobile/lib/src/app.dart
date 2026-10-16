@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'controller.dart';
 import 'services.dart';
 import 'offline_guide.dart';
+import 'media_service.dart';
+import 'device_tools.dart';
+import 'map_screen.dart';
 
 const ink = Color(0xFF182E2B);
 const paper = Color(0xFFF6F3EA);
@@ -88,14 +92,75 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with WidgetsBindingObserver {
   final _name = TextEditingController();
   final _message = TextEditingController();
   int _tab = 0;
   bool _sending = false;
+  bool _notifications = false;
+  String? _playingNoteId;
+  final _device = const PlatformDeviceTools();
+  late final TorchController _torch;
+  final _media = MediaSession();
+  @override
+  void initState() {
+    super.initState();
+    _torch = TorchController(_device);
+    _media.addListener(_mediaChanged);
+    WidgetsBinding.instance.addObserver(this);
+    c.addListener(_sessionChanged);
+    c.onNoteReceived = (_) {
+      if (_notifications) {
+        unawaited(_notifyIncoming());
+      }
+    };
+  }
+
+  Future<void> _notifyIncoming() async {
+    try {
+      final shown = await _device.notifyMessage();
+      if (!shown && mounted) {
+        setState(() => _notifications = false);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _notifications = false);
+      }
+    }
+  }
+
+  void _sessionChanged() {
+    if (_playingNoteId != null &&
+        !c.notes.any((note) => note.id == _playingNoteId)) {
+      _playingNoteId = null;
+      unawaited(_media.stopPlayback());
+    }
+  }
+
+  void _mediaChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      unawaited(_media.background());
+    }
+  }
+
   LanternController get c => widget.controller;
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    c.onNoteReceived = null;
+    c.removeListener(_sessionChanged);
+    _media.removeListener(_mediaChanged);
+    _media.dispose();
+    _torch.dispose();
     _name.dispose();
     _message.dispose();
     super.dispose();
@@ -524,6 +589,7 @@ class _HomeState extends State<Home> {
             onPressed: () => setState(() => _tab = 0),
             child: const Text('Find someone nearby'),
           ),
+          if (_media.draft != null) _attachmentDraft(),
         ],
       );
     }
@@ -604,13 +670,15 @@ class _HomeState extends State<Home> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SelectableText(
-                              note.text,
-                              style: TextStyle(
-                                color: note.mine ? Colors.white : ink,
-                                fontSize: 16,
+                            if (note.attachmentBytes != null) _attachment(note),
+                            if (note.text.isNotEmpty)
+                              SelectableText(
+                                note.text,
+                                style: TextStyle(
+                                  color: note.mine ? Colors.white : ink,
+                                  fontSize: 16,
+                                ),
                               ),
-                            ),
                             if (note.expiresAt != null)
                               Text(
                                 'Disappears at ${_clock(note.expiresAt!)}',
@@ -646,6 +714,58 @@ class _HomeState extends State<Home> {
                   },
                 ),
         ),
+        if (_media.error.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(_media.error),
+          ),
+        if (_media.draft != null) _attachmentDraft(),
+        Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            IconButton(
+              tooltip: 'Choose photo · may disconnect',
+              onPressed: _media.busy || _media.recording
+                  ? null
+                  : () => _media.pickPhoto(camera: false),
+              icon: const Icon(Icons.photo_outlined),
+            ),
+            IconButton(
+              tooltip: 'Take photo · may disconnect',
+              onPressed: _media.busy || _media.recording
+                  ? null
+                  : () => _media.pickPhoto(camera: true),
+              icon: const Icon(Icons.camera_alt_outlined),
+            ),
+            IconButton(
+              tooltip: _media.recording
+                  ? 'Stop recording and review'
+                  : 'Record voice · up to 30 seconds',
+              onPressed: _media.busy
+                  ? null
+                  : _media.recording
+                  ? _media.stopRecording
+                  : _media.startRecording,
+              icon: Icon(_media.recording ? Icons.stop_circle : Icons.mic_none),
+            ),
+            IconButton(
+              tooltip: 'Insert emoji',
+              onPressed: _emojiPicker,
+              icon: const Icon(Icons.emoji_emotions_outlined),
+            ),
+            _help(
+              'Photos and voice',
+              'Choose or take a photo, or record up to 30 seconds. Review the draft before sending. Photos are resized and re-encoded without embedded location metadata; each attachment is limited to 1 MiB. The photo picker may disconnect this foreground-only app. Your draft stays on this phone until you reconnect, send or discard it. Voice recording stops and is discarded when the app backgrounds. Recipients can copy attachments. Voice never plays automatically.',
+            ),
+            if (_media.recording) const Text('Recording · maximum 30 seconds'),
+            if (_media.playing)
+              TextButton(
+                onPressed: _media.stopPlayback,
+                child: const Text('Stop audio'),
+              ),
+          ],
+        ),
         Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
@@ -676,6 +796,247 @@ class _HomeState extends State<Home> {
         ),
       ],
     );
+  }
+
+  Widget _attachment(Note note) {
+    final bytes = note.attachmentBytes!;
+    if (note.attachmentMime!.startsWith('image/')) {
+      return Image.memory(
+        bytes,
+        width: 220,
+        height: 150,
+        fit: BoxFit.contain,
+        cacheWidth: 440,
+        errorBuilder: (_, _, _) => const Text('Photo cannot be displayed'),
+      );
+    }
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: note.mine ? Colors.white : ink,
+      ),
+      onPressed: () {
+        _playingNoteId = note.id;
+        unawaited(_media.play(bytes));
+      },
+      icon: const Icon(Icons.play_arrow),
+      label: const Text('Play voice note'),
+    );
+  }
+
+  Widget _attachmentDraft() {
+    final draft = _media.draft!;
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(10),
+      color: const Color(0xFFE4EADF),
+      child: Row(
+        children: [
+          if (draft.isPhoto)
+            Image.memory(
+              draft.bytes,
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              cacheWidth: 96,
+            )
+          else
+            IconButton(
+              tooltip: 'Preview voice draft',
+              onPressed: () => _media.play(draft.bytes),
+              icon: const Icon(Icons.play_arrow),
+            ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${draft.isPhoto ? 'Photo' : 'Voice'} draft · ${(draft.bytes.length / 1024).ceil()} KiB${c.connected == null ? '\nReconnect to send.' : ''}',
+            ),
+          ),
+          IconButton(
+            tooltip: 'Discard attachment',
+            onPressed: _media.clearDraft,
+            icon: const Icon(Icons.close),
+          ),
+          IconButton(
+            tooltip: 'Review recipient and send attachment',
+            onPressed: c.connected == null || c.sendingAttachment
+                ? null
+                : _sendAttachment,
+            icon: const Icon(Icons.send),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _sendAttachment() async {
+    final draft = _media.draft;
+    final peer = c.connected;
+    if (draft == null || peer == null) {
+      return;
+    }
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Send to ${peer.name}?'),
+        content: Text(
+          'Send this ${draft.isPhoto ? 'photo' : 'voice note'} to the connected person. They may save or copy it.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Send attachment'),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true && mounted && c.connected?.id == peer.id) {
+      if (await c.sendAttachment(draft.bytes, draft.mime)) {
+        _media.clearDraft();
+      }
+    }
+  }
+
+  Future<void> _emojiPicker() => showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Insert an emoji'),
+      content: Wrap(
+        spacing: 8,
+        children: ['👍', '✅', '📍', '🔧', '🧹', '🕐', '👋', '🙏']
+            .map(
+              (emoji) => TextButton(
+                onPressed: () {
+                  _message.text = '${_message.text}$emoji';
+                  _message.selection = TextSelection.collapsed(
+                    offset: _message.text.length,
+                  );
+                  Navigator.pop(context);
+                },
+                child: Text(emoji, style: const TextStyle(fontSize: 28)),
+              ),
+            )
+            .toList(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    ),
+  );
+
+  Widget _devicePanel() => ListenableBuilder(
+    listenable: _torch,
+    builder: (context, _) => _panel(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _toolTitle(
+            'Device tools',
+            'Torch switches on the camera light. Flash SOS blinks the light locally; it sends no message and calls nobody. Stop it at any time. Both stop when Lantern backgrounds. Avoid flashing near anyone sensitive to flashing lights. Notifications are optional, generic and only generated while this app receives messages; they do not keep connections alive in the background.',
+          ),
+          Wrap(
+            spacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _torch.busy ? null : _torch.toggle,
+                icon: Icon(
+                  _torch.torchOn ? Icons.flashlight_off : Icons.flashlight_on,
+                ),
+                label: Text(_torch.torchOn ? 'Torch off' : 'Torch on'),
+              ),
+              OutlinedButton.icon(
+                onPressed: _torch.sosActive ? _torch.stop : _confirmFlashSos,
+                icon: const Icon(Icons.sos),
+                label: Text(_torch.sosActive ? 'Stop flashing' : 'Flash SOS'),
+              ),
+            ],
+          ),
+          if (_torch.error != null) Text(_torch.error!),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Generic message notifications'),
+            subtitle: const Text(
+              'Opt-in for this app session. No message text shown.',
+            ),
+            value: _notifications,
+            onChanged: _setNotifications,
+          ),
+          TextButton.icon(
+            onPressed: () async {
+              try {
+                await _device.openAppSettings();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Settings unavailable: $e')),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.settings_outlined),
+            label: const Text('Open system permissions'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _setNotifications(bool enabled) async {
+    try {
+      final allowed = enabled && await _device.requestNotifications();
+      if (!enabled) {
+        await _device.clearNotifications();
+      }
+      if (mounted) {
+        setState(() => _notifications = allowed);
+      }
+      if (enabled && !allowed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Notifications not permitted. Change this in system settings.',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Notifications unavailable: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmFlashSos() async {
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Flash an SOS signal?'),
+        content: const Text(
+          'Blinks your phone light. It does not contact anyone. Avoid use around people sensitive to flashing lights.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Start flashing'),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true && mounted) {
+      await _torch.startSos();
+    }
   }
 
   String _clock(DateTime time) =>
@@ -715,6 +1076,14 @@ class _HomeState extends State<Home> {
     key: const ValueKey('field-tools'),
     padding: const EdgeInsets.all(20),
     children: [
+      _devicePanel(),
+      OutlinedButton.icon(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => MapScreen(controller: c)),
+        ),
+        icon: const Icon(Icons.map_outlined),
+        label: const Text('Open maps'),
+      ),
       _heading(
         'WHILE YOU ARE HERE',
         'Field tools',
@@ -979,7 +1348,9 @@ class _HomeState extends State<Home> {
     // after its route has left the widget tree.
     await Future<void>.delayed(const Duration(milliseconds: 300));
     input.dispose();
-    if (name != null && name.isNotEmpty && mounted) c.saveWaypoint(name);
+    if (name != null && name.isNotEmpty && mounted) {
+      c.saveWaypoint(name);
+    }
   }
 
   Future<void> _confirmSos() async {
@@ -1002,7 +1373,9 @@ class _HomeState extends State<Home> {
         ],
       ),
     );
-    if (accepted == true && mounted) await c.sendSos();
+    if (accepted == true && mounted) {
+      await c.sendSos();
+    }
   }
 
   Future<void> _send() async {
@@ -1096,7 +1469,7 @@ class _HomeState extends State<Home> {
         ),
       ),
       const Text(
-        'Lantern 0.1.0 · Early device-testing build\nNot an emergency or rescue service. Range and availability depend on your phones and surroundings. A recipient can copy messages or coordinates. Android Nearby uses Google Play services, which may collect SDK diagnostics.',
+        'Lantern 0.2.0 · Early device-testing build\nNot an emergency or rescue service. Range and availability depend on your phones and surroundings. A recipient can copy messages or coordinates. Android Nearby uses Google Play services, which may collect SDK diagnostics.',
         style: TextStyle(height: 1.6, fontSize: 12),
       ),
     ],

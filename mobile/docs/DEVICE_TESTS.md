@@ -26,5 +26,16 @@ Record phone models, OS versions, app commit, tester, date and observed result f
 | Restart / profile rename | Name persists, conversation does not; rename disconnects | Pending |
 | Airplane mode + re-enable Wi-Fi/Bluetooth | Local connection works where the OS permits; no mobile data required | Pending |
 | Large text / VoiceOver / TalkBack / rotation | Controls remain accessible; no clipping or silent actions | Pending |
+| Photo camera and gallery | Permission requested on use; preview appears; reconnect after picker if necessary; receipt only after full transfer | Pending |
+| Photo metadata and memory | Sent image contains re-encoded pixels; oversized media rejected; repeated transfers remain bounded | Pending |
+| Voice record / deny microphone | Denial is recoverable; recording stops by 30 seconds; audio never auto-plays | Pending |
+| Background during record/playback | Recording/playback stops; temporary audio files cleaned up | Pending |
+| Attachment interrupted by disconnect | No partial image/audio is presented as delivered | Pending |
+| Notifications allow/deny/revoke | Generic alert only after received message and opt-in; no sender/text leak; denial does not prevent chat | Pending |
+| Torch absent / camera busy / permission denied | Actionable error; no false active indicator | Pending |
+| Torch SOS and Stop | Three short, three long, three short; Stop and background switch flash off | Pending |
+| Torch permission interrupted | Cancelling/backgrounding cannot turn flash on later | Pending |
+| Offline saved map | Previously saved area renders with network disabled; date and coverage limits visible | Pending |
+| Find me help message | Explicit review before coordinates leave device; stale/missing GPS not presented as current; delivery status accurate | Pending |
 
 Release blockers: unresolved failures here, iOS identity verification if stronger threat protection is required, cross-platform interoperability if product scope requires it, production signing and store/privacy declarations.

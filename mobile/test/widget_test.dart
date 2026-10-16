@@ -165,6 +165,33 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+  testWidgets('chat media controls and emoji insertion need explicit send', (
+    tester,
+  ) async {
+    final transport = FakeTransport();
+    final c = LanternController(transport, FakeLocation(), FakeProfile());
+    await c.initialize();
+    await c.start();
+    transport.emit('invitation');
+    await c.respond(true);
+    transport.emit('connected');
+    await tester.pumpWidget(LanternApp(controller: c));
+    await tester.tap(find.text('Conversation'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Choose photo · may disconnect'), findsOneWidget);
+    expect(find.byTooltip('Record voice · up to 30 seconds'), findsOneWidget);
+    await tester.tap(find.byTooltip('Insert emoji'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('✅'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      '✅',
+    );
+    expect(transport.calls.any((call) => call.$1 == 'send'), isFalse);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
 
 class _CountingLocation extends FakeLocation {

@@ -1,7 +1,7 @@
 name: lantern
 description: Consent-first nearby messaging for people together in person.
 publish_to: none
-version: 0.1.0+1
+version: 0.2.0+2
 environment:
   sdk: '>=3.9.0 <4.0.0'
 dependencies:
@@ -9,6 +9,13 @@ dependencies:
     sdk: flutter
   geolocator: ^14.0.2
   shared_preferences: ^2.5.3
+  image_picker: 1.2.0
+  record: 6.1.2
+  audioplayers: 6.5.1
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  file_picker: ^10.3.3
+  path_provider: ^2.1.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
