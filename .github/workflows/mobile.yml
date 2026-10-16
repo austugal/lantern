@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['mobile/**', '.github/workflows/mobile.yml']
   push:
-    branches: [main, feat/mobile-app]
+    branches: [main]
     paths: ['mobile/**', '.github/workflows/mobile.yml']
   workflow_dispatch:
 permissions:
