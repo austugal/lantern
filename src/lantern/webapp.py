@@ -98,7 +98,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(404, {"error": "Not found"})
             return
         name, kind = resources[path]
-        self._reply(200, files("lantern").joinpath("web", name).read_bytes(), kind)
+        self._reply(200, files("lantern").joinpath("web").joinpath(name).read_bytes(), kind)
 
     def do_POST(self) -> None:
         if not self._authorized():

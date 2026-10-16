@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -307,7 +308,8 @@ def test_vault_roundtrip_preserves_consent_state(tmp_path: Path) -> None:
     a.grant(z.fp, Scope.LOCATION, ttl_s=600)
     path = tmp_path / "v.bin"
     save(a, path, "correct horse battery", n=2**12)
-    assert (path.stat().st_mode & 0o777) == 0o600
+    if os.name == "posix":
+        assert (path.stat().st_mode & 0o777) == 0o600
     hub2 = LoopbackHub()
     restored = load(path, "correct horse battery", lambda i: hub2.endpoint(i.fp), clock)
     assert restored.fp == a.fp
