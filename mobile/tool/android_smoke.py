@@ -138,7 +138,10 @@ class Smoke:
         self.find("Browse online?")
         self.record("07-browser-consent")
         self.tap("Open online browser")
-        self.find("HTTPS website address")
+        self.find("Online browser")
+        # Flutter's floating field label is not exposed in this Android semantics tree.
+        self.find(class_name="android.widget.EditText")
+        self.find("Open website online")
         self.find("JavaScript disabled")
         self.record("08-browser-controls-no-navigation")
         # No address entered and no remote website opened by this smoke test.
