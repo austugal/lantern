@@ -972,7 +972,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
               try {
                 await _device.openAppSettings();
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Settings unavailable: $e')),
                   );

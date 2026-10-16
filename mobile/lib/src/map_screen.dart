@@ -414,7 +414,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       const Text(
                         'Foreground only. GPS can be inaccurate indoors or under debris. No rescue service is contacted.',
                       ),
-                      if (c.error != null) Text(c.error!),
+                      if (c.error.isNotEmpty) Text(c.error),
                       if (_status != null)
                         Text(
                           _status!,

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'protocol.dart';
@@ -735,7 +734,7 @@ class LanternController extends ChangeNotifier {
           'mime': mime,
           'size': immutable.length,
           'chunks': count,
-          if (ttl != null) 'ttl': ttl,
+          'ttl': ?ttl,
         }),
       ).timeout(const Duration(seconds: 10));
       for (var index = 0; index < count; index++) {
