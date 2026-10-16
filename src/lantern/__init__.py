@@ -4,9 +4,12 @@ from lantern.consent import Grant, Scope
 from lantern.errors import ConsentError, LanternError
 from lantern.identity import Card, Identity
 from lantern.node import LanternNode
+from lantern.safety import Alert, SafeWalk
 from lantern.transport import LoopbackHub, Transport
 
 __all__ = [
+    "Alert",
+    "SafeWalk",
     "Card",
     "ConsentError",
     "Grant",
@@ -17,4 +20,4 @@ __all__ = [
     "Scope",
     "Transport",
 ]
-__version__ = "0.1.0"
+__version__ = "0.2.0"

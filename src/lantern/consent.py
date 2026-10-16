@@ -19,10 +19,13 @@ class Scope(str, Enum):
 
     MESSAGE: the grantor lets the grantee send messages to the grantor.
     LOCATION: the grantor lets the grantee see the grantor's location.
+    SOS: the grantor pre-authorises the grantee as a guardian. If the grantor triggers an
+    emergency, the guardian receives the exact position. Nothing is sent otherwise.
     """
 
     MESSAGE = "message"
     LOCATION = "location"
+    SOS = "sos"
 
 
 @dataclass(frozen=True)
