@@ -1,3 +1,5 @@
+// Standalone CLI intentionally imports source directly and prints its result.
+// ignore_for_file: avoid_relative_lib_imports, avoid_print
 // Standalone offline checks: dart tool/protocol_check.dart
 import 'dart:convert';
 import 'dart:math';

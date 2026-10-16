@@ -42,6 +42,20 @@ class Packet {
               (body['text'] as String).length > 1000) {
             return null;
           }
+          if (body.containsKey('ttl') &&
+              (body['ttl'] is! int ||
+                  ![60, 300, 900, 3600].contains(body['ttl']))) {
+            return null;
+          }
+        case 'guardianRequest':
+        case 'guardianAlert':
+          if (body.isNotEmpty) {
+            return null;
+          }
+        case 'guardianResponse':
+          if (body.length != 1 || body['accepted'] is! bool) {
+            return null;
+          }
         case 'ack':
           if (body['id'] is! String ||
               !RegExp(r'^[a-f0-9]{32}$').hasMatch(body['id'])) {

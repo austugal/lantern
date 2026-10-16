@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'controller.dart';
+import 'services.dart';
 
 const ink = Color(0xFF182E2B);
 const paper = Color(0xFFF6F3EA);
@@ -119,11 +120,15 @@ class _HomeState extends State<Home> {
           ],
         ),
         actions: [
+          _help(
+            'Quick start',
+            '1. Both people open Lantern on the same type of phone.\n2. Enable Bluetooth and Wi-Fi, then turn on Lantern.\n3. Connect and confirm the invitation in person.\n4. Open Conversation to message. Field tools adds optional location and check-ins.\n\nKeep Lantern open. Backgrounding disconnects and stops sharing. Android and iPhone cannot connect to each other in this build.',
+          ),
           Padding(
-            padding: const EdgeInsets.only(right: 20),
+            padding: const EdgeInsets.only(right: 4),
             child: Chip(
               label: Text(
-                c.active ? 'VISIBLE NEARBY' : 'INVISIBLE',
+                c.active ? 'VISIBLE' : 'OFF',
                 style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -150,6 +155,21 @@ class _HomeState extends State<Home> {
                       TextButton(
                         onPressed: c.clearError,
                         child: const Text('Dismiss'),
+                      ),
+                    ],
+                  ),
+                if (c.guardianRequested || c.incomingAlert.isNotEmpty)
+                  MaterialBanner(
+                    leading: const Icon(Icons.notifications_active_outlined),
+                    content: Text(
+                      c.incomingAlert.isNotEmpty
+                          ? c.incomingAlert
+                          : 'Your connected peer requests a guardian.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => setState(() => _tab = 2),
+                        child: const Text('View field tools'),
                       ),
                     ],
                   ),
@@ -187,6 +207,8 @@ class _HomeState extends State<Home> {
                       ? _nearby()
                       : _tab == 1
                       ? _chat()
+                      : _tab == 2
+                      ? _tools()
                       : _profile(),
                 ),
               ],
@@ -204,6 +226,10 @@ class _HomeState extends State<Home> {
                 NavigationDestination(
                   icon: Icon(Icons.chat_bubble_outline),
                   label: 'Conversation',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.explore_outlined),
+                  label: 'Field tools',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.person_outline),
@@ -298,7 +324,7 @@ class _HomeState extends State<Home> {
     children: [
       _heading(
         'YOUR NEARBY CIRCLE',
-        'Good company.\nNo signal needed.',
+        'Nearby people.\nYour choice.',
         c.active
             ? 'You are visible as ${c.name}. Connect with someone you can confirm in person.'
             : 'Become visible when you want company. You decide who connects.',
@@ -306,6 +332,10 @@ class _HomeState extends State<Home> {
       _panel(
         Column(
           children: [
+            _toolTitle(
+              'Nearby connection',
+              'Turn on Lantern on both phones. Tap Connect beside the person you know. Compare Android pairing codes on both screens before accepting. On iPhone, confirm the invitation face to face; display names are not verified identities. Turning off clears the conversation and stops location sharing.',
+            ),
             Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
@@ -410,7 +440,11 @@ class _HomeState extends State<Home> {
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.link),
             title: Text('Connected to ${c.connected!.name}'),
-            subtitle: const Text('Location is off until you share it.'),
+            subtitle: Text(
+              c.sharing
+                  ? 'Your location is being shared.'
+                  : 'Your location sharing is off.',
+            ),
             trailing: const Icon(Icons.arrow_forward),
             onTap: () => setState(() => _tab = 1),
           ),
@@ -488,11 +522,20 @@ class _HomeState extends State<Home> {
             c.connected!.name,
             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22),
           ),
-          subtitle: const Text('Private session · kept only in memory'),
-          trailing: IconButton(
-            tooltip: 'Disconnect and clear conversation',
-            onPressed: c.disconnect,
-            icon: const Icon(Icons.link_off),
+          subtitle: const Text('Session only · clears on disconnect'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _help(
+                'Conversation',
+                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
+              ),
+              IconButton(
+                tooltip: 'Disconnect and clear conversation',
+                onPressed: c.disconnect,
+                icon: const Icon(Icons.link_off),
+              ),
+            ],
           ),
         ),
         Padding(
@@ -510,36 +553,10 @@ class _HomeState extends State<Home> {
           ),
         ),
         if (remote != null)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: _panel(
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'THEIR LAST LOCATION',
-                    style: TextStyle(
-                      fontSize: 10,
-                      letterSpacing: 1.5,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  SelectableText(
-                    '${remote.fix.latitude.toStringAsFixed(5)}, ${remote.fix.longitude.toStringAsFixed(5)}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    'Accuracy ±${remote.fix.accuracy.round()} m · expires after 30 seconds without an update',
-                  ),
-                  const Text('Coordinates only. No offline map is included.'),
-                ],
-              ),
-              color: const Color(0xFFE4EADF),
-            ),
+          TextButton.icon(
+            onPressed: () => setState(() => _tab = 2),
+            icon: const Icon(Icons.near_me_outlined),
+            label: const Text('Their location is available · View field tools'),
           ),
         Expanded(
           child: c.notes.isEmpty
@@ -581,6 +598,16 @@ class _HomeState extends State<Home> {
                                 fontSize: 16,
                               ),
                             ),
+                            if (note.expiresAt != null)
+                              Text(
+                                'Disappears at ${_clock(note.expiresAt!)}',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: note.mine
+                                      ? Colors.white70
+                                      : Colors.black54,
+                                ),
+                              ),
                             const SizedBox(height: 6),
                             Text(
                               note.mine
@@ -638,6 +665,331 @@ class _HomeState extends State<Home> {
     );
   }
 
+  String _clock(DateTime time) =>
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  Widget _help(String title, String text) => IconButton(
+    tooltip: 'Explain $title',
+    icon: const Icon(Icons.help_outline, size: 22),
+    onPressed: () => showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(child: Text(text)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _toolTitle(String title, String help) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        ),
+      ),
+      _help(title, help),
+    ],
+  );
+
+  Widget _tools() => ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      _heading(
+        'WHILE YOU ARE HERE',
+        'Field tools',
+        'Tap a question mark for instructions. These tools run only while Lantern stays open.',
+      ),
+      _panel(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _toolTitle(
+              'Disappearing messages',
+              'Choose how long new messages remain visible. Existing messages keep their original expiry. Disconnecting clears the conversation. Recipients can still copy or screenshot messages.',
+            ),
+            const Text('Applies to messages you send next.'),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<int>(
+              initialValue: c.messageLifetimeSeconds ?? 0,
+              decoration: const InputDecoration(labelText: 'Message lifetime'),
+              items: const [
+                DropdownMenuItem(value: 0, child: Text('Until disconnect')),
+                DropdownMenuItem(value: 60, child: Text('1 minute')),
+                DropdownMenuItem(value: 300, child: Text('5 minutes')),
+                DropdownMenuItem(value: 900, child: Text('15 minutes')),
+                DropdownMenuItem(value: 3600, child: Text('1 hour')),
+              ],
+              onChanged: (value) =>
+                  c.setMessageLifetime(value == 0 ? null : value),
+            ),
+          ],
+        ),
+      ),
+      _panel(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _toolTitle(
+              'Location sharing',
+              'Connect first. Share sends precise coordinates to that one person for up to 15 minutes. Stop immediately with Stop sharing. Closing or backgrounding Lantern stops sharing. Old received positions expire after 30 seconds. Copies made by a recipient cannot be removed.',
+            ),
+            Text(
+              c.sharing
+                  ? 'Sharing until ${_clock(c.shareUntil!)}'
+                  : 'Your location sharing is off.',
+            ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: c.connected == null
+                  ? null
+                  : c.sharing
+                  ? c.stopSharing
+                  : _confirmLocation,
+              icon: Icon(
+                c.sharing ? Icons.location_off : Icons.location_on_outlined,
+              ),
+              label: Text(c.sharing ? 'Stop sharing' : 'Share for 15 minutes'),
+            ),
+            if (c.connected == null)
+              const Text('Connect on the Nearby tab first.'),
+            if (c.remoteLocation != null) ...[
+              const Divider(height: 28),
+              const Text(
+                'Their latest position',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              _position(c.remoteLocation!.fix),
+              const Text('Expires after 30 seconds without an update.'),
+            ],
+          ],
+        ),
+      ),
+      _panel(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _toolTitle(
+              'Offline navigation',
+              'Start local GPS to keep a breadcrumb trail on this phone. This does not share your position. Save a named waypoint, then read its straight-line distance and bearing. Bearings are degrees clockwise from true north, not turn-by-turn directions. Clear trail also removes all waypoints. No maps or obstacle information are included. Data stays in memory.',
+            ),
+            Text(
+              c.navigating
+                  ? 'Local GPS active · ${c.breadcrumbs.length} trail points'
+                  : 'Local GPS is off.',
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: c.navigating ? c.stopNavigation : c.startNavigation,
+              icon: Icon(c.navigating ? Icons.gps_off : Icons.gps_fixed),
+              label: Text(c.navigating ? 'Stop local GPS' : 'Start local GPS'),
+            ),
+            if (c.navigating && c.localFix == null)
+              const Text(
+                'Waiting for a GPS fix. Move near a window or outdoors.',
+              ),
+            if (c.localFix != null) _position(c.localFix!, showVector: false),
+            Wrap(
+              spacing: 8,
+              children: [
+                TextButton.icon(
+                  onPressed: c.localFix == null ? null : _saveWaypoint,
+                  icon: const Icon(Icons.add_location_alt_outlined),
+                  label: const Text('Save waypoint'),
+                ),
+                TextButton(
+                  onPressed: c.breadcrumbs.isEmpty ? null : c.clearTrail,
+                  child: const Text('Clear trail & waypoints'),
+                ),
+              ],
+            ),
+            if (c.breadcrumbs.isNotEmpty) ...[
+              const Text(
+                'Trail start',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              _position(c.breadcrumbs.first),
+            ],
+            ...c.waypoints.entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.key,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    _position(entry.value),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      _panel(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _toolTitle(
+              'Buddy check-in',
+              'Connect and ask that person to be your guardian. They must accept. Start a timer and tap Check in before it ends. If it expires, Lantern attempts an alert to that connected person. Keep both apps open and within range. Disconnecting or backgrounding cancels the timer. It does not call emergency services, work in the background, or guarantee help. SOS does not silently start location sharing.',
+            ),
+            const Text('Foreground only. Not an emergency or rescue service.'),
+            const SizedBox(height: 12),
+            if (c.guardianStatus.isNotEmpty) Text(c.guardianStatus),
+            if (c.guardianRequested) ...[
+              Text(
+                '${c.connected?.name ?? 'Your peer'} asks you to be their guardian.',
+              ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  FilledButton(
+                    onPressed: () => c.respondGuardian(true),
+                    child: const Text('Accept guardian role'),
+                  ),
+                  TextButton(
+                    onPressed: () => c.respondGuardian(false),
+                    child: const Text('Decline'),
+                  ),
+                ],
+              ),
+            ],
+            if (!c.guardianAccepted)
+              OutlinedButton(
+                onPressed: c.connected == null ? null : c.requestGuardian,
+                child: const Text('Ask connected person to be guardian'),
+              ),
+            if (c.guardianAccepted) ...[
+              if (c.checkInUntil == null)
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => c.armCheckIn(const Duration(minutes: 5)),
+                      child: const Text('5-minute check-in'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () =>
+                          c.armCheckIn(const Duration(minutes: 15)),
+                      child: const Text('15-minute check-in'),
+                    ),
+                  ],
+                )
+              else ...[
+                Text(
+                  'Check in by ${_clock(c.checkInUntil!)}. Keep Lantern open.',
+                ),
+                FilledButton(
+                  onPressed: c.cancelCheckIn,
+                  child: const Text('Check in · cancel timer'),
+                ),
+              ],
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: _confirmSos,
+                icon: const Icon(Icons.sos),
+                label: const Text('Send buddy SOS'),
+              ),
+            ],
+            if (c.incomingAlert.isNotEmpty) ...[
+              const Divider(),
+              Text(
+                c.incomingAlert,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ],
+        ),
+      ),
+    ],
+  );
+
+  Widget _position(Fix fix, {bool showVector = true}) {
+    final vector = showVector ? c.navigationTo(fix) : null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SelectableText(
+            '${fix.latitude.toStringAsFixed(5)}, ${fix.longitude.toStringAsFixed(5)}',
+          ),
+          Text('GPS accuracy ±${fix.accuracy.round()} m'),
+          if (vector != null)
+            Text(
+              '${vector.distanceMeters.round()} m straight-line · ${vector.bearingDegrees.round()}° from true north',
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveWaypoint() async {
+    final input = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Save this position'),
+        content: TextField(
+          controller: input,
+          autofocus: true,
+          maxLength: 40,
+          decoration: const InputDecoration(
+            labelText: 'Waypoint name',
+            hintText: 'Car, camp or meeting point',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, input.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    // The dialog exit animation may still read its controller. Keep disposal
+    // after its route has left the widget tree.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    input.dispose();
+    if (name != null && name.isNotEmpty && mounted) c.saveWaypoint(name);
+  }
+
+  Future<void> _confirmSos() async {
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Send a buddy SOS?'),
+        content: Text(
+          'Ask ${c.connected?.name ?? 'your guardian'} for help over this connection. Delivery needs both phones connected and open. This does not call emergency services.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Send SOS'),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true && mounted) await c.sendSos();
+  }
+
   Future<void> _send() async {
     if (_sending) {
       return;
@@ -691,6 +1043,10 @@ class _HomeState extends State<Home> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _toolTitle(
+              'Display name',
+              'Enter a nickname and save. This disconnects the current session. Nearby people see this name while Lantern is on; it is not proof of identity.',
+            ),
             TextField(
               controller: _name,
               maxLength: 24,

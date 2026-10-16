@@ -27,7 +27,7 @@ class FakeTransport implements NearbyTransport {
       'id': id,
       'name': name,
       'code': code,
-      if (data != null) 'data': data,
+      'data': ?data,
     });
   }
 }

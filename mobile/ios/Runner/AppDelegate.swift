@@ -29,6 +29,7 @@ final class LanternNearby: NSObject, FlutterStreamHandler, MCSessionDelegate, MC
   private var pending: String?
   private var connected: String?
   private var invitation: ((Bool, MCSession?) -> Void)?
+  private var invitationTimeout: DispatchWorkItem?
   private let service = "lantern-v1"
 
   init(messenger: FlutterBinaryMessenger) {
@@ -78,6 +79,7 @@ final class LanternNearby: NSObject, FlutterStreamHandler, MCSessionDelegate, MC
     case "request":
       guard let peer = peers[id], let session = session, pending == nil, connected == nil else { failure(result, "This person is no longer available"); return }
       pending = id
+      scheduleInvitationTimeout(id, session: session)
       browser?.invitePeer(peer, to: session, withContext: Data("lantern-v1".utf8), timeout: 30)
       result(nil)
     case "accept":
@@ -86,9 +88,11 @@ final class LanternNearby: NSObject, FlutterStreamHandler, MCSessionDelegate, MC
       handler(true, session)
       result(nil)
     case "reject":
-      if pending == id { invitation?(false, nil); invitation = nil; pending = nil }
+      if pending == id { invitationTimeout?.cancel(); invitationTimeout = nil; invitation?(false, nil); invitation = nil; pending = nil }
       result(nil)
     case "disconnect":
+      invitationTimeout?.cancel()
+      invitationTimeout = nil
       invitation?(false, nil)
       invitation = nil
       pending = nil
@@ -109,7 +113,27 @@ final class LanternNearby: NSObject, FlutterStreamHandler, MCSessionDelegate, MC
     default: result(FlutterMethodNotImplemented)
     }
   }
+  private func scheduleInvitationTimeout(_ id: String, session: MCSession) {
+    invitationTimeout?.cancel()
+    let task = DispatchWorkItem { [weak self, weak session] in
+      guard let self = self, let session = session, session === self.session, self.pending == id else { return }
+      self.invitation?(false, nil)
+      self.invitation = nil
+      self.pending = nil
+      let replacement = MCSession(peer: session.myPeerID, securityIdentity: nil, encryptionPreference: .required)
+      replacement.delegate = self
+      self.session = replacement
+      session.disconnect()
+      self.invitationTimeout = nil
+      self.emit("disconnected", id)
+      self.emit("error", id, ["message": "Invitation expired. Ask the other person to try again."])
+    }
+    invitationTimeout = task
+    DispatchQueue.main.asyncAfter(deadline: .now() + 30, execute: task)
+  }
   func stop(emitEvent: Bool = true) {
+    invitationTimeout?.cancel()
+    invitationTimeout = nil
     invitation?(false, nil)
     invitation = nil
     advertiser?.stopAdvertisingPeer()
@@ -125,31 +149,42 @@ final class LanternNearby: NSObject, FlutterStreamHandler, MCSessionDelegate, MC
     if emitEvent { emit("stopped") }
   }
   func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
-    guard browser === self.browser, peers.count < 100, info?["v"] == "1" else { return }
-    emit("found", key(peerID), ["name": peerID.displayName])
+    DispatchQueue.main.async { [self] in
+      guard browser === self.browser, peers.count < 100, info?["v"] == "1" else { return }
+      emit("found", key(peerID), ["name": peerID.displayName])
+    }
   }
   func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-    guard browser === self.browser, let id = peers.first(where: { $0.value == peerID })?.key else { return }
-    emit("lost", id)
-    if id != pending && id != connected { peers.removeValue(forKey: id) }
+    DispatchQueue.main.async { [self] in
+      guard browser === self.browser, let id = peers.first(where: { $0.value == peerID })?.key else { return }
+      emit("lost", id)
+      if id != pending && id != connected { peers.removeValue(forKey: id) }
+    }
   }
   func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-    guard browser === self.browser else { return }
-    emit("error", "", ["message": "Discovery failed. Check Local Network permission in Settings. \(error.localizedDescription)"])
-    stop()
+    DispatchQueue.main.async { [self] in
+      guard browser === self.browser else { return }
+      emit("error", "", ["message": "Discovery failed. Check Local Network permission in Settings. \(error.localizedDescription)"])
+      stop()
+    }
   }
   func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-    guard advertiser === self.advertiser else { return }
-    emit("error", "", ["message": "Visibility failed. Check Local Network permission in Settings. \(error.localizedDescription)"])
-    stop()
+    DispatchQueue.main.async { [self] in
+      guard advertiser === self.advertiser else { return }
+      emit("error", "", ["message": "Visibility failed. Check Local Network permission in Settings. \(error.localizedDescription)"])
+      stop()
+    }
   }
   func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-    guard advertiser === self.advertiser, session != nil, pending == nil, connected == nil,
-          context == Data("lantern-v1".utf8), peers.count < 100 else { invitationHandler(false, nil); return }
-    let id = key(peerID)
-    pending = id
-    invitation = invitationHandler
-    emit("invitation", id, ["name": peerID.displayName, "code": ""])
+    DispatchQueue.main.async { [self] in
+      guard advertiser === self.advertiser, session != nil, pending == nil, connected == nil,
+            context == Data("lantern-v1".utf8), peers.count < 100 else { invitationHandler(false, nil); return }
+      let id = key(peerID)
+      pending = id
+      invitation = invitationHandler
+      if let session = session { scheduleInvitationTimeout(id, session: session) }
+      emit("invitation", id, ["name": peerID.displayName, "code": ""])
+    }
   }
   func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
     DispatchQueue.main.async { [weak self] in
@@ -157,11 +192,13 @@ final class LanternNearby: NSObject, FlutterStreamHandler, MCSessionDelegate, MC
       let id = self.key(peerID)
       if state == .connected {
         guard self.pending == id, self.connected == nil else { session.cancelConnectPeer(peerID); return }
+        self.invitationTimeout?.cancel()
+        self.invitationTimeout = nil
         self.pending = nil
         self.connected = id
         self.emit("connected", id, ["name": peerID.displayName])
       } else if state == .notConnected {
-        if self.pending == id { self.pending = nil; self.invitation = nil }
+        if self.pending == id { self.invitationTimeout?.cancel(); self.invitationTimeout = nil; self.pending = nil; self.invitation = nil }
         if self.connected == id { self.connected = nil }
         self.emit("disconnected", id)
       }

@@ -17,6 +17,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private var sink: EventChannel.EventSink? = null
     private var running = false
     private var generation = 0
+    private var invitationGeneration = 0
     private var displayName = ""
     private var pending: String? = null
     private var connected: String? = null
@@ -36,10 +37,14 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     }
     private fun fail(result: MethodChannel.Result, e: Exception) = result.error("nearby", e.localizedMessage ?: "Nearby operation failed", null)
     private fun requiredPermissions(): Array<String> {
-        val permissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        val permissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
         if (Build.VERSION.SDK_INT >= 31) permissions.addAll(listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_ADVERTISE))
         if (Build.VERSION.SDK_INT >= 33) permissions.add(Manifest.permission.NEARBY_WIFI_DEVICES)
-        return permissions.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }.toTypedArray()
+        val missing = permissions.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }.toMutableList()
+        if (Manifest.permission.ACCESS_FINE_LOCATION in missing && Manifest.permission.ACCESS_COARSE_LOCATION !in missing) {
+            missing.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+        return missing.toTypedArray()
     }
     private fun handle(call: MethodCall, result: MethodChannel.Result) {
         val id = call.argument<String>("id") ?: ""
@@ -59,6 +64,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
             "request" -> {
                 if (!running || connected != null || pending != null || !names.containsKey(id)) { result.error("state", "This person is no longer available", null); return }
                 pending = id
+                expireInvitation(id, generation)
                 val epoch = generation
                 client.requestConnection(displayName, id, lifecycle(epoch))
                     .addOnSuccessListener { result.success(null) }
@@ -124,6 +130,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         override fun onConnectionInitiated(id: String, info: ConnectionInfo) {
             if (!running || epoch != generation || connected != null || (pending != null && pending != id)) { client.rejectConnection(id); return }
             pending = id
+            expireInvitation(id, epoch)
             names[id] = info.endpointName.take(64)
             emit("invitation", id, mapOf("name" to names[id]!!, "code" to info.authenticationDigits))
         }
@@ -154,6 +161,18 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         override fun onPayloadTransferUpdate(id: String, update: PayloadTransferUpdate) {
             if (epoch == generation && update.status == PayloadTransferUpdate.Status.FAILURE) emit("error", id, mapOf("message" to "A message could not be transferred. Check its delivery status."))
         }
+    }
+    private fun expireInvitation(id: String, epoch: Int) {
+        val invitationEpoch = ++invitationGeneration
+        window.decorView.postDelayed({
+            if (running && epoch == generation && invitationEpoch == invitationGeneration && pending == id) {
+                pending = null
+                client.rejectConnection(id)
+                client.disconnectFromEndpoint(id)
+                emit("disconnected", id)
+                emit("error", id, mapOf("message" to "Invitation expired. Ask the other person to try again."))
+            }
+        }, 30_000)
     }
     private fun shutdown() {
         ++generation
