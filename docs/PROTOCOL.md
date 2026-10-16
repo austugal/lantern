@@ -7,7 +7,7 @@ All frames are canonical JSON (sorted keys, no whitespace), at most 16 KiB.
 | Field | Meaning |
 | --- | --- |
 | `v` | Protocol version, currently `1` |
-| `t` | `grant`, `revoke`, `msg`, `loc` or `sos` |
+| `t` | `grant`, `revoke`, `msg`, `loc`, `sos` or `receipt` |
 | `from`, `to` | Sender and recipient fingerprints |
 | `id` | 24 hex characters, random, used for replay rejection |
 | `ts` | Sender clock, integer seconds |
@@ -65,3 +65,15 @@ Relays see the destination fingerprint and the packet size, never the content.
 
 `ttl` on a `msg` asks the receiver to delete the message after that many seconds (1 second
 to 7 days). The receiver's `purge_expired()` honours it. A modified client can ignore it.
+
+## Desktop receipts and invitations (0.3)
+
+A signed, encrypted `receipt` contains `{id, revoke?}`. Its sender must match the
+peer of a pending delivery. It confirms app acceptance, never human reading.
+Pending revocations are persisted and retried every 10 seconds while unlocked and
+paired, until receipt or grant expiry. Unpairing removes the retry destination.
+UDP submission alone does not establish delivery, and messages are not retried.
+
+Signed `lantern:` invitations carry a public identity card, private IPv4 endpoint,
+port and ten-minute expiry. Both users import and compare safety numbers before
+pairing. The local browser API requires a per-process token and same-origin access.

@@ -23,8 +23,8 @@
   captured earlier. A full ratchet is on the roadmap.
 - Relays learn the destination fingerprint, packet size and timing. Floods are visible to
   anyone listening. A relay can drop packets (denial of service) but cannot alter them.
-- Radio range is physical. One BLE hop is roughly 100 m. 1000 m needs about ten relay hops
-  or a longer range radio such as LoRa. The code cannot extend a radio.
+- Radio range is not measured here. Mesh tests use simulated distances. The desktop
+  transport uses an existing private LAN; no BLE or LoRa adapter is included.
 - Dead reckoning drifts. Precision degrades with distance travelled until a GPS fix returns.
 - Disappearing messages rely on the receiving client. A modified client can keep them.
 - Metadata is visible. Sender and recipient fingerprints and frame types are in clear text
@@ -34,9 +34,24 @@
 - Clock trust. Expiry uses the local clock. A device whose clock is rolled back honours
   expired grants. Receivers should treat the clock as part of their trusted base.
 - Revocation is best effort over a lossy radio. The grantor stops sending immediately, but
-  a receiver out of range will not hear the revoke until the grant expires. This is why
-  expiry is mandatory.
+  a disconnected receiver may keep data until reconnect or expiry. The desktop retries
+  revocations while the peer remains paired. Unpairing prevents further retries.
 - Receivers can screenshot or copy anything they are shown. Consent controls what is sent,
   not what the other person does with it.
-- Replay memory and the ledger are in RAM only. Restarting a node forgets seen ids.
+- The desktop persists replay identifiers and the ledger in its encrypted vault. A crash
+  can lose changes since the last save. Core-only callers must arrange their own persistence.
 - No external review has been done.
+
+## Desktop boundaries
+
+The local service binds to IPv4 loopback, checks Host/Origin and a secret token,
+bounds requests, and serves bundled assets under a restrictive CSP. The token is
+kept in same-tab session storage so reloading works; it is not a vault key.
+A compromised browser, extension, OS or local account is outside this protection.
+Python cannot guarantee erasure of key or message copies from RAM. A receiver can
+retain any received content. Windows filesystem ACLs require platform verification;
+POSIX mode 0600 must not be interpreted as a portable Windows ACL guarantee.
+
+The timer is an experimental convenience. It cannot run through process exit or
+sleep and does not send stale coordinates. No delivery, rescue or human-response
+guarantee is made. Use only one running process per profile directory.

@@ -59,7 +59,7 @@ def guide(me: Fix, target: Fix) -> Heading:
     return Heading(
         distance_m(me, target),
         bearing_deg(me, target),
-        (me.precision_m + target.precision_m) / 2.0,
+        (me.precision_m + target.precision_m),
     )
 
 

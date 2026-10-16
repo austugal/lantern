@@ -14,6 +14,14 @@ class Fix:
     lon: float
     precision_m: float
 
+    def __post_init__(self) -> None:
+        if not all(math.isfinite(v) for v in (self.lat, self.lon, self.precision_m)):
+            raise ValueError("location values must be finite")
+        if not -90 <= self.lat <= 90 or not -180 <= self.lon <= 180:
+            raise ValueError("latitude or longitude out of range")
+        if not 0 <= self.precision_m <= 1_000_000:
+            raise ValueError("precision must be between 0 and 1,000,000 metres")
+
 
 def coarsen(lat: float, lon: float, precision_m: float) -> Fix:
     """Snap a point to the centre of a grid cell about precision_m wide.
@@ -23,6 +31,8 @@ def coarsen(lat: float, lon: float, precision_m: float) -> Fix:
     """
     if not (-90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0):
         raise ValueError("latitude or longitude out of range")
+    if not math.isfinite(precision_m) or not 0 < precision_m <= 1_000_000:
+        raise ValueError("precision must be finite and positive")
     lat_step = precision_m / _M_PER_DEG_LAT
     cos_lat = max(math.cos(math.radians(lat)), 1e-6)
     lon_step = precision_m / (_M_PER_DEG_LAT * cos_lat)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import secrets
 from dataclasses import dataclass
 from enum import Enum
@@ -53,6 +54,16 @@ class Grant:
         }
 
     def verify(self) -> bool:
+        cap = MAX_MESSAGE_TTL_S if self.scope is Scope.MESSAGE else MAX_LOCATION_TTL_S
+        if not 0 < self.expires_at - self.issued_at <= cap:
+            return False
+        if self.scope is Scope.LOCATION:
+            if self.precision_m is None or not math.isfinite(self.precision_m):
+                return False
+            if not MIN_PRECISION_M <= self.precision_m <= 1_000_000:
+                return False
+        elif self.precision_m is not None:
+            return False
         return verify_signature(
             self.grantor_sign_pub, self.sig, b"lantern/grant/1" + canonical(self._body())
         )
@@ -88,10 +99,12 @@ def issue(
     precision_m: float | None = None,
 ) -> Grant:
     """Create and sign a grant. Expiry is mandatory and capped per scope."""
-    cap = MAX_LOCATION_TTL_S if scope is Scope.LOCATION else MAX_MESSAGE_TTL_S
+    cap = MAX_MESSAGE_TTL_S if scope is Scope.MESSAGE else MAX_LOCATION_TTL_S
     if ttl_s <= 0 or ttl_s > cap:
         raise ValueError(f"ttl_s must be between 1 and {cap} for {scope.value}")
     if scope is Scope.LOCATION:
+        if precision_m is not None and (not math.isfinite(precision_m) or precision_m > 1_000_000):
+            raise ValueError("invalid location precision")
         precision_m = float(max(MIN_PRECISION_M, precision_m if precision_m is not None else 50.0))
     else:
         precision_m = None

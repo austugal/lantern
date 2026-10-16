@@ -6,9 +6,9 @@
 enforcement, coarsening, audit log, radio simulator, CLI demo, CI.
 
 0.2:
-- Opt-in mesh relaying with TTL and loop suppression (the route to 1000 m and beyond)
-- Per-frame ephemeral keys (sender-side forward secrecy)
-- SOS guardians: pre-consented emergency scope, exact position, only to people you named
+- Opt-in mesh relaying with TTL and loop suppression in the radio simulator
+- Per-frame ephemeral keys (partial forward secrecy; no double ratchet)
+- SOS guardians: pre-consented emergency scope, reported position, only to people you named
 - Safe walk: dead-man timer that raises the SOS if you do not check in
 - Drift alerts that account for fix imprecision (no false alarms from coarse positions)
 - Offline navigation with no maps: bearing and distance to a peer, breadcrumb backtrack,
@@ -16,6 +16,18 @@ enforcement, coarsening, audit log, radio simulator, CLI demo, CI.
 - Disappearing messages
 - Encrypted vault for identity, peers and consent state, with wipe
 - Radio profiles and a hop calculator
+
+## 0.3 desktop preview
+
+- Real UDP transport between explicitly paired LAN endpoints.
+- Local browser interface, signed invitations and safety-number confirmation.
+- Encrypted app receipts for messages, alerts and revocations.
+- Persistent revocation retry queue while the peer remains paired.
+- Foreground location sharing, fresh-fix checks and expiry cleanup.
+- Encrypted profile, source launchers and desktop packaging workflow.
+
+BLE and LoRa ranges are not validated by this project. The mesh range test is a
+simulation only; desktop UDP does not provide hardware mesh discovery or routing.
 
 ## Ideas not built yet
 
@@ -31,17 +43,6 @@ enforcement, coarsening, audit log, radio simulator, CLI demo, CI.
 6. Push-to-talk voice bursts, signed per sender.
 7. LoRa bridge transport (Meshtastic-class hardware) for 2 to 15 km hops.
 8. Full ratchet for forward secrecy on both sides.
-9. Persistent revoke queue so revocations reach peers who were out of range.
-10. QR pairing payload and a verified safety number screen.
-11. External security review before any public release.
-
-## Landscape (checked 2026-10-16, secondary sources)
-
-- BLE mesh hops are about 100 m. Briar's local links are about 10 to 100 m.
-- Meshtastic (LoRa) reaches about 2 to 15 km per hop with line of sight, hop limit 7.
-- Bitchat 1.6 and 1.7 added store-and-forward direct messages, push-to-talk, courier drops
-  and signed voice bursts.
-- Sources: d-central.tech mesh protocol comparison, a dev.to write-up of Bitchat 1.6 and 1.7.
-- I did not find an offline messenger that combines pre-consented SOS scope, a dead-man
-  timer, precision-aware drift alerts and signed expiring grants. That is a thin-search
-  observation, not proof that none exists.
+9. Reliable message retransmission and reconnect negotiation.
+10. QR invitation exchange (text invitations and safety-number screen are implemented).
+11. External security review before a production release.
