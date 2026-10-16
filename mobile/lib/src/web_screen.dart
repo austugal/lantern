@@ -395,7 +395,7 @@ class _OnlineBrowserState extends State<_OnlineBrowser> {
     final confirmed = await _confirm(
       context,
       'Save readable text on this device?',
-      'Saves visible page text and its address, up to 200,000 characters. This may contain personal information displayed by the website. Images, forms, videos and login sessions are not saved. Saved text is not additionally encrypted by Lantern.',
+      'Saves visible page text and its address, up to 200,000 characters. This may contain personal information displayed by the website. Displayed form text may be included. Images, interactive form functionality, videos and login sessions are not saved. Saved text is not additionally encrypted by Lantern.',
       'Save text',
     );
     if (!confirmed || !mounted) {
