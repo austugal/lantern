@@ -1,0 +1,100 @@
+name: Mobile checks and native builds
+on:
+  pull_request:
+    paths: ['mobile/**', '.github/workflows/mobile.yml']
+  push:
+    branches: [main]
+    paths: ['mobile/**', '.github/workflows/mobile.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    working-directory: mobile
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test tool
+      - run: flutter analyze
+      - run: flutter test --coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mobile-validation
+          path: |
+            mobile/coverage/lcov.info
+            mobile/pubspec.lock
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lantern-Android-testing-APK
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+  ios:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.7'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --simulator --debug
+      - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphonesimulator/Runner.app build/ios/Lantern-iOS-simulator.zip
+      - run: flutter build ios --release --no-codesign
+      - run: ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app build/ios/Lantern-iOS-unsigned-device.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lantern-iOS-builds
+          path: mobile/build/ios/*.zip
+          if-no-files-found: error
+  publish:
+    needs: [checks, android, ios]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Lantern-*
+          path: artifacts
+          merge-multiple: true
+      - name: Publish tested developer builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          mv artifacts/app-debug.apk artifacts/Lantern-Android-testing.apk
+          sha256sum artifacts/* > artifacts/SHA256SUMS.txt
+          printf '%s\n' 'Developer preview. Android APK uses a debug signing key. iOS simulator build runs in Xcode Simulator; unsigned device build requires Apple signing and provisioning before installation. Nearby sessions currently support Android-to-Android or iPhone-to-iPhone, foreground only. Physical-device range and reliability have not been validated. Not an emergency-service replacement.' > release-notes.txt
+          gh release create "mobile-preview-${RELEASE_SHA:0:12}" artifacts/* --target "$RELEASE_SHA" --prerelease --title 'Lantern mobile developer preview' --notes-file release-notes.txt
