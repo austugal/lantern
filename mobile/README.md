@@ -92,7 +92,7 @@ There is no Lantern account server, advertising or application analytics integra
 
 Flutter analysis and **53 automated tests passed**. GitHub Actions compiled the Android testing APK, iOS simulator app and unsigned iOS device app. [Verification details](docs/VERIFICATION.md).
 
-These checks do not test physical radios, real-device GPS, battery life or real-world range. Complete the [two-phone acceptance checklist](docs/DEVICE_TESTS.md) before relying on a deployment.
+The Android emulator also passed APK installation/navigation and a native browser/offline-reader fixture. These checks do not test physical radios, real-device GPS, battery life or real-world range. Complete the [two-phone acceptance checklist](docs/DEVICE_TESTS.md) before relying on a deployment.
 
 ## Build from source
 

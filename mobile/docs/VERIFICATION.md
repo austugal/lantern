@@ -1,5 +1,21 @@
 # Mobile verification record
 
+## Mobile 0.3.0 web reading
+
+[Validation run 38902303778](https://github.com/austugal/lantern/actions/runs/38902303778) passed on source `1308ce82b57a160dd4c28df4264e143b848fd54d`, merged through PR #6 at `e99ac83ace6f9eebc33a463515239559f1420420`.
+
+- Formatting and static analysis passed; **67 Flutter tests passed**.
+- Android APK, iPhone simulator and unsigned iPhone device builds passed.
+- Actual Android API 35 emulator: APK installation and all nine onboarding/navigation/browser checks passed, with no app crash detected.
+- Native integration test passed: page scripts remained disabled, bounded fixture text was parsed, saved and rendered using Flutter without a WebView. The deterministic download fixture makes no external website request.
+- Emulator screenshots, UI XML and logs are in the run’s **Android-emulator-evidence** artifact (14-day retention).
+
+Earlier test runs found an Android WebView extraction limitation, a test selector mismatch and a Pixel Launcher system ANR. The app now downloads text separately without browser cookies; the test matches actual Android semantics and handles only the exact system-launcher dialog. App crashes still fail the gate.
+
+This establishes automated emulator behaviour, not physical radio reliability, arbitrary website compatibility or independent security certification. Real websites, physical phones and iPhone runtime testing remain required.
+
+[Main release run 38904352555](https://github.com/austugal/lantern/actions/runs/38904352555) passed all checks, native builds, emulator tests and publication. [Download mobile 0.3.0](https://github.com/austugal/lantern/releases/tag/mobile-preview-e99ac83ace6f): Android testing APK, iPhone simulator ZIP, unsigned iPhone device ZIP and SHA256SUMS.txt.
+
 ## Mobile 0.2.0 media and maps
 
 [Validation run 38893649362](https://github.com/austugal/lantern/actions/runs/38893649362) passed on source `13fd0ce75d70e85ac43ad25249f70154936c3033`:
