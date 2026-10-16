@@ -38,4 +38,9 @@ Record phone models, OS versions, app commit, tester, date and observed result f
 | Offline saved map | Previously saved area renders with network disabled; date and coverage limits visible | Pending |
 | Find me help message | Explicit review before coordinates leave device; stale/missing GPS not presented as current; delivery status accurate | Pending |
 
+| Online browser | Consent before web use; HTTPS page loads; back/forward/reload work; no camera/microphone/location access | Pending |
+| Save text offline | Save a readable page online; disable mobile data and network access; saved title/text open without WebView or internet | Pending |
+| Browser denied/error states | Invalid URL blocked; unavailable website shows error; unsupported extraction never reports saved | Pending |
+| Delete saved pages / browser data | Deletion persists after restart; browser cache/cookies clear separately from saved text | Pending |
+
 Release blockers: unresolved failures here, iOS identity verification if stronger threat protection is required, cross-platform interoperability if product scope requires it, production signing and store/privacy declarations.

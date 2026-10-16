@@ -9,6 +9,14 @@ class GuideTopic {
 
 const guideTopics = <GuideTopic>[
   GuideTopic(
+    'Read web pages offline',
+    'web browser internet offline save website reading',
+    'Open Field tools, then Web & saved pages. Browse online requires internet. '
+        'Enter an HTTPS website and choose Download public text offline. Return to saved reading to open it without internet. '
+        'Public text is fetched separately without browser cookies or logins. Images, video and live services are not saved. JavaScript is disabled. '
+        'Save useful instructions before an outage. Saved text stays on this device until deleted and is not an encrypted vault.',
+  ),
+  GuideTopic(
     'Connect two phones',
     'connect pairing bluetooth wifi wi-fi nearby android iphone ios code',
     'Open Lantern on both phones. Turn on Bluetooth and Wi-Fi, then tap Turn on Lantern. '
