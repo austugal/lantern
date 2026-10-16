@@ -14,7 +14,12 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
     X25519PrivateKey,
     X25519PublicKey,
 )
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+    PublicFormat,
+)
 
 from lantern.wire import b64d, b64e, canonical
 
@@ -69,13 +74,34 @@ class Card:
 class Identity:
     """Long-term signing (Ed25519) and key-agreement (X25519) keys."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(
+        self,
+        name: str,
+        sign_seed: bytes | None = None,
+        kx_secret: bytes | None = None,
+    ) -> None:
         self.name = name
-        self._sign = Ed25519PrivateKey.generate()
-        self._kx = X25519PrivateKey.generate()
+        self._sign = (
+            Ed25519PrivateKey.from_private_bytes(sign_seed)
+            if sign_seed
+            else Ed25519PrivateKey.generate()
+        )
+        self._kx = (
+            X25519PrivateKey.from_private_bytes(kx_secret)
+            if kx_secret
+            else X25519PrivateKey.generate()
+        )
         self.sign_pub = _raw(self._sign.public_key())
         self.kx_pub = _raw(self._kx.public_key())
         self.fp = fingerprint(self.sign_pub, self.kx_pub)
+
+    def export_private(self) -> tuple[bytes, bytes]:
+        """Raw private key material. Only the vault should call this."""
+        fmt = (Encoding.Raw, PrivateFormat.Raw, NoEncryption())
+        return (
+            bytes(self._sign.private_bytes(*fmt)),
+            bytes(self._kx.private_bytes(*fmt)),
+        )
 
     def sign(self, data: bytes) -> bytes:
         return bytes(self._sign.sign(data))

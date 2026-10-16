@@ -221,6 +221,9 @@ class Tap:
         self.frames.append(frame)
         return self.inner.send(dst_fp, frame) if self.deliver else True
 
+    def broadcast(self, frame: bytes) -> int:
+        return self.inner.broadcast(frame)
+
     def set_receiver(self, callback: Callable[[bytes], object]) -> None:
         self.inner.set_receiver(callback)
 
