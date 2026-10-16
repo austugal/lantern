@@ -2,9 +2,9 @@ name: Desktop preview builds
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['src/**', 'tests/**', 'pyproject.toml', 'packaging/**', 'src/lantern/web/**', '.github/workflows/desktop.yml']
+    paths: ['src/**', 'tests/**', 'pyproject.toml', 'packaging/**', '.github/workflows/desktop.yml']
   push:
-    branches: [main, feat/public-desktop-app, finish/desktop-release]
+    branches: [main, finish/desktop-release]
 permissions:
   contents: read
 jobs:
@@ -32,12 +32,54 @@ jobs:
       - name: Smoke test the executable (Windows)
         if: runner.os == 'Windows'
         run: ./dist/Lantern.exe demo
+      - name: Package download
+        shell: python
+        run: |
+          import hashlib, os, pathlib, zipfile
+          name = "Lantern-" + os.environ["RUNNER_OS"] + "-" + os.environ["RUNNER_ARCH"] + "-preview.zip"
+          executable = pathlib.Path("dist/Lantern.exe" if os.name == "nt" else "dist/Lantern")
+          members = [executable, pathlib.Path("README.md"), pathlib.Path("LICENSE"), pathlib.Path("docs/DESKTOP.md")]
+          members += list(pathlib.Path("dist").glob("*.whl"))
+          with zipfile.ZipFile("dist/" + name, "w", zipfile.ZIP_DEFLATED) as archive:
+              for path in members:
+                  archive.write(path, path.name)
+              archive.writestr("SHA256SUMS.txt", "".join(hashlib.sha256(p.read_bytes()).hexdigest() + "  " + p.name + "\n" for p in members))
       - uses: actions/upload-artifact@v4
         with:
           name: Lantern-${{ runner.os }}-${{ runner.arch }}-preview
-          path: |
-            dist/Lantern*
-            dist/*.whl
-            README.md
-            LICENSE
-            docs/DESKTOP.md
+          path: dist/Lantern-*-preview.zip
+          if-no-files-found: error
+  publish:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Lantern-*-preview
+          merge-multiple: true
+          path: downloads
+      - name: Publish experimental desktop prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          tag="desktop-preview-${RELEASE_SHA:0:12}"
+          cat > release-notes.md <<'NOTES'
+          Experimental Lantern 0.3 desktop preview for consent-based encrypted LAN messaging.
+          
+          Download the ZIP for your operating system, extract it, and run Lantern (Lantern.exe on Windows). On macOS/Linux you may need chmod +x Lantern. These binaries are not code-signed or notarized; this is a developer preview.
+          
+          Includes verified pairing, expiring permissions, app delivery receipts, encrypted local vault, location controls, guardian check-ins, navigation helpers and Explain controls popups.
+          
+          All three platform builds passed lint, formatting, strict typing, tests and executable demo checks. Physical-device networking and visual accessibility still need testing. No independent security audit, mobile APK/iOS app, BLE/LoRa hardware support or emergency-service guarantee.
+          NOTES
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "This commit already has a release."
+          else
+            gh release create "$tag" downloads/*.zip --target "$RELEASE_SHA" --prerelease --title "Lantern 0.3 desktop preview" --notes-file release-notes.md
+          fi
