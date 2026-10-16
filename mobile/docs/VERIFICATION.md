@@ -1,5 +1,21 @@
 # Mobile verification record
 
+## Mobile 0.2.0 media and maps
+
+[Validation run 38893649362](https://github.com/austugal/lantern/actions/runs/38893649362) passed on source `13fd0ce75d70e85ac43ad25249f70154936c3033`:
+
+- Formatting and Flutter analysis: no issues.
+- **53 automated tests passed.**
+- Android testing APK compiled.
+- iOS simulator and unsigned device apps compiled.
+- Desktop CI passed for the same changes.
+
+The source was merged through PR #5 at `adfd2c230f06e763ae72861c846b5298caabe8f9`. New checks cover attachment bounds and cleanup, torch timing/cancellation, notification channel arguments, photo resizing, emoji entry and offline-map parsing. Actual camera, microphone, torch, notifications, map downloads and mixed OS lifecycle behaviour still need physical-device testing.
+
+[Main release run 38894662274](https://github.com/austugal/lantern/actions/runs/38894662274) passed all checks, native builds and publication. [Download mobile 0.2.0](https://github.com/austugal/lantern/releases/tag/mobile-preview-adfd2c230f06): Android testing APK, iOS simulator ZIP, unsigned iOS device ZIP and SHA256SUMS.txt.
+
+## Earlier preview evidence
+
 ## Completed automated checks
 
 The root [Mobile workflow](../../.github/workflows/mobile.yml) uses Flutter 3.35.7.

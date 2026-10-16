@@ -1,5 +1,18 @@
 # Changelog
 
+## Mobile 0.2.0 — communication and field tools
+
+- Photo attachments from camera/gallery, resized and re-encoded before sending.
+- Voice notes up to 30 seconds, explicit playback, and emoji entry.
+- Bounded attachment transfers with complete-message receipts and disconnect cleanup.
+- Opt-in generic local notifications and on-use camera/microphone permissions.
+- Steady torch and repeating Morse SOS, with cancellation and background shutdown.
+- Optional online maps, saved small offline areas and GeoJSON import.
+- Explicit Find me/help coordinate messages with accuracy, fix time and stale-fix checks.
+- Expanded built-in help, workplace examples and physical-device test checklist.
+
+Same-platform, one-peer, foreground mobile communication remains the current limit. This does not add live calls, remote push messaging, emergency-service contact or production signing. See the mobile verification record for build evidence and untested device behaviours. Desktop version numbering is independent.
+
 ## 0.3.0 — desktop preview
 
 - Added an offline-assets desktop interface, local vault onboarding and explanatory control help.
