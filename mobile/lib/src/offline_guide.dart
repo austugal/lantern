@@ -12,8 +12,8 @@ const guideTopics = <GuideTopic>[
     'Read web pages offline',
     'web browser internet offline save website reading',
     'Open Field tools, then Web & saved pages. Browse online requires internet. '
-        'Enter an HTTPS website and choose Save text offline. Return to saved reading to open it without internet. '
-        'Only text is saved, not images, video or a working website. JavaScript is disabled. '
+        'Enter an HTTPS website and choose Download public text offline. Return to saved reading to open it without internet. '
+        'Public text is fetched separately without browser cookies or logins. Images, video and live services are not saved. JavaScript is disabled. '
         'Save useful instructions before an outage. Saved text stays on this device until deleted and is not an encrypted vault.',
   ),
   GuideTopic(

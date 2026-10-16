@@ -12,7 +12,7 @@ void main() {
     expect(find.text('Web & saved reading'), findsOneWidget);
     expect(
       find.text(
-        'No saved pages. Browse online, then explicitly save readable page text.',
+        'No saved pages. Browse online, then explicitly download public page text.',
       ),
       findsOneWidget,
     );

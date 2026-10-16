@@ -46,11 +46,35 @@ def center(node: ET.Element) -> tuple[int, int]:
     return (left + right) // 2, (top + bottom) // 2
 
 
+def launcher_anr_close(xml: str) -> ET.Element | None:
+    """Match only Android's exact Pixel Launcher ANR, never Lantern's ANR."""
+    nodes = list(ET.fromstring(xml).iter("node"))
+    launcher_title = any(
+        n.get("package") == "android"
+        and n.get("resource-id") == "android:id/alertTitle"
+        and n.get("text") == "Pixel Launcher isn't responding"
+        for n in nodes
+    )
+    if not launcher_title:
+        return None
+    return next(
+        (
+            n
+            for n in nodes
+            if n.get("package") == "android"
+            and n.get("resource-id") == "android:id/aerr_close"
+            and n.get("text") == "Close app"
+        ),
+        None,
+    )
+
+
 class Smoke:
     def __init__(self, evidence: Path):
         self.evidence = evidence
         evidence.mkdir(parents=True, exist_ok=True)
         self.steps: list[str] = []
+        self.launcher_recovered = False
 
     def snapshot(self, name: str) -> str:
         adb("shell", "uiautomator", "dump", "/sdcard/lantern-smoke.xml")
@@ -59,12 +83,30 @@ class Smoke:
         (self.evidence / f"{name}.png").write_bytes(adb("exec-out", "screencap", "-p"))
         return xml
 
-    def find(self, label: str = "", class_name: str = "") -> ET.Element:
+    def find(
+        self, label: str = "", class_name: str = "", allow_launcher_recovery: bool = False
+    ) -> ET.Element:
         # Bounded retries accommodate first-frame rendering and emulator load.
         last_error: Exception | None = None
         for _ in range(12):
             try:
                 xml = self.snapshot("latest")
+                close = launcher_anr_close(xml) if allow_launcher_recovery else None
+                if close is not None and not self.launcher_recovered:
+                    self.launcher_recovered = True
+                    for extension in ("xml", "png"):
+                        source = self.evidence / f"latest.{extension}"
+                        (self.evidence / f"system-launcher-anr.{extension}").write_bytes(
+                            source.read_bytes()
+                        )
+                    x, y = center(close)
+                    adb("shell", "input", "tap", str(x), str(y))
+                    adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/.MainActivity")
+                    print(
+                        "Recovered exact Pixel Launcher ANR once; Lantern ANRs remain failures.",
+                        flush=True,
+                    )
+                    continue
                 node = match_node(xml, label, class_name)
                 if node is not None:
                     return node
@@ -114,7 +156,7 @@ class Smoke:
         (self.evidence / "launch.txt").write_bytes(launch)
         if b"Error:" in launch:
             raise AssertionError(launch.decode())
-        self.find("Make yourself at home")
+        self.find("Make yourself at home", allow_launcher_recovery=True)
         self.record("01-onboarding")
         self.tap(class_name="android.widget.EditText")
         adb("shell", "input", "text", "EmulatorTester")
@@ -171,6 +213,7 @@ class Smoke:
             json.dumps(
                 {
                     "passed": error is None,
+                    "system_launcher_anr_recovered": self.launcher_recovered,
                     "steps": self.steps,
                     "error": error,
                     "scope": "Single emulator APK installation, onboarding and UI navigation only",

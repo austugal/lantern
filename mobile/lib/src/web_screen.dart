@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'web_store.dart';
+import 'web_fetch.dart';
 
 /// Shared by production browser and the native integration fixture.
 Future<WebViewController> createReadingWebView() async {
@@ -22,27 +22,6 @@ Future<WebViewController> createReadingWebView() async {
     );
   }
   return web;
-}
-
-/// Evaluates only this fixed read-only expression through the native engine.
-/// Does not enable page scripts, register a JS bridge, or execute website text.
-Future<Map<String, dynamic>> captureWebText(WebViewController web) async {
-  final result = await web
-      .runJavaScriptReturningResult(
-        "JSON.stringify({url:location.href,title:document.title.slice(0,300),text:(document.body?document.body.innerText:'').slice(0,200000)})",
-      )
-      .timeout(const Duration(seconds: 5));
-  Object? decoded = result;
-  for (var i = 0; i < 2 && decoded is String; i++) {
-    decoded = jsonDecode(decoded);
-  }
-  if (decoded is! Map<String, dynamic> ||
-      decoded['url'] is! String ||
-      decoded['title'] is! String ||
-      decoded['text'] is! String) {
-    throw const FormatException('Page text extraction is unavailable.');
-  }
-  return decoded;
 }
 
 /// Opens on saved reading. A WebView is created only after explicit online use.
@@ -181,7 +160,7 @@ class _WebScreenState extends State<WebScreen> {
                     child: Padding(
                       padding: EdgeInsets.all(24),
                       child: Text(
-                        'No saved pages. Browse online, then explicitly save readable page text.',
+                        'No saved pages. Browse online, then explicitly download public page text.',
                       ),
                     ),
                   )
@@ -394,9 +373,9 @@ class _OnlineBrowserState extends State<_OnlineBrowser> {
     }
     final confirmed = await _confirm(
       context,
-      'Save readable text on this device?',
-      'Saves visible page text and its address, up to 200,000 characters. This may contain personal information displayed by the website. Displayed form text may be included. Images, interactive form functionality, videos and login sessions are not saved. Saved text is not additionally encrypted by Lantern.',
-      'Save text',
+      'Download public text offline?',
+      'Downloads the full page address again without browser cookies. It may differ from your signed-in or live page. Links containing access tokens may still reveal private information. The download is limited to 1 MiB and 200,000 characters; images, scripts and form controls are excluded. Text may be incomplete. Saved text is not additionally encrypted by Lantern.',
+      'Download public text',
     );
     if (!confirmed || !mounted) {
       return;
@@ -410,16 +389,16 @@ class _OnlineBrowserState extends State<_OnlineBrowser> {
       if (before == null || publicWebUri(before) == null) {
         throw StateError('No public page is loaded.');
       }
-      final decoded = await captureWebText(web);
+      final downloaded = await fetchPublicText(Uri.parse(before));
       final after = await web.currentUrl();
-      if (decoded['url'] != before || after != before) {
+      if (after != before) {
         throw StateError('Page changed or its text was unavailable.');
       }
       final page = SavedWebPage(
         id: 'p${DateTime.now().microsecondsSinceEpoch}',
-        url: before,
-        title: decoded['title'] as String,
-        text: decoded['text'] as String,
+        url: downloaded.url.toString(),
+        title: downloaded.title,
+        text: downloaded.text,
         savedAt: DateTime.now(),
       );
       await widget.store.save(page);
@@ -537,7 +516,7 @@ class _OnlineBrowserState extends State<_OnlineBrowser> {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: Text(
-              'Online · website requests use internet. JavaScript disabled. Saving stores text only.',
+              'Online · website requests use internet. JavaScript disabled. Offline download fetches public text separately.',
               style: TextStyle(fontSize: 12),
             ),
           ),
@@ -572,7 +551,7 @@ class _OnlineBrowserState extends State<_OnlineBrowser> {
               TextButton.icon(
                 onPressed: _pageReady && !_busy ? _save : null,
                 icon: const Icon(Icons.download_outlined),
-                label: Text(_busy ? 'Saving…' : 'Save text offline'),
+                label: Text(_busy ? 'Saving…' : 'Download public text'),
               ),
             ],
           ),
