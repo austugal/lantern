@@ -23,7 +23,7 @@ Flutter app with real native transports, not simulated peers. Early device-testi
 | Android ↔ Android | Google Play services required; Android 7+ |
 | iPhone ↔ iPhone | iOS 13+; Multipeer Connectivity |
 | Android ↔ iPhone | Not supported by these adapters |
-| Browser / desktop | No nearby transport |
+| Mobile ↔ desktop | Not interoperable; desktop has its own LAN transport |
 
 Keep both apps open and Wi-Fi/Bluetooth enabled. Internet is not needed for an established nearby conversation, but installation and dependency downloads need internet. Range depends on hardware and surroundings. Android permission prompts can include Location because Nearby discovery needs it; **granting the permission does not start coordinate sharing**.
 
@@ -32,6 +32,7 @@ Keep both apps open and Wi-Fi/Bluetooth enabled. Internet is not needed for an e
 Use Flutter **3.35.7**, Java 17 and the Android SDK (API 36), or macOS with Xcode/CocoaPods for iOS.
 
 ```sh
+cd mobile
 flutter pub get
 flutter run
 ```

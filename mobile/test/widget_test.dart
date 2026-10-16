@@ -14,7 +14,14 @@ void main() {
     await tester.pumpWidget(LanternApp(controller: c));
     await tester.enterText(find.byType(TextField), 'Tiago');
     await tester.ensureVisible(find.text('Make yourself at home'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Make yourself at home'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Turn on Lantern'),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
     expect(find.text('Turn on Lantern'), findsOneWidget);
     expect(c.name, 'Tiago');
@@ -33,7 +40,12 @@ void main() {
     final c = LanternController(transport, FakeLocation(), FakeProfile());
     await c.initialize();
     await tester.pumpWidget(LanternApp(controller: c));
-    await tester.ensureVisible(find.text('Turn on Lantern'));
+    await tester.scrollUntilVisible(
+      find.text('Turn on Lantern'),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Turn on Lantern'));
     await tester.pumpAndSettle();
     transport.emit('invitation');
@@ -43,6 +55,7 @@ void main() {
       200,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.pumpAndSettle();
     expect(find.text('1234'), findsOneWidget);
     await tester.tap(find.text('Codes match · Accept'));
     await tester.pumpAndSettle();
@@ -72,7 +85,12 @@ void main() {
 
     await tester.tap(find.text('Field tools'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byTooltip('Explain Offline navigation'));
+    await tester.scrollUntilVisible(
+      find.byTooltip('Explain Offline navigation'),
+      160,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Explain Offline navigation'));
     await tester.pumpAndSettle();
     expect(find.byType(AlertDialog), findsOneWidget);
@@ -115,7 +133,11 @@ void main() {
       'Buddy check-in',
     ]) {
       final help = find.byTooltip('Explain $title');
-      await tester.ensureVisible(help);
+      await tester.scrollUntilVisible(
+        help,
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: '$title panel should fit');
       await tester.tap(help);

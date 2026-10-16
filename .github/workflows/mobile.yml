@@ -35,7 +35,6 @@ jobs:
             mobile/coverage/lcov.info
             mobile/pubspec.lock
   android:
-    needs: checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +55,6 @@ jobs:
           path: mobile/build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
   ios:
-    needs: checks
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -76,7 +74,7 @@ jobs:
           path: mobile/build/ios/*.zip
           if-no-files-found: error
   publish:
-    needs: [android, ios]
+    needs: [checks, android, ios]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
