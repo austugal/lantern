@@ -31,11 +31,17 @@ No internet service is needed for the nearby conversation. Initial installation 
 | Control | What it does |
 | --- | --- |
 | Nearby discovery | Finds participating Lantern peers after you turn it on. Nothing connects automatically. |
-| Conversation | Sends up to 1,000 characters per message over the native encrypted connection; shows receipts and failures. |
+| Conversation | Sends text and emojis over the native encrypted connection; shows receipts and failures. Text is limited to 1,000 characters. |
+| Photos | Select a photo or use the camera, review it, then send. Images are resized and re-encoded before transfer. |
+| Voice messages | Record up to 30 seconds, review and send. Received audio plays only when tapped. These are recordings, not live calls. |
+| Local notifications | Optional generic alerts after a message arrives. They work without internet over an active nearby session; there is no background or remote push delivery. |
+| Torch / SOS flash | Steady light or repeated three-short, three-long, three-short flashes, with Stop. Requires a working phone flash; backgrounding switches it off. This does not contact anyone. |
 | Message expiry | Removes messages after 1 minute, 5 minutes, 15 minutes or 1 hour, if enabled. Screenshots and modified clients cannot be prevented. |
 | Location sharing | Sends your position only after separate consent, for up to 15 minutes. Old received positions disappear after 30 seconds without an update. |
 | Local GPS | Records a private breadcrumb trail and named waypoints in memory. Starting local GPS does not transmit coordinates. |
-| Navigation | Shows straight-line distance and a true-north bearing to a waypoint, trail start or shared position. There are no maps, obstacle checks or road routes. |
+| Navigation | Shows straight-line distance and a true-north bearing to a waypoint, trail start or shared position. This is not a safe route or obstacle check. |
+| Map & find me | Optional online street map; save a basic area around you for offline use or import a bounded GeoJSON map. |
+| I need help — find me | Review and send a one-time coordinate, GPS accuracy and fix time to your connected colleague. Review the receipt in Conversation. |
 | Guardian request | Asks the currently connected person to accept alerts. An unanswered request expires after 35 seconds. |
 | Check-in timer | Sends an assistance alert if it expires while the same accepted guardian remains connected and both apps stay open. |
 | Assistance alert | Submits an alert to the accepted guardian. It does not automatically include coordinates and does not confirm receipt or a human response. |
@@ -43,11 +49,17 @@ No internet service is needed for the nearby conversation. Initial installation 
 
 Location sharing and guardian consent are separate. A guardian alert does not override your location choices.
 
+### Prepare an offline map
+
+Open **Field tools → Map & find me**, start local GPS, then choose **Save nearby area offline** while internet is available. Confirm the request to download roads, building outlines and landmarks within about 500 metres. It replaces the previously saved area. Check the map before an outage. You can delete it from the map screen. The downloaded area persists on your phone; it is not an encrypted vault. Downloads can fail or be rate-limited, and this basic map has no routing, live hazards or rescue information. [Map instructions and provider details](../docs/MAPS.md).
+
 ## What happens when I close or lock the app?
 
 The connection stops, location sharing stops, the check-in timer is cancelled and the conversation is cleared. Opening the app again does not silently reconnect or restart sharing. There is **no background rescue monitoring**.
 
-Only your display name is saved. Messages and coordinates are held in memory. Local trails and waypoints are also held in memory until cleared or the app closes; stopping GPS clears the current fix but retains the trail. **Clear trail** removes the trail and waypoints.
+Your display name is saved. Conversation messages and attachments are held in memory; temporary audio playback/recording files are cleaned up by the app. Local trails and waypoints are held in memory until cleared or the app closes; stopping GPS clears the current fix but retains the trail. **Clear trail** removes the trail and waypoints.
+
+Opening the camera, photo picker or phone settings can background Lantern and disconnect it. Reconnect before sending a selected attachment. Camera, microphone and notification permission prompts appear only when you use those features. You can review permissions in phone settings. Attachments are limited to 1 MiB each, incomplete transfers expire, and media retained in the conversation is capped.
 
 ## Connections and limits
 
@@ -67,7 +79,7 @@ Android's permission prompts may include Location for nearby discovery. Granting
 
 Encryption comes from Google Nearby or Apple Multipeer Connectivity. Android provides a pairing-code comparison. The iPhone flow does not provide an independent cryptographic identity comparison; verify the invitation in person.
 
-There is no Lantern account server, advertising, map provider or application analytics integration. Google's Nearby SDK may collect diagnostics under Google's policies. A recipient can copy information; stopping sharing cannot erase copies already made. No independent audit or security certification is claimed.
+There is no Lantern account server, advertising or application analytics integration. Online street maps use OpenStreetMap tiles only after you enable them; the provider sees your IP address and viewed region. Saving a nearby map sends the chosen GPS coordinate to Overpass after confirmation. Google's Nearby SDK may collect diagnostics under Google's policies. A recipient can copy information; stopping sharing cannot erase copies already made. No independent audit or security certification is claimed.
 
 ## Verified builds
 

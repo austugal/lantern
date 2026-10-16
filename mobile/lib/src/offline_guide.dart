@@ -70,6 +70,42 @@ const guideTopics = <GuideTopic>[
         'Expiry cannot erase screenshots, copied text or information remembered by the recipient.',
   ),
   GuideTopic(
+    'Map and find me',
+    'map gps offline online download save area find me help earthquake coordinates',
+    'Open Map & find me in Field tools and start local GPS. Online street maps are optional. '
+        'Before an outage, Save nearby area offline downloads a basic map of roads, buildings and landmarks around you after confirmation. '
+        'It needs internet for the download and sends the area coordinate to the map provider. '
+        'The saved map stays on your phone until deleted; it does not show live hazards or safe routes. '
+        'I need help lets you review and send your coordinates, accuracy and fix time to the connected colleague. '
+        'Check the receipt in Conversation. It does not reach emergency services or guarantee a human response.',
+  ),
+  GuideTopic(
+    'Torch and SOS flashing',
+    'torch flashlight flash light morse sos stop camera permission',
+    'Use the torch for steady light or SOS for repeating three short, three long and three short flashes. '
+        'Allow camera access when requested. Stop switches the light off; leaving Lantern also stops it. '
+        'A phone without a working flash cannot use this feature. This is a visual signal only: '
+        'it does not send a message, call anyone or contact emergency services.',
+  ),
+  GuideTopic(
+    'Photos, voice and emojis',
+    'photo picture camera gallery microphone voice audio emoji attachment permissions',
+    'Use the attachment controls in Conversation to choose a photo or record a short voice message. '
+        'Camera and microphone permissions are requested when needed. Review your attachment before sending. '
+        'The phone emoji keyboard works in text messages. A working nearby connection is required for delivery. '
+        'Opening the camera or another app may disconnect the session; reconnect before sending. '
+        'Received audio plays only when you choose to play it.',
+  ),
+  GuideTopic(
+    'Message notifications',
+    'notifications alerts permission settings online offline background',
+    'Enable message notifications in Lantern and allow them in your phone settings. '
+        'Notifications use a generic message so the sender and content are not shown on the notification. '
+        'They appear only after Lantern receives a message over an active connection. '
+        'Internet is not required for local receipt, but locking the phone or leaving Lantern ends this preview’s nearby session. '
+        'This is not remote push messaging or background delivery.',
+  ),
+  GuideTopic(
     'Offline guide and AI status',
     'copilot ai model assistant internet cloud online offline dependencies',
     'This guide searches built-in instructions. It works offline and sends no questions to a server. '

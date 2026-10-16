@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'protocol.dart';
@@ -26,7 +28,16 @@ class Note {
     this.time,
     this.delivery, {
     this.expiresAt,
+    this.attachmentBytes,
+    this.attachmentMime,
   });
+  final Uint8List? attachmentBytes;
+  final String? attachmentMime;
+  String? get attachmentKind => attachmentMime == null
+      ? null
+      : attachmentMime!.startsWith('image/')
+      ? 'photo'
+      : 'voice';
   final DateTime? expiresAt;
   final String id, text;
   final bool mine;
@@ -40,6 +51,15 @@ class RemoteLocation {
   final DateTime receivedAt;
 }
 
+class _IncomingAttachment {
+  _IncomingAttachment(this.mime, this.size, this.count, this.expiresAt);
+  final String mime;
+  final int size, count;
+  final DateTime? expiresAt;
+  final createdAt = DateTime.now();
+  final chunks = <int, Uint8List>{};
+}
+
 class LanternController extends ChangeNotifier {
   LanternController(this.transport, this.location, this.store) {
     _events = transport.events.listen(
@@ -50,6 +70,12 @@ class LanternController extends ChangeNotifier {
       },
     );
     _expiry = Timer.periodic(const Duration(seconds: 5), (_) {
+      _incomingAttachments.removeWhere(
+        (_, transfer) =>
+            DateTime.now().difference(transfer.createdAt).inSeconds >= 120 ||
+            (transfer.expiresAt != null &&
+                !DateTime.now().isBefore(transfer.expiresAt!)),
+      );
       final before = notes.length;
       notes.removeWhere(
         (note) =>
@@ -76,6 +102,22 @@ class LanternController extends ChangeNotifier {
   final _seen = <String>{};
   final peers = <String, Peer>{};
   final notes = <Note>[];
+  final _incomingAttachments = <String, _IncomingAttachment>{};
+  bool sendingAttachment = false;
+  int _attachmentSendEpoch = 0;
+  void Function(Note)? onNoteReceived;
+
+  void _receivedNote(Note note) {
+    notes.add(note);
+    _trimNotes();
+    // UI integrations must not be able to break packet processing.
+    try {
+      onNoteReceived?.call(note);
+    } catch (_) {
+      /* Notification hooks must not break receipt handling. */
+    }
+  }
+
   String name = '', error = '';
   bool ready = false, active = false, busy = false, sharing = false;
   bool foreground = true, _disposed = false;
@@ -93,6 +135,7 @@ class LanternController extends ChangeNotifier {
   Timer? _checkInTimer, _guardianDeadline;
   bool navigating = false;
   Fix? localFix;
+  DateTime? localFixAt;
   final breadcrumbs = <Fix>[];
   final waypoints = <String, Fix>{};
   StreamSubscription<Fix>? _navigationFixes;
@@ -220,6 +263,7 @@ class LanternController extends ChangeNotifier {
             return;
           }
           localFix = fix;
+          localFixAt = DateTime.now();
           if (breadcrumbs.isEmpty ||
               vectorBetween(breadcrumbs.last, fix).distanceMeters >= 5) {
             breadcrumbs.add(fix);
@@ -245,6 +289,7 @@ class LanternController extends ChangeNotifier {
     ++_navigationEpoch;
     navigating = false;
     localFix = null;
+    localFixAt = null;
     final subscription = _navigationFixes;
     _navigationFixes = null;
     _notify();
@@ -350,6 +395,9 @@ class LanternController extends ChangeNotifier {
   }
 
   void _resetConnection() {
+    ++_attachmentSendEpoch;
+    sendingAttachment = false;
+    _incomingAttachments.clear();
     _guardianDeadline?.cancel();
     _checkInTimer?.cancel();
     checkInUntil = null;
@@ -516,7 +564,7 @@ class LanternController extends ChangeNotifier {
         }
         switch (packet.kind) {
           case 'text':
-            notes.add(
+            _receivedNote(
               Note(
                 packet.id,
                 packet.body['text'],
@@ -531,6 +579,22 @@ class LanternController extends ChangeNotifier {
               ),
             );
             _trimNotes();
+          case 'attachmentStart':
+            if (_incomingAttachments.length < 2 &&
+                !_incomingAttachments.containsKey(packet.id)) {
+              _incomingAttachments[packet.id] = _IncomingAttachment(
+                packet.body['mime'] as String,
+                packet.body['size'] as int,
+                packet.body['chunks'] as int,
+                packet.body['ttl'] is int
+                    ? DateTime.now().add(
+                        Duration(seconds: packet.body['ttl'] as int),
+                      )
+                    : null,
+              );
+            }
+          case 'attachmentChunk':
+            _receiveAttachmentChunk(packet);
           case 'ack':
             for (final note in notes) {
               if (note.mine && note.id == packet.body['id']) {
@@ -571,6 +635,152 @@ class LanternController extends ChangeNotifier {
     _notify();
   }
 
+  void _receiveAttachmentChunk(Packet packet) {
+    final id = packet.body['transfer'] as String;
+    final transfer = _incomingAttachments[id];
+    if (transfer == null) {
+      return;
+    }
+    final now = DateTime.now();
+    if (now.difference(transfer.createdAt).inSeconds >= 120 ||
+        (transfer.expiresAt != null && !now.isBefore(transfer.expiresAt!))) {
+      _incomingAttachments.remove(id);
+      return;
+    }
+    final index = packet.body['index'] as int;
+    final bytes = base64Decode(packet.body['data'] as String);
+    final expected = index == transfer.count - 1
+        ? transfer.size - index * attachmentChunkBytes
+        : attachmentChunkBytes;
+    if (index >= transfer.count || bytes.length != expected) {
+      _incomingAttachments.remove(id);
+      return;
+    }
+    final existing = transfer.chunks[index];
+    if (existing != null) {
+      if (!listEquals(existing, bytes)) {
+        _incomingAttachments.remove(id);
+      }
+      return;
+    }
+    transfer.chunks[index] = bytes;
+    if (transfer.chunks.length != transfer.count) {
+      return;
+    }
+    _incomingAttachments.remove(id);
+    final assembled = Uint8List(transfer.size);
+    for (var part = 0; part < transfer.count; part++) {
+      assembled.setRange(
+        part * attachmentChunkBytes,
+        part * attachmentChunkBytes + transfer.chunks[part]!.length,
+        transfer.chunks[part]!,
+      );
+    }
+    if (!validAttachment(assembled, transfer.mime)) {
+      return;
+    }
+    _receivedNote(
+      Note(
+        id,
+        transfer.mime.startsWith('image/') ? 'Photo' : 'Voice note',
+        false,
+        now,
+        Delivery.delivered,
+        expiresAt: transfer.expiresAt,
+        attachmentBytes: assembled,
+        attachmentMime: transfer.mime,
+      ),
+    );
+    unawaited(
+      _sendPacket(Packet('ack', newId(), {'id': id})).catchError((Object _) {}),
+    );
+  }
+
+  Future<bool> sendAttachment(Uint8List bytes, String mime) async {
+    final peer = connected;
+    if (peer == null || !foreground || !active || sendingAttachment) {
+      return false;
+    }
+    if (!validAttachment(bytes, mime)) {
+      error =
+          'Choose a JPEG/PNG photo up to 2048 pixels or an M4A voice note, no larger than 1 MB.';
+      _notify();
+      return false;
+    }
+    final epoch = ++_attachmentSendEpoch;
+    sendingAttachment = true;
+    final immutable = Uint8List.fromList(bytes);
+    final ttl = messageLifetimeSeconds;
+    final note = Note(
+      newId(),
+      mime.startsWith('image/') ? 'Photo' : 'Voice note',
+      true,
+      DateTime.now(),
+      Delivery.sending,
+      expiresAt: ttl == null
+          ? null
+          : DateTime.now().add(Duration(seconds: ttl)),
+      attachmentBytes: immutable,
+      attachmentMime: mime,
+    );
+    notes.add(note);
+    _trimNotes();
+    _notify();
+    final count =
+        (immutable.length + attachmentChunkBytes - 1) ~/ attachmentChunkBytes;
+    final deadline = DateTime.now().add(const Duration(minutes: 2));
+    try {
+      await _sendPacket(
+        Packet('attachmentStart', note.id, {
+          'mime': mime,
+          'size': immutable.length,
+          'chunks': count,
+          if (ttl != null) 'ttl': ttl,
+        }),
+      ).timeout(const Duration(seconds: 10));
+      for (var index = 0; index < count; index++) {
+        if (connected != peer ||
+            epoch != _attachmentSendEpoch ||
+            !foreground ||
+            DateTime.now().isAfter(deadline) ||
+            (note.expiresAt != null &&
+                !DateTime.now().isBefore(note.expiresAt!))) {
+          throw StateError('Attachment transfer ended before completion.');
+        }
+        final start = index * attachmentChunkBytes;
+        final end = (start + attachmentChunkBytes).clamp(0, immutable.length);
+        await _sendPacket(
+          Packet('attachmentChunk', newId(), {
+            'transfer': note.id,
+            'index': index,
+            'data': base64Encode(immutable.sublist(start, end)),
+          }),
+        ).timeout(const Duration(seconds: 10));
+        if (index + 1 < count) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+      }
+      if (connected != peer || epoch != _attachmentSendEpoch) {
+        return false;
+      }
+      if (note.delivery == Delivery.sending) {
+        note.delivery = Delivery.sent;
+      }
+      return true;
+    } catch (e) {
+      note.delivery = Delivery.failed;
+      if (connected == peer && epoch == _attachmentSendEpoch) {
+        error = describe(e);
+      }
+      return false;
+    } finally {
+      if (epoch == _attachmentSendEpoch) {
+        sendingAttachment = false;
+      }
+      _notify();
+    }
+  }
+
   Future<void> _quietCall(String method, Map<String, dynamic> args) async {
     try {
       await transport.call(method, args);
@@ -588,6 +798,18 @@ class LanternController extends ChangeNotifier {
   }
 
   void _trimNotes() {
+    // Media is memory-only; retain at most 8 MiB across the whole conversation.
+    var mediaBytes = notes.fold<int>(
+      0,
+      (sum, note) => sum + (note.attachmentBytes?.length ?? 0),
+    );
+    while (mediaBytes > 8 * maxAttachmentBytes) {
+      final index = notes.indexWhere((note) => note.attachmentBytes != null);
+      if (index < 0) {
+        break;
+      }
+      mediaBytes -= notes.removeAt(index).attachmentBytes!.length;
+    }
     if (notes.length > 200) {
       notes.removeRange(0, notes.length - 200);
     }
@@ -733,6 +955,9 @@ class LanternController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    ++_attachmentSendEpoch;
+    _incomingAttachments.clear();
+    onNoteReceived = null;
     ++_locationEpoch;
     _events.cancel();
     _expiry.cancel();

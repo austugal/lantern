@@ -38,6 +38,11 @@ Android connects to Android; iPhone connects to iPhone. Each mobile session supp
 | Feature | What the phone app does |
 | --- | --- |
 | Private text messages | Encrypted nearby connection, receipts and visible failures |
+| Emojis, photos and voice notes | Emoji text, camera/gallery photo attachments and short recorded voice messages |
+| Message notifications | Optional generic local alerts when messages arrive over an active session |
+| Torch and SOS flash | Steady light or repeating Morse SOS; immediate Stop, switches off on background |
+| GPS map | Optional online street map; save a small basic area offline before losing internet |
+| Find me / I need help | Review and send coordinates, accuracy and fix time to the connected colleague |
 | Disappearing messages | Optional 1-minute, 5-minute, 15-minute or 1-hour expiry |
 | Location sharing | Separate opt-in, stop button, 15-minute limit; stale fixes disappear |
 | Local navigation | GPS breadcrumbs, named waypoints, distance and true-north bearing |
@@ -48,6 +53,10 @@ Android connects to Android; iPhone connects to iPhone. Each mobile session supp
 | Offline guide | Searchable built-in guidance and a staff request template |
 
 Navigation gives a direction and straight-line distance, **not a road route or a safe path**. Mobile GPS requires permission and a usable fix. Desktop browser location may depend on an online provider; manually entered coordinates are supported and labelled.
+
+The mobile map can save roads, building outlines and landmarks around a GPS position (about 500 metres) for offline viewing. It is a basic local map, not a complete city download or a live disaster map. Saving an area requires internet beforehand and confirmation to send its coordinate to the map-data provider. Online maps are opt-in. Saved areas remain on the phone until deleted. See [maps and finding a colleague](docs/MAPS.md).
+
+Photo and voice messages use the same nearby connection, with or without internet present. Notifications do not extend radio range or enable background delivery. Camera, microphone and notification access is requested when used. Torch SOS is a visual signal only. “I need help” messages reach only the connected colleague; app receipt is not confirmation that someone read the request or that rescue is coming.
 
 Messages, coordinates, trails and waypoints are not saved as permanent history. Mobile trails and waypoints remain in memory until cleared or the app closes; desktop locking clears session data and timers. A recipient can still copy or screenshot information.
 
