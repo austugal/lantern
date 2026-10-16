@@ -83,3 +83,11 @@ pyinstaller --noconfirm --onefile --name Lantern --collect-data lantern packagin
 The included desktop workflow builds on Linux, Windows and macOS and uploads preview artifacts. It does not publish a release automatically. Production code signing, notarization, platform testing and external security review remain release gates.
 
 See [desktop setup and troubleshooting](docs/DESKTOP.md), [verification](docs/VERIFICATION.md), [roadmap](docs/ROADMAP.md), and [protocol](docs/PROTOCOL.md). License: MIT.
+
+## Mobile application
+
+The Android and iPhone Flutter application lives in [mobile/](mobile/README.md). Desktop remains available separately. Mobile CI builds an Android testing APK and iOS simulator/unsigned device artifacts; iPhone installation requires Apple signing.
+
+Lantern is intended for nearby colleagues in hotels, events, warehouses and other workplaces without internet access. Radio range, walls and platform restrictions apply. Current mobile sessions are same-platform, foreground and peer-to-peer; they do not yet provide hotel-wide group coverage or desktop interoperability. Treat this preview as a tested prototype, not a replacement for emergency communications.
+
+See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) for completed checks and physical-device testing limitations.

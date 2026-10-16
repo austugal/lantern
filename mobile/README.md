@@ -68,11 +68,31 @@ Transport encryption is provided by Google Nearby / Apple Multipeer. The iOS flo
 
 See [architecture and protocol](docs/ARCHITECTURE.md) for implementation boundaries and primary SDK references.
 
-## Implementation status
+## Mobile field tools
 
-The initial remote contained only this project's one-line README; the Copilot Windows worktree was never pushed. This implementation is independently rebuilt from the handoff. Local Flutter dependency setup was blocked by automatic approval review after attempting a cloud metadata connection; offline Dart formatting was available. The connected GitHub integration rejected branch creation with HTTP 403 (Resource not accessible by integration), so no remote branch, PR or CI run was created. Automated Flutter tests/builds remain unverified; physical device checks remain manual. The supplied archive includes the full source and CI workflow.
+- Message expiry: session-only, 1 minute, 5 minutes, 15 minutes or 1 hour. The recipient removes expired messages; screenshots and modified clients remain outside control.
+- Local GPS navigation: bearing and distance to a shared position, trail start or a named waypoint. No maps or obstacle-aware routes. Waypoints and trails are kept in memory.
+- Guardian consent: ask the currently connected person to accept guardian alerts. An accepted guardian can receive a check-in alert while both apps remain open and connected. Alerts do not automatically include coordinates; location sharing is separate.
+- Foreground check-in timers: cancelled when the session ends or the app backgrounds. These are not background rescue monitoring.
+- Tappable help explains each feature before use.
 
-See [verification record](docs/VERIFICATION.md) for the exact checks performed and [import instructions](docs/IMPORT.md) for publishing the supplied Git bundle without touching your original Copilot worktree.
+## Build status and distribution
+
+The mobile app lives under `mobile/` alongside the preserved Python desktop app.
+GitHub Actions runs Flutter analysis/tests and builds an Android testing APK, an
+iOS simulator app, and an unsigned iOS device app. Check the Mobile workflow for
+the status of a specific commit; source availability alone does not establish a
+successful build. These are development previews, not store releases.
+
+Android testing APKs use a development signing key. Back up anything important
+before replacing an older testing install; independently built debug keys can differ.
+iOS simulator packages run on a Mac simulator. Unsigned device packages require
+Apple signing/provisioning before installation; they are not TestFlight releases.
+No phone-to-phone, field-range or battery-lifetime test has been performed here.
+
+The mobile protocol is separate from the Python desktop protocol. Desktop/mobile
+interoperability, Android/iPhone interoperability, mesh relaying, LoRa, voice,
+background alerts and a mobile encrypted evidence vault are not implemented.
 
 ## License
 

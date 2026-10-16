@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'protocol.dart';
 import 'services.dart';
+import 'navigation.dart';
 
 class Peer {
   const Peer(this.id, this.name);
@@ -19,7 +19,15 @@ class Invitation {
 enum Delivery { sending, sent, delivered, failed }
 
 class Note {
-  Note(this.id, this.text, this.mine, this.time, this.delivery);
+  Note(
+    this.id,
+    this.text,
+    this.mine,
+    this.time,
+    this.delivery, {
+    this.expiresAt,
+  });
+  final DateTime? expiresAt;
   final String id, text;
   final bool mine;
   final DateTime time;
@@ -42,6 +50,14 @@ class LanternController extends ChangeNotifier {
       },
     );
     _expiry = Timer.periodic(const Duration(seconds: 5), (_) {
+      final before = notes.length;
+      notes.removeWhere(
+        (note) =>
+            note.expiresAt != null && !DateTime.now().isBefore(note.expiresAt!),
+      );
+      if (notes.length != before) {
+        _notify();
+      }
       if (remoteLocation != null &&
           DateTime.now().difference(remoteLocation!.receivedAt).inSeconds >
               30) {
@@ -57,7 +73,7 @@ class LanternController extends ChangeNotifier {
   late final Timer _expiry;
   StreamSubscription<Fix>? _fixes;
   Timer? _shareDeadline, _inviteDeadline;
-  final _seen = LinkedHashSet<String>();
+  final _seen = <String>{};
   final peers = <String, Peer>{};
   final notes = <Note>[];
   String name = '', error = '';
@@ -69,6 +85,193 @@ class LanternController extends ChangeNotifier {
   String? requesting;
   RemoteLocation? remoteLocation;
   DateTime? shareUntil;
+  int? messageLifetimeSeconds;
+  bool guardianRequested = false, guardianAccepted = false;
+  bool _guardianRequestPending = false, _servingGuardian = false;
+  String guardianStatus = '', incomingAlert = '';
+  DateTime? checkInUntil;
+  Timer? _checkInTimer, _guardianDeadline;
+  bool navigating = false;
+  Fix? localFix;
+  final breadcrumbs = <Fix>[];
+  final waypoints = <String, Fix>{};
+  StreamSubscription<Fix>? _navigationFixes;
+  int _navigationEpoch = 0;
+
+  void setMessageLifetime(int? seconds) {
+    if (seconds != null && ![60, 300, 900, 3600].contains(seconds)) {
+      return;
+    }
+    messageLifetimeSeconds = seconds;
+    _notify();
+  }
+
+  Future<void> requestGuardian() async {
+    if (connected == null || _guardianRequestPending || guardianAccepted) {
+      return;
+    }
+    _guardianRequestPending = true;
+    final epoch = _epoch;
+    final peer = connected;
+    _guardianDeadline?.cancel();
+    _guardianDeadline = Timer(const Duration(seconds: 35), () {
+      if (_guardianRequestPending) {
+        _guardianRequestPending = false;
+        guardianStatus = 'Guardian request expired. Try again.';
+        _notify();
+      }
+    });
+    guardianStatus = 'Waiting for this peer to accept.';
+    try {
+      await _sendPacket(Packet('guardianRequest', newId(), {}));
+    } catch (e) {
+      if (_epoch != epoch || connected != peer) {
+        return;
+      }
+      _guardianRequestPending = false;
+      _guardianDeadline?.cancel();
+      guardianStatus = 'Request failed.';
+      error = describe(e);
+    }
+    _notify();
+  }
+
+  Future<void> respondGuardian(bool accept) async {
+    if (!guardianRequested) {
+      return;
+    }
+    guardianRequested = false;
+    _servingGuardian = accept;
+    try {
+      await _sendPacket(
+        Packet('guardianResponse', newId(), {'accepted': accept}),
+      );
+    } catch (e) {
+      _servingGuardian = false;
+      error = describe(e);
+    }
+    _notify();
+  }
+
+  void armCheckIn(Duration duration) {
+    if (!guardianAccepted ||
+        connected == null ||
+        !foreground ||
+        duration.inSeconds < 60 ||
+        duration.inSeconds > 3600) {
+      return;
+    }
+    _checkInTimer?.cancel();
+    checkInUntil = DateTime.now().add(duration);
+    guardianStatus = 'Check-in armed. Keep Lantern open and connected.';
+    _checkInTimer = Timer(duration, () {
+      checkInUntil = null;
+      unawaited(sendSos());
+    });
+    _notify();
+  }
+
+  void cancelCheckIn() {
+    _checkInTimer?.cancel();
+    checkInUntil = null;
+    guardianStatus = 'Check-in cancelled.';
+    _notify();
+  }
+
+  Future<void> sendSos() async {
+    if (!guardianAccepted || connected == null || !foreground) {
+      guardianStatus = 'No accepted, connected guardian. Alert not sent.';
+      _notify();
+      return;
+    }
+    final epoch = _epoch;
+    final peer = connected;
+    try {
+      // No automatic location escalation: separate location sharing remains opt-in.
+      await _sendPacket(Packet('guardianAlert', newId(), {}));
+      if (_epoch != epoch || connected != peer) {
+        return;
+      }
+      guardianStatus = 'Alert submitted to connection; receipt not confirmed.';
+    } catch (e) {
+      if (_epoch != epoch || connected != peer) {
+        return;
+      }
+      guardianStatus = 'Alert failed. Use another way to contact help.';
+      error = describe(e);
+    }
+    _notify();
+  }
+
+  Future<void> startNavigation() async {
+    if (navigating || !foreground) {
+      return;
+    }
+    final epoch = ++_navigationEpoch;
+    try {
+      await location.authorize();
+      if (epoch != _navigationEpoch || !foreground) {
+        return;
+      }
+      navigating = true;
+      _navigationFixes = location.fixes.listen(
+        (fix) {
+          if (!navigating || epoch != _navigationEpoch || !validFix(fix)) {
+            return;
+          }
+          localFix = fix;
+          if (breadcrumbs.isEmpty ||
+              vectorBetween(breadcrumbs.last, fix).distanceMeters >= 5) {
+            breadcrumbs.add(fix);
+            if (breadcrumbs.length > 1000) {
+              breadcrumbs.removeAt(0);
+            }
+          }
+          _notify();
+        },
+        onError: (Object e) {
+          error = describe(e);
+          unawaited(stopNavigation());
+        },
+        onDone: () => unawaited(stopNavigation()),
+      );
+    } catch (e) {
+      error = describe(e);
+    }
+    _notify();
+  }
+
+  Future<void> stopNavigation() async {
+    ++_navigationEpoch;
+    navigating = false;
+    localFix = null;
+    final subscription = _navigationFixes;
+    _navigationFixes = null;
+    _notify();
+    await subscription?.cancel();
+  }
+
+  void saveWaypoint(String name) {
+    name = name.trim();
+    if (localFix == null ||
+        name.isEmpty ||
+        name.length > 40 ||
+        waypoints.length >= 50) {
+      return;
+    }
+    waypoints[name] = localFix!;
+    _notify();
+  }
+
+  void clearTrail() {
+    breadcrumbs.clear();
+    waypoints.clear();
+    _notify();
+  }
+
+  NavigationVector? navigationTo(Fix target) =>
+      localFix == null ? null : vectorBetween(localFix!, target);
+
   void _notify() {
     if (!_disposed) {
       notifyListeners();
@@ -147,6 +350,15 @@ class LanternController extends ChangeNotifier {
   }
 
   void _resetConnection() {
+    _guardianDeadline?.cancel();
+    _checkInTimer?.cancel();
+    checkInUntil = null;
+    guardianRequested = false;
+    guardianAccepted = false;
+    _guardianRequestPending = false;
+    _servingGuardian = false;
+    incomingAlert = '';
+    guardianStatus = 'Session ended. Check-in cancelled.';
     unawaited(stopSharing(notifyPeer: false));
     connected = null;
     invitation = null;
@@ -311,6 +523,11 @@ class LanternController extends ChangeNotifier {
                 false,
                 DateTime.now(),
                 Delivery.delivered,
+                expiresAt: packet.body['ttl'] is int
+                    ? DateTime.now().add(
+                        Duration(seconds: packet.body['ttl'] as int),
+                      )
+                    : null,
               ),
             );
             _trimNotes();
@@ -331,6 +548,24 @@ class LanternController extends ChangeNotifier {
             );
           case 'locationStop':
             remoteLocation = null;
+          case 'guardianRequest':
+            if (!_servingGuardian) {
+              guardianRequested = true;
+            }
+          case 'guardianResponse':
+            if (_guardianRequestPending) {
+              _guardianRequestPending = false;
+              _guardianDeadline?.cancel();
+              guardianAccepted = packet.body['accepted'] == true;
+              guardianStatus = guardianAccepted
+                  ? 'Guardian accepted for this connection.'
+                  : 'Guardian declined.';
+            }
+          case 'guardianAlert':
+            if (_servingGuardian) {
+              incomingAlert =
+                  'Your connected peer sent an assistance alert. Contact them now.';
+            }
         }
     }
     _notify();
@@ -363,12 +598,26 @@ class LanternController extends ChangeNotifier {
     if (connected == null || text.isEmpty || text.length > 1000) {
       return false;
     }
-    final note = Note(newId(), text, true, DateTime.now(), Delivery.sending);
+    final note = Note(
+      newId(),
+      text,
+      true,
+      DateTime.now(),
+      Delivery.sending,
+      expiresAt: messageLifetimeSeconds == null
+          ? null
+          : DateTime.now().add(Duration(seconds: messageLifetimeSeconds!)),
+    );
     notes.add(note);
     _trimNotes();
     _notify();
     try {
-      await _sendPacket(Packet('text', note.id, {'text': text}));
+      await _sendPacket(
+        Packet('text', note.id, {
+          'text': text,
+          if (messageLifetimeSeconds != null) 'ttl': messageLifetimeSeconds,
+        }),
+      );
       if (note.delivery == Delivery.sending) {
         note.delivery = Delivery.sent;
       }
@@ -406,6 +655,9 @@ class LanternController extends ChangeNotifier {
               epoch != _locationEpoch ||
               connected?.id != peer ||
               !foreground) {
+            return;
+          }
+          if (!validFix(fix)) {
             return;
           }
           final now = DateTime.now();
@@ -468,6 +720,7 @@ class LanternController extends ChangeNotifier {
   void setForeground(bool value) {
     foreground = value;
     if (!value) {
+      unawaited(stopNavigation());
       unawaited(stop());
     }
   }
@@ -483,6 +736,10 @@ class LanternController extends ChangeNotifier {
     ++_locationEpoch;
     _events.cancel();
     _expiry.cancel();
+    _guardianDeadline?.cancel();
+    _checkInTimer?.cancel();
+    ++_navigationEpoch;
+    _navigationFixes?.cancel();
     _fixes?.cancel();
     _shareDeadline?.cancel();
     _inviteDeadline?.cancel();

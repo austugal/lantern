@@ -1,16 +1,18 @@
-# Verification record
+# Mobile verification record
 
-## Passed in this environment
+The root `.github/workflows/mobile.yml` is the authoritative build pipeline.
+It runs Flutter 3.35.7 analysis and tests, Android debug APK compilation, iOS
+simulator compilation, and an unsigned iOS device build.
 
-- Dart source parsing and formatting for lib/, test/ and tool/.
-- Standalone protocol check: 10,019 checks, including Unicode, version/size validation, invalid coordinates, receipts, revocation and 10,000 malformed fuzz inputs.
-- iOS property-list parsing and Android XML parsing.
-- Git whitespace/diff check.
+Local checks: direct offline Dart formatting/parsing, 10,019 standalone packet
+checks, Android XML and iOS plist parsing. Do not confuse these with a native build.
 
-## Not run
+Initial CI caught four lint findings in the original foundation. Subsequent commits
+fix those findings and add feature tests; use the latest workflow result rather
+than an earlier run. Desktop validation is recorded separately in the repository's
+`docs/DESKTOP-QA-2026-10-16.md`.
 
-- Flutter analyzer, widget/controller test suite, Android APK build, iOS build, physical-device radio/location tests.
-- Local Flutter setup was stopped by automatic approval review after an unexpected request to cloud metadata address 169.254.169.254. The blocked setup was not retried; only the installed Dart binary's offline parsing/formatting and standalone protocol checks were used.
-- GitHub publication and Actions: integration returned HTTP 403, `Resource not accessible by integration`, on branch creation. CLI Git also lacked push credentials. No remote modifications or PR were made.
-
-Do not interpret source completeness or the offline checks as native build validation. Run the included CI workflow and physical-device acceptance checklist after restoring repository write access.
+Physical radios, GPS on actual devices, permission denial on real OS builds,
+background/sleep behaviour, battery use, screen-reader/large-text behaviour and
+cross-device range still require the device checklist. No APK/iOS store publication
+or independent security certification is implied by a successful compiler run.
