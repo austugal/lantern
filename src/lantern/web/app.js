@@ -85,3 +85,34 @@ document.addEventListener('submit', event => {
   $('control-help-copy').textContent = 'Turn help off before submitting this form. Your values have not been sent.';
   $('control-help').showModal();
 }, true);
+
+
+// Fixed local reference content: no model, network calls, state reads or app actions.
+const guideTopics = [
+  {title:'Connect two computers', tags:'connect pair pairing invite invitation network wifi hotspot', text:'Run Lantern on both computers on the same LAN, Wi-Fi or hotspot. Generate invitations using each computer’s LAN IPv4 address, not 127.0.0.1 (unless both instances run on one computer). Exchange invitations both ways and compare every safety-number group through a trusted channel. Pair only when they match. Then each recipient chooses Allow messages.'},
+  {title:'A message is not arriving', tags:'troubleshoot firewall receipt offline connection failed', text:'Check that both apps are open, computers are awake, and the recipient has allowed messages. After unlocking, exchange fresh invitations because the UDP port may change. Check private-network firewall permission for Lantern and whether hotspot/client isolation blocks devices. Do not disable the firewall. Received means the app acknowledged the message, not that a person read it; no receipt means delivery is unconfirmed.'},
+  {title:'Write a clear staff request', tags:'staff team workplace hotel request template tasks', text:'Describe the task, where it is needed, its urgency and the reply you need. Use an agreed room or asset reference; leave guest names, payment details, passwords and sensitive personal data out of messages. Copy this blank template, fill it in, and send it yourself to an approved recipient.', template:'Task: [what needs doing]\nLocation / asset reference: [agreed non-personal reference]\nPriority: [routine / urgent]\nNeeded by: [time and timezone]\nPlease reply with: [accepted / ETA / completed]\nDetails: [minimum necessary information]'},
+  {title:'Share location deliberately', tags:'sharing privacy precision revoke location gps', text:'Set a fresh position under Places & trails, then choose Share location on the intended person’s card. Sharing is separate from messaging, lasts at most 15 minutes and stops when this page is hidden or stops responding. Stop sharing revokes location permissions. Offline peers may not receive a revocation immediately. Precision is approximate, and recipients can keep copies. Browser location may require an online provider; manual positions are not GPS measurements.'},
+  {title:'Guardians and background limits', tags:'guardian sos timer check-in background sleep emergency', text:'Choose guardians separately and keep a position from the last two minutes. The desktop timer needs Lantern running, an awake computer and a reachable guardian. Sleep, shutdown or locking prevents monitoring; locking also cancels the timer. If the timer is overdue without a fresh position, no alert is sent until one is available while the session remains running. Guardian alerts are not emergency services or a promise of rescue.'},
+  {title:'Lock and protect your vault', tags:'security password passphrase vault lock permissions', text:'Lock & disconnect revokes issued permissions, closes the transport and clears session messages, positions, waypoints and trails. Your encrypted identity remains on this computer. There is no passphrase reset. Do not share the private local launcher URL. An unlocked app can still be compromised by malware or an administrator; no tool is immune to hacking.'}
+];
+function renderGuide(){
+  const terms=$('guide-search').value.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
+  const topics=guideTopics.filter(topic=>terms.every(term=>(topic.title+' '+topic.tags+' '+topic.text).toLocaleLowerCase().includes(term)));
+  $('guide-count').textContent=topics.length ? topics.length+' guidance topic(s)' : 'No matching topic. Try pairing, firewall, staff, privacy or timer.';
+  const results=$('guide-results');results.replaceChildren();
+  for(const topic of topics){
+    const article=element('article');article.append(element('h3',topic.title),element('p',topic.text));
+    if(topic.template){
+      const template=element('textarea');template.readOnly=true;template.value=topic.template;template.setAttribute('aria-label','Blank staff request template');
+      const copy=btn('Copy blank template','Copy only this blank template; nothing is sent',async()=>{
+        try{await navigator.clipboard.writeText(topic.template);toast('Blank template copied. Fill it in and send it yourself.');}
+        catch{template.focus();template.select();toast('Clipboard unavailable. Copy the selected template manually.');}
+      });copy.className='secondary';article.append(template,copy);
+    }
+    results.append(article);
+  }
+}
+$('open-guide').onclick=()=>{renderGuide();$('offline-guide').showModal();$('guide-search').focus();};
+$('close-guide').onclick=()=>$('offline-guide').close();
+$('guide-search').addEventListener('input',renderGuide);
