@@ -4,26 +4,24 @@
 
 [View the still banner](assets/lantern-banner.png)
 
-**Talk nearby. Share your location by choice. Keep control of your data.**
+**Mobile-first communication for people working nearby, even without internet.**
 
-Lantern is an open-source communication tool with **mobile and desktop previews**. It is designed for people together in person: colleagues in a hotel, an event team, warehouse staff, friends or family. After installation, nearby conversations can work without an internet connection.
+Lantern is a **mobile-first, open-source nearby messaging tool** for Android and iPhone, with a separate desktop companion preview. The aim is simple: help colleagues exchange requests and updates when internet access is unavailable. After installation, phones communicate through their nearby radios; they still need Wi-Fi/Bluetooth enabled, suitable permissions and a working local connection. They do not need an internet-connected Wi-Fi access point for nearby messaging.
+
+The current mobile preview connects **two phones of the same platform with both apps open**. It is a starting point for workplace trials, not yet a hotel-wide team network.
 
 **[Download Lantern](https://github.com/austugal/lantern/releases)** · [Mobile setup](mobile/README.md) · [Desktop setup](docs/DESKTOP.md)
 
-## Which download do I need?
+## Mobile app — Android and iPhone
 
 | Your device | Download and use |
 | --- | --- |
 | Android phone | Download the Android [**testing APK**](https://github.com/austugal/lantern/releases/download/mobile-preview-928a3c3c4bed/Lantern-Android-testing.apk), open it on your phone and allow installation from that source when prompted. This is a development-signed testing app, not a Play Store release. |
 | iPhone | The iPhone app has compiled successfully. [Mobile downloads](https://github.com/austugal/lantern/releases/tag/mobile-preview-928a3c3c4bed) include a **Mac simulator app** and an **unsigned device app**. Installing on a real iPhone still requires Apple signing and provisioning; there is no TestFlight or App Store release yet. |
-| Windows | Download the Windows desktop ZIP, extract it and run `Lantern.exe`. No Python installation required for the packaged app. |
-| Mac or Linux | Download the matching desktop archive and run `Lantern`. The local interface opens in your browser. Desktop binaries are unsigned; platform trust checks may apply. |
 
-Keep the desktop and mobile downloads separate. They are two implementations and **do not yet talk to each other**.
+Android uses Google Nearby Connections and requires Google Play services. iPhone uses Apple Multipeer Connectivity. The adapters do not yet connect Android to iPhone.
 
-## How does it work?
-
-### Two phones
+### How two colleagues use it on phones
 
 1. Install Lantern on **two Android phones** or **two iPhones with a signed build**. Keep both apps open and Wi-Fi/Bluetooth enabled.
 2. Choose a display name and turn on Lantern. Grant the requested nearby-device permissions.
@@ -35,6 +33,53 @@ Use the small **help buttons** for short instructions. Opening help does not sta
 
 Android connects to Android; iPhone connects to iPhone. Each mobile session supports **one connected peer**. Switching apps or locking the phone stops the session, cancels check-in timers and clears its messages. This preview has no background messaging.
 
+### Mobile capabilities
+
+| Feature | What the phone app does |
+| --- | --- |
+| Private text messages | Encrypted nearby connection, receipts and visible failures |
+| Disappearing messages | Optional 1-minute, 5-minute, 15-minute or 1-hour expiry |
+| Location sharing | Separate opt-in, stop button, 15-minute limit; stale fixes disappear |
+| Local navigation | GPS breadcrumbs, named waypoints, distance and true-north bearing |
+| Guardian alerts | Connected peer must accept the role; alerts do not automatically send location |
+| Check-in timer | Foreground only; cancels on disconnect or background |
+| Local profile | Saves your display name |
+| Simple instructions | Tappable help beside features |
+| Offline guide | Searchable built-in guidance and a staff request template |
+
+Navigation gives a direction and straight-line distance, **not a road route or a safe path**. Mobile GPS requires permission and a usable fix. Desktop browser location may depend on an online provider; manually entered coordinates are supported and labelled.
+
+Messages, coordinates, trails and waypoints are not saved as permanent history. Mobile trails and waypoints remain in memory until cleared or the app closes; desktop locking clears session data and timers. A recipient can still copy or screenshot information.
+
+## How hotels and other industries could use it
+
+These are proposed pilot uses of the existing one-to-one messaging feature, not claims of deployed customers, automatic dispatch or built-in department channels.
+
+| Workplace | Practical example |
+| --- | --- |
+| Hotel housekeeping | Two nearby attendants exchange a linen or supply request in a service area with poor internet access. Put the floor or work-area name in the message. |
+| Hotel maintenance | A colleague sends “Maintenance request: service corridor, light not working; please acknowledge.” The recipient replies when they accept the task. |
+| Hotel reception and operations | Nearby colleagues exchange a short operational handover during an internet outage, provided their phones can still connect locally. |
+| Events and venues | A floor attendant asks a nearby coordinator for supplies or confirms that a meeting point is ready. |
+| Warehouses and retail | Colleagues exchange an aisle/location and a stock request without using guest or public Wi-Fi. |
+| Construction and field work | Nearby colleagues share a meeting point or routine progress update; optional coordinates are useful only where GPS has a usable fix. |
+| Community groups | People together in person exchange updates when internet access is unavailable. |
+
+**Example staff message:** “Housekeeping request — Floor 2 service cupboard — need towels — routine priority — please reply when accepted.” Use work-area labels rather than guest names or booking information. The offline guide includes a template you can copy, edit and send yourself.
+
+Start with two same-platform phones and routine, noncritical tasks. Test the actual rooms, floors and service areas: walls and distance can break a connection. “Delivered” confirms app receipt, not that a colleague read or accepted the job; ask for a reply. Indoor GPS may be inaccurate, so room or area labels are often more useful.
+
+Lantern may provide an additional local communication option during an internet outage, but it cannot guarantee communication during an emergency or reach emergency services. Keep established radios, telephones and emergency procedures available. Group channels, mixed Android/iPhone teams and locked-screen delivery remain future work.
+
+## Desktop version — Windows, Mac and Linux
+
+Desktop is a separate implementation for computers on a shared LAN, Wi-Fi network or hotspot. It does not currently connect to the phone app. Internet access is not required for local conversations, but a working local network is.
+
+| Computer | Download and use |
+| --- | --- |
+| Windows | Download the Windows desktop ZIP, extract it and run `Lantern.exe`. No Python installation required for the packaged app. |
+| Mac or Linux | Download the matching desktop archive and run `Lantern`. The local interface opens in your browser. Desktop binaries are unsigned; platform trust checks may apply. |
+
 ### Two computers
 
 1. Open Lantern on both computers and join the same Wi-Fi, LAN or hotspot.
@@ -45,23 +90,7 @@ Android connects to Android; iPhone connects to iPhone. Each mobile session supp
 
 The desktop app uses the local network, not phone Bluetooth. A firewall or hotspot that isolates its clients can prevent a connection. `127.0.0.1` is only for testing on one computer. See [desktop troubleshooting](docs/DESKTOP.md).
 
-## What can Lantern do now?
-
-| Feature | Mobile | Desktop |
-| --- | --- | --- |
-| Private text messages | Encrypted nearby connection, receipts and visible failures | Signed and encrypted LAN messages with encrypted receipts |
-| Disappearing messages | Optional 1-minute, 5-minute, 15-minute or 1-hour expiry | Optional expiry; session history stays in memory |
-| Location sharing | Separate opt-in, stop button, 15-minute limit; stale fixes disappear | Separate, expiring permission; reported accuracy respected; stop/revocation controls |
-| Local navigation | GPS breadcrumbs, named waypoints, distance and true-north bearing | Local waypoints, bearings and breadcrumb legs |
-| Guardian alerts | Connected peer must accept the role; alerts do not automatically send location | Pre-authorized guardians; receipt separates network submission from app receipt |
-| Check-in timer | Foreground only; cancels on disconnect or background | Runs while the desktop process is alive; requires a recent position at trigger time |
-| Local profile | Saves your display name | Passphrase-protected encrypted vault |
-| Simple instructions | Tappable help beside features | **Explain controls** mode |
-| Offline guide | Searchable built-in guidance and a staff request template | Searchable built-in guidance and a staff request template |
-
-Navigation gives a direction and straight-line distance, **not a road route or a safe path**. Mobile GPS requires permission and a usable fix. Desktop browser location may depend on an online provider; manually entered coordinates are supported and labelled.
-
-Messages, coordinates, trails and waypoints are not saved as permanent history. Mobile trails and waypoints remain in memory until cleared or the app closes; desktop locking clears session data and timers. A recipient can still copy or screenshot information.
+Desktop includes signed invitations and safety-number verification, encrypted messages and receipts, a passphrase-protected profile vault, separate expiring permissions, optional location sharing, guardian alerts, local waypoints and breadcrumbs. Its **Explain controls** mode and searchable offline guide explain each feature. See [desktop setup](docs/DESKTOP.md) for full instructions.
 
 ## Practical limits
 
@@ -74,6 +103,16 @@ Messages, coordinates, trails and waypoints are not saved as permanent history. 
 Lantern is an experimental preview. Do not use it as your only emergency communication system. An alert receipt is not a human response, and mobile guardian alerts do not currently have receipt confirmation.
 
 ## Privacy and security
+
+**Secure communication is a core design priority.** Lantern is a working, open-source developer preview with downloadable builds and published automated test results. It is not an independently certified or audited security product.
+
+- **Encrypted communication:** desktop messages are signed and encrypted; mobile sessions use the native platform's encrypted transport.
+- **Explicit consent:** people accept connections; location sharing and guardian roles require separate choices.
+- **Limited exposure:** location sharing expires, stale positions are removed, and mobile sessions end when the app backgrounds.
+- **Reviewable releases:** download from this repository's release pages. The mobile release includes `SHA256SUMS.txt` for file-integrity checking; checksums do not prove a file is harmless.
+- **Verified checks:** 91 desktop tests and 28 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
+
+The Android APK uses development signing and desktop packages are unsigned. No “anti-hack”, malware-free or unhackable guarantee is made. Test on noncritical devices and workflows before operational use.
 
 There is no Lantern account server, advertising or cloud message relay. The desktop interface is served locally on `127.0.0.1`, requires a launch token and uses no external scripts, fonts or maps. Android uses Google Nearby Connections and Google Play services; that SDK can collect diagnostics under Google's policies. iPhone uses Apple's encrypted Multipeer Connectivity.
 
@@ -93,7 +132,9 @@ See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification
 
 ## Build from source
 
-Desktop requires Python 3.10+. First installation downloads dependencies:
+**Mobile first:** use Flutter 3.35.7 and the [mobile build instructions](mobile/README.md). The Android and iOS native projects are in `mobile/`.
+
+**Desktop:** requires Python 3.10+. First installation downloads dependencies:
 
 ```sh
 python -m venv .venv
@@ -107,4 +148,8 @@ The source archive also includes `Start-Lantern.cmd` and `Start-Lantern.sh`. The
 
 Mobile uses Flutter 3.35.7; see [mobile build instructions](mobile/README.md). GitHub Actions builds preview downloads, and the release workflow publishes them. Store submission, production signing and notarization are not configured.
 
-[Roadmap](docs/ROADMAP.md) · [License: MIT](LICENSE)
+## Copyright and licence
+
+Copyright © 2026 Tiago Fitas (austugal). Lantern is distributed under the [MIT License](LICENSE). Existing third-party notices remain in place, including [Flutter scaffold attribution](mobile/docs/FLUTTER-LICENSE). This notice does not represent a copyright or trademark registration.
+
+[Roadmap](docs/ROADMAP.md) · [Community introduction](docs/COMMUNITY-INTRODUCTION.md)

@@ -95,3 +95,5 @@ The platform projects are included. Do not use `flutter create --overwrite`: it 
 The authoritative workflow is [../.github/workflows/mobile.yml](../.github/workflows/mobile.yml). Release signing, provisioning and store submission are not configured. [Architecture and SDK references](docs/ARCHITECTURE.md).
 
 Application code: MIT. Flutter platform scaffolding retains its [BSD license](docs/FLUTTER-LICENSE).
+
+Copyright © 2026 Tiago Fitas (austugal). See [MIT License](LICENSE).
