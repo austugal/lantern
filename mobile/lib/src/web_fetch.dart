@@ -72,10 +72,11 @@ Future<PublicText> fetchPublicText(
 }
 
 Future<PublicText> _fetch(Uri address, PublicTextTransport source) async {
-  var uri = publicWebUri(address.toString());
-  if (uri == null) {
+  final initial = publicWebUri(address.toString());
+  if (initial == null) {
     throw const FormatException('Use a public HTTPS page address.');
   }
+  Uri uri = initial;
   for (var redirects = 0; redirects <= 3; redirects++) {
     final response = await source.get(uri);
     if ([301, 302, 303, 307, 308].contains(response.status)) {
@@ -84,12 +85,13 @@ Future<PublicText> _fetch(Uri address, PublicTextTransport source) async {
       if (target == null || redirects == 3) {
         throw const FormatException('Too many or invalid redirects.');
       }
-      uri = publicWebUri(uri.resolve(target).toString());
-      if (uri == null) {
+      final next = publicWebUri(uri.resolve(target).toString());
+      if (next == null) {
         throw const FormatException(
           'Redirect to a local or unsupported address was blocked.',
         );
       }
+      uri = next;
       continue;
     }
     if (response.status != 200) {
