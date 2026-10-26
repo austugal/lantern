@@ -4,7 +4,7 @@
 
 Base inspected: `main` at `93ad5022a9f1e311d186a301fa79e7a8d87994f6`. GitHub listed no open PRs or issues and no active CI runs when work resumed. Tracked repository files contained no active work record or AGENTS instructions. The earlier local mobile worktree was left untouched; workspace maintenance later removed that checkout, so this milestone was reconstructed against the same unchanged base and revalidated.
 
-The existing [mobile release](https://github.com/austugal/lantern/releases/tag/mobile-preview-e99ac83ace6f) passed [mobile release run 38904352555](https://github.com/austugal/lantern/actions/runs/38904352555), desktop builds and desktop CI. It remains the working download while this PR is validated.
+The preceding [mobile release](https://github.com/austugal/lantern/releases/tag/mobile-preview-e99ac83ace6f) passed [mobile release run 38904352555](https://github.com/austugal/lantern/actions/runs/38904352555), desktop builds and desktop CI. It remained the working download while this milestone was validated.
 
 This milestone implements bounded text delivery deadlines and explicit same-session retry. Native Android and iOS transport files, permissions, consent, background behaviour and desktop source remain unchanged. Mixed Android/iPhone communication still requires a separate transport milestone and physical devices.
 
@@ -32,4 +32,6 @@ GitHub's contributors API was checked again during this milestone. The current r
 
 ## Validation
 
-Local and CI results are recorded in [mobile verification](../mobile/docs/VERIFICATION.md). Existing physical-device tests remain pending.
+[PR #7](https://github.com/austugal/lantern/pull/7) merged at `2c05cf8828df6ddb48eac3243fea58b4a06dba79` after [mobile validation run 40335605064](https://github.com/austugal/lantern/actions/runs/40335605064) and desktop CI passed. The [main release run 40338496400](https://github.com/austugal/lantern/actions/runs/40338496400) then passed the 83-test suite, native builds, actual-APK emulator gate and publication. The validated [mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-2c05cf8828df) contains the Android testing APK, iPhone simulator archive, unsigned iPhone device archive and checksums.
+
+Full results are recorded in [mobile verification](../mobile/docs/VERIFICATION.md). Existing physical-device tests remain pending.

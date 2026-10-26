@@ -18,8 +18,8 @@ The current mobile preview connects **two phones of the same platform with both 
 
 | Your device | Download and use |
 | --- | --- |
-| Android phone | Download the Android [**testing APK**](https://github.com/austugal/lantern/releases/download/mobile-preview-e99ac83ace6f/Lantern-Android-testing.apk), open it on your phone and allow installation from that source when prompted. This is a development-signed testing app, not a Play Store release. |
-| iPhone | The iPhone app has compiled successfully. [Mobile downloads](https://github.com/austugal/lantern/releases/tag/mobile-preview-e99ac83ace6f) include a **Mac simulator app** and an **unsigned device app**. Installing on a real iPhone still requires Apple signing and provisioning; there is no TestFlight or App Store release yet. |
+| Android phone | Download the Android [**testing APK**](https://github.com/austugal/lantern/releases/download/mobile-preview-2c05cf8828df/Lantern-Android-testing.apk), open it on your phone and allow installation from that source when prompted. This is a development-signed testing app, not a Play Store release. |
+| iPhone | The iPhone app has compiled successfully. [Mobile downloads](https://github.com/austugal/lantern/releases/tag/mobile-preview-2c05cf8828df) include a **Mac simulator app** and an **unsigned device app**. Installing on a real iPhone still requires Apple signing and provisioning; there is no TestFlight or App Store release yet. |
 
 Android uses Google Nearby Connections and requires Google Play services. iPhone uses Apple Multipeer Connectivity. The adapters do not yet connect Android to iPhone.
 
@@ -33,7 +33,7 @@ Android uses Google Nearby Connections and requires Google Play services. iPhone
 
 Use the small **help buttons** for short instructions. Opening help does not start discovery, GPS or sharing.
 
-**Unreleased source milestone:** ordinary text becomes **Delivery unconfirmed** if submission times out or no app receipt arrives within 30 seconds of submission. It may already have arrived. **Retry message** asks for confirmation and reuses its ID, with at most two retries in the same connection. Disappearing messages and attachments do not have this retry control. There is no automatic resend or retry after reconnection. A receipt still does not mean a colleague accepted a task. The linked APK remains the validated web-reading preview until a newer release is linked.
+Ordinary text becomes **Delivery unconfirmed** if submission times out or no app receipt arrives within 30 seconds of submission. It may already have arrived. **Retry message** asks for confirmation and reuses its ID, with at most two retries in the same connection. Disappearing messages and attachments do not have this retry control. There is no automatic resend or retry after reconnection. A receipt still does not mean a colleague accepted a task.
 
 Android connects to Android; iPhone connects to iPhone. Each mobile session supports **one connected peer**. Switching apps or locking the phone stops the session, cancels check-in timers and clears its messages. This preview has no background messaging.
 
@@ -123,7 +123,7 @@ Lantern is an experimental preview. Do not use it as your only emergency communi
 - **Explicit consent:** people accept connections; location sharing and guardian roles require separate choices.
 - **Limited exposure:** location sharing expires, stale positions are removed, and mobile sessions end when the app backgrounds.
 - **Reviewable releases:** download from this repository's release pages. The mobile release includes `SHA256SUMS.txt` for file-integrity checking; checksums do not prove a file is harmless.
-- **Verified checks:** 91 desktop tests and 67 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
+- **Verified checks:** 91 desktop tests and 83 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
 
 The Android APK uses development signing and desktop packages are unsigned. No “anti-hack”, malware-free or unhackable guarantee is made. Test on noncritical devices and workflows before operational use.
 
@@ -138,7 +138,7 @@ No independent security audit or immunity from hacking is claimed. For details, 
 | Area | Completed checks |
 | --- | --- |
 | Desktop | 91 Python tests; lint and strict type checks; integration checks; Windows, macOS and Linux builds and executable checks |
-| Mobile | Flutter analyzer and **67 automated tests** passed; Android testing APK, iOS simulator app and unsigned iOS device app compiled |
+| Mobile | Flutter analyzer and **83 automated tests** passed; Android testing APK, iOS simulator app and unsigned iOS device app compiled |
 | Mobile wire format | 10,019 standalone offline packet checks passed |
 
 See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification](mobile/docs/VERIFICATION.md) for evidence and limits. Real phone-to-phone radio, GPS, range and battery tests are still outstanding. A successful build does not prove those behaviours.
