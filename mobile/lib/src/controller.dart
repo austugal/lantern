@@ -42,6 +42,34 @@ class Note {
   final bool mine;
   final DateTime time;
   Delivery delivery;
+  String? deliveryDetail;
+  int sendAttempts = 0;
+
+  // A retry must not restart a disappearing message's recipient-side lifetime.
+  bool get canRetry =>
+      mine &&
+      attachmentBytes == null &&
+      expiresAt == null &&
+      delivery == Delivery.failed &&
+      sendAttempts > 0 &&
+      sendAttempts < LanternController.maxTextSubmissions;
+}
+
+class _TextSendAttempt {
+  _TextSendAttempt(this.note, this.peer, this.session);
+  final Note note;
+  final Peer peer;
+  final int session;
+  final completion = Completer<bool>();
+  Timer? nativeDeadline, receiptDeadline;
+
+  void cancel(bool submitted) {
+    nativeDeadline?.cancel();
+    receiptDeadline?.cancel();
+    if (!completion.isCompleted) {
+      completion.complete(submitted);
+    }
+  }
 }
 
 class RemoteLocation {
@@ -81,6 +109,7 @@ class LanternController extends ChangeNotifier {
             note.expiresAt != null && !DateTime.now().isBefore(note.expiresAt!),
       );
       if (notes.length != before) {
+        _pruneTextAttempts();
         _notify();
       }
       if (remoteLocation != null &&
@@ -98,7 +127,17 @@ class LanternController extends ChangeNotifier {
   late final Timer _expiry;
   StreamSubscription<Fix>? _fixes;
   Timer? _shareDeadline, _inviteDeadline;
+  static const maxTextSubmissions = 3;
+  static const maxPendingTextSends = 8;
+  static const textSendTimeout = Duration(seconds: 10);
+  static const textReceiptTimeout = Duration(seconds: 30);
+  final _textAttempts = <String, _TextSendAttempt>{};
+  // Future.timeout cannot cancel a native call. Keep genuinely unresolved calls
+  // counted until they settle, even after a visible timeout, to bound resources.
+  final _nativeTextSends = <_TextSendAttempt>{};
+  int _textSession = 0;
   final _seen = <String>{};
+  final _receivedTextIds = <String>{};
   final peers = <String, Peer>{};
   final notes = <Note>[];
   final _incomingAttachments = <String, _IncomingAttachment>{};
@@ -394,6 +433,7 @@ class LanternController extends ChangeNotifier {
   }
 
   void _resetConnection() {
+    _cancelTextSends();
     ++_attachmentSendEpoch;
     sendingAttachment = false;
     _incomingAttachments.clear();
@@ -525,6 +565,7 @@ class LanternController extends ChangeNotifier {
           unawaited(_quietCall('disconnect', {'id': id}));
           return;
         }
+        _cancelTextSends();
         connected = Peer(
           id,
           e['name'] as String? ?? peers[id]?.name ?? 'Nearby person',
@@ -549,13 +590,25 @@ class LanternController extends ChangeNotifier {
           return;
         }
         if (packet.kind == 'text') {
+          final duplicate = _receivedTextIds.contains(packet.id);
+          // Never evict accepted text IDs during a session: the sender may
+          // retain and retry an older note after this peer has trimmed it.
+          if (!duplicate && _receivedTextIds.length >= 1024) {
+            error =
+                'Text receipt limit reached. Reconnect to receive more texts.';
+            _notify();
+            return;
+          }
+          _receivedTextIds.add(packet.id);
           unawaited(
             _sendPacket(
               Packet('ack', newId(), {'id': packet.id}),
             ).catchError((Object _) {}),
           );
-        }
-        if (!_seen.add(packet.id)) {
+          if (duplicate) {
+            return;
+          }
+        } else if (!_seen.add(packet.id)) {
           return;
         }
         if (_seen.length > 512) {
@@ -598,6 +651,8 @@ class LanternController extends ChangeNotifier {
             for (final note in notes) {
               if (note.mine && note.id == packet.body['id']) {
                 note.delivery = Delivery.delivered;
+                note.deliveryDetail = null;
+                _textAttempts.remove(note.id)?.cancel(true);
               }
             }
           case 'location':
@@ -812,44 +867,157 @@ class LanternController extends ChangeNotifier {
     if (notes.length > 200) {
       notes.removeRange(0, notes.length - 200);
     }
+    _pruneTextAttempts();
+  }
+
+  void _pruneTextAttempts() {
+    for (final attempt in _textAttempts.values.toList()) {
+      if (!notes.contains(attempt.note)) {
+        _textAttempts.remove(attempt.note.id);
+        attempt.cancel(false);
+      }
+    }
+  }
+
+  void _cancelTextSends() {
+    ++_textSession;
+    for (final attempt in _textAttempts.values) {
+      attempt.cancel(false);
+    }
+    _textAttempts.clear();
+    // Unresolved native calls are deliberately retained across reconnects.
+    // A Dart timeout cannot cancel platform work, so clearing this set would
+    // let each new session bypass the controller-lifetime resource bound.
+    _receivedTextIds.clear();
+  }
+
+  bool _currentTextAttempt(_TextSendAttempt attempt) =>
+      !_disposed &&
+      attempt.session == _textSession &&
+      identical(connected, attempt.peer) &&
+      identical(_textAttempts[attempt.note.id], attempt) &&
+      notes.contains(attempt.note) &&
+      (attempt.note.expiresAt == null ||
+          DateTime.now().isBefore(attempt.note.expiresAt!));
+
+  bool canRetry(Note note) =>
+      !_disposed &&
+      active &&
+      foreground &&
+      connected != null &&
+      notes.contains(note) &&
+      note.canRetry;
+
+  bool _textCapacityAvailable() {
+    if (_textAttempts.length < maxPendingTextSends &&
+        _nativeTextSends.length < maxPendingTextSends) {
+      return true;
+    }
+    error =
+        'Text sends are still pending. Wait for them or restart Lantern before sending more.';
+    _notify();
+    return false;
+  }
+
+  /// Retries are explicit and reuse the packet ID. A lost receipt may mean the
+  /// peer already received the message; the receiver remembers accepted text IDs
+  /// for the whole connected session.
+  Future<bool> retry(Note note) async {
+    if (!canRetry(note) || !_textCapacityAvailable()) {
+      return false;
+    }
+    return _submitText(note, null);
+  }
+
+  Future<bool> _submitText(Note note, int? ttl) {
+    final attempt = _TextSendAttempt(note, connected!, _textSession);
+    note.sendAttempts++;
+    note.delivery = Delivery.sending;
+    note.deliveryDetail = null;
+    error = '';
+    _textAttempts[note.id] = attempt;
+    _nativeTextSends.add(attempt);
+
+    void fail(String message) {
+      if (!_currentTextAttempt(attempt)) {
+        return;
+      }
+      _textAttempts.remove(note.id);
+      attempt.cancel(false);
+      note.delivery = Delivery.failed;
+      note.deliveryDetail = message;
+      _notify();
+    }
+
+    attempt.nativeDeadline = Timer(textSendTimeout, () {
+      fail('Text submission timed out. Receipt is unconfirmed.');
+    });
+    unawaited(
+      _sendPacket(
+        Packet('text', note.id, {'text': note.text, 'ttl': ?ttl}),
+      ).then(
+        (_) {
+          final removed = _nativeTextSends.remove(attempt);
+          if (!_currentTextAttempt(attempt)) {
+            if (removed && !_disposed && attempt.session == _textSession) {
+              _notify();
+            }
+            return;
+          }
+          attempt.nativeDeadline?.cancel();
+          note.delivery = Delivery.sent;
+          note.deliveryDetail = null;
+          if (!attempt.completion.isCompleted) {
+            attempt.completion.complete(true);
+          }
+          attempt.receiptDeadline = Timer(textReceiptTimeout, () {
+            fail('No text receipt after 30 seconds. Receipt is unconfirmed.');
+          });
+          _notify();
+        },
+        onError: (Object e) {
+          final removed = _nativeTextSends.remove(attempt);
+          if (_currentTextAttempt(attempt)) {
+            fail(
+              'Text submission failed; receipt is unconfirmed. ${describe(e)}',
+            );
+          } else if (removed && !_disposed && attempt.session == _textSession) {
+            _notify();
+          }
+        },
+      ),
+    );
+    // Notify only after guards and deadlines exist. A synchronous listener may
+    // stop or dispose the controller; that must invalidate the attempt safely.
+    _notify();
+    return attempt.completion.future;
   }
 
   Future<bool> send(String text) async {
     text = text.trim();
-    if (connected == null || text.isEmpty || text.length > 1000) {
+    if (_disposed ||
+        !active ||
+        !foreground ||
+        connected == null ||
+        text.isEmpty ||
+        text.length > 1000 ||
+        !_textCapacityAvailable()) {
       return false;
     }
+    final ttl = messageLifetimeSeconds;
     final note = Note(
       newId(),
       text,
       true,
       DateTime.now(),
       Delivery.sending,
-      expiresAt: messageLifetimeSeconds == null
+      expiresAt: ttl == null
           ? null
-          : DateTime.now().add(Duration(seconds: messageLifetimeSeconds!)),
+          : DateTime.now().add(Duration(seconds: ttl)),
     );
     notes.add(note);
     _trimNotes();
-    _notify();
-    try {
-      await _sendPacket(
-        Packet('text', note.id, {
-          'text': text,
-          if (messageLifetimeSeconds != null) 'ttl': messageLifetimeSeconds,
-        }),
-      );
-      if (note.delivery == Delivery.sending) {
-        note.delivery = Delivery.sent;
-      }
-      _notify();
-      return true;
-    } catch (e) {
-      note.delivery = Delivery.failed;
-      error = describe(e);
-      _notify();
-      return false;
-    }
+    return _submitText(note, ttl);
   }
 
   Future<void> startSharing() async {
@@ -954,6 +1122,7 @@ class LanternController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _cancelTextSends();
     ++_attachmentSendEpoch;
     _incomingAttachments.clear();
     onNoteReceived = null;

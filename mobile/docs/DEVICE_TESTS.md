@@ -17,6 +17,8 @@ Record phone models, OS versions, app commit, tester, date and observed result f
 | Simultaneous requests | Failure/timeout is recoverable; no auto-accept | Pending |
 | Messages both directions | Unicode and multiline work; receiver acknowledgement gives Delivered | Pending |
 | Range loss during send | No false Delivered; reconnect starts a fresh conversation | Pending |
+| Unconfirmed text and manual retry | Missing receipt becomes unconfirmed within the stated deadline; confirm Retry, one recipient bubble and matching late receipt; no automatic retransmission | Pending |
+| Retry limit and lifecycle | Three submissions maximum; no retry for media/disappearing text; disconnect/background clears retry state and pending deadlines | Pending |
 | Share location | Separate confirmation; only selected peer receives updates | Pending |
 | Deny location after connecting | Messaging continues; no sharing indicator left on | Pending |
 | Stop / disconnect / 15-minute expiry | Position stream stops; peer coordinates clear or expire | Pending |

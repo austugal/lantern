@@ -46,6 +46,10 @@ The mobile media/maps milestone adds photo and voice attachments, emoji entry, o
 
 Development coordination: inspect current PRs and CI before starting a milestone; assign separate file ownership to collaborating agents. Never duplicate an active workstream. Publish only the exact validated source, update the evidence and keep capability limits visible. Scheduled continuation advances a bounded milestone per run; it does not imply uninterrupted background execution.
 
+### 26 October 2026: bounded text retry
+
+Implemented for PR validation: 10-second submission and 30-second receipt deadlines, explicit same-session ordinary-text retry with three submissions total, stable IDs, a bounded accepted-text ledger and late-callback guards. Disappearing messages and media remain outside retry. No automatic reconnection, new transport, background operation or human job acceptance was added. See [verification](../mobile/docs/VERIFICATION.md) and [development record](DEVELOPMENT-2026-10-26.md). Physical reliability and mixed Android/iPhone communication remain open priorities.
+
 ## Longer-term ideas
 
 1. Consent receipts. A signed log, readable by you, of every grant given, used and revoked,

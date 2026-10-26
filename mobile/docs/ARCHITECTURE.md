@@ -25,7 +25,15 @@ UTF-8 JSON, maximum 8,192 bytes. Envelope: `v` = 1, `kind`, random 128-bit hexad
 | `guardianResponse` | Boolean `accepted` | Explicit guardian response |
 | `guardianAlert` | empty object | Check-in alert to an accepting guardian; no automatic coordinate attachment |
 
-Optional message lifetimes are 60, 300, 900 or 3,600 seconds. Receiver expiry starts at receipt, so it is not globally synchronized deletion. Deduplication retains 512 IDs. Notes are memory-only, limited to 200 entries and 8 MiB of attachment bytes; disconnect clears the conversation. No automatic resend or durable offline message queue is implemented. Recipients can retain screenshots or other copies.
+Optional message lifetimes are 60, 300, 900 or 3,600 seconds. Receiver expiry starts at receipt, so it is not globally synchronized deletion. Non-text packet deduplication retains 512 IDs. Accepted text IDs have a separate non-evicting session ledger capped at 1,024: accepted duplicates receive another receipt without another displayed message, even after history trimming. At capacity new text is rejected without a receipt and the UI asks for reconnection. Notes are memory-only, limited to 200 entries and 8 MiB of attachment bytes; disconnect clears the conversation. Recipients can retain screenshots or other copies.
+
+### Bounded text delivery
+
+Native text submission times out visibly after 10 seconds. Successful submission starts a 30-second app-receipt deadline. Timeout or failure is unconfirmed delivery, not proof that the peer did not receive the message. Matching receipts win over late native completions and errors and can resolve an unconfirmed note. A note's draft clears when it is admitted, so another Send tap cannot silently create a second ID from the same retained composer text.
+
+Manual retry is restricted to retained, failed, non-disappearing text in the current foreground connection. It reuses the original ID and text, requires UI confirmation, and permits three submissions total. Relative-TTL packets are excluded so retry cannot restart disappearance. There is no automatic resend, persistence, background retry or cross-session queue.
+
+At most eight text attempts await submission or receipts, and at most eight real native text calls may remain unresolved across the controller's lifetime. A timeout cannot cancel an underlying platform call; reconnect does not reset this latter budget. A real completion frees its slot. Session generations and attempt identities guard callbacks; disconnect, expiry, trimming and disposal cancel attempt deadlines. This changes no native transport or wire contract.
 
 ## Media boundary
 
