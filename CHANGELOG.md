@@ -8,7 +8,7 @@
 - Late receipts win over timeout and error races; old-session callbacks cannot change a new conversation.
 - Composer clears on admission; disappearing text and media remain excluded from retry.
 
-No transport, background, signing or interoperability capability changed. Physical-device validation remains outstanding; existing download links retain the last validated preview.
+No transport, background, signing or interoperability capability changed. Physical-device validation remains outstanding. The validated build is published as [mobile-preview-2c05cf8828df](https://github.com/austugal/lantern/releases/tag/mobile-preview-2c05cf8828df).
 
 ## Mobile 0.2.0 — communication and field tools
 

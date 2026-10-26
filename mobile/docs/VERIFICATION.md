@@ -1,10 +1,19 @@
 # Mobile verification record
 
-## 26 October 2026 — bounded text retry source milestone
+## 26 October 2026 — bounded text retry
 
-Scope: ordinary text only, 10-second native submission deadline, 30-second receipt deadline, explicit same-ID retry up to three submissions, bounded session duplicate records and unresolved native-call accounting. No native transport or permission changes. The linked mobile 0.3.0 release below remains the working download until this source passes PR and native validation.
+Scope: ordinary text only, 10-second native submission deadline, 30-second receipt deadline, explicit same-ID retry up to three submissions, bounded session duplicate records and unresolved native-call accounting. No native transport, permission or background changes were made.
 
-Regression and CI results are recorded here before the milestone is marked validated. Tests target missing and late receipts, native deadlines, unchanged retry IDs, the three-submission limit, stale completion races, same-endpoint reconnection, both eight-operation budgets, receiver-history trimming, mixed-traffic deduplication and the 1,024-ID receive limit. Manual retry deliberately excludes relative-expiry text and media.
+[PR #7](https://github.com/austugal/lantern/pull/7) was validated in [run 40335605064](https://github.com/austugal/lantern/actions/runs/40335605064) and merged at `2c05cf8828df6ddb48eac3243fea58b4a06dba79`.
+
+- Formatting and static analysis passed; **83 Flutter tests passed**.
+- Android testing APK, iPhone simulator and unsigned iPhone device builds passed.
+- The actual Android API 35 emulator installed and exercised the APK successfully.
+- Desktop lint, strict typing and **91 tests** passed on Python 3.10, 3.12 and 3.13 in [run 40335605021](https://github.com/austugal/lantern/actions/runs/40335605021).
+
+The new tests cover missing and late receipts, native deadlines, unchanged retry IDs, the three-submission limit, stale completion races, same-endpoint reconnection, both eight-operation budgets, receiver-history trimming, mixed-traffic deduplication and the 1,024-ID receive limit. Manual retry deliberately excludes relative-expiry text and media.
+
+[Main release run 40338496400](https://github.com/austugal/lantern/actions/runs/40338496400) passed the same checks, native builds, actual-APK emulator gate and publication. [Download the validated preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-2c05cf8828df): Android testing APK, iPhone simulator ZIP, unsigned iPhone device ZIP and SHA256SUMS.txt.
 
 These checks cannot establish radio delivery, battery use, mixed-platform operation, production signing or an independent security audit. Physical checks remain pending in [DEVICE_TESTS.md](DEVICE_TESTS.md).
 

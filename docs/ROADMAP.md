@@ -48,7 +48,7 @@ Development coordination: inspect current PRs and CI before starting a milestone
 
 ### 26 October 2026: bounded text retry
 
-Implemented for PR validation: 10-second submission and 30-second receipt deadlines, explicit same-session ordinary-text retry with three submissions total, stable IDs, a bounded accepted-text ledger and late-callback guards. Disappearing messages and media remain outside retry. No automatic reconnection, new transport, background operation or human job acceptance was added. See [verification](../mobile/docs/VERIFICATION.md) and [development record](DEVELOPMENT-2026-10-26.md). Physical reliability and mixed Android/iPhone communication remain open priorities.
+Released and validated: 10-second submission and 30-second receipt deadlines, explicit same-session ordinary-text retry with three submissions total, stable IDs, a bounded accepted-text ledger and late-callback guards. Disappearing messages and media remain outside retry. No automatic reconnection, new transport, background operation or human job acceptance was added. See [verification](../mobile/docs/VERIFICATION.md) and [development record](DEVELOPMENT-2026-10-26.md). Physical reliability and mixed Android/iPhone communication remain open priorities.
 
 ## Longer-term ideas
 
