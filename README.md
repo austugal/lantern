@@ -33,6 +33,8 @@ Android uses Google Nearby Connections and requires Google Play services. iPhone
 
 Use the small **help buttons** for short instructions. Opening help does not start discovery, GPS or sharing.
 
+**Unreleased source milestone:** ordinary text becomes **Delivery unconfirmed** if submission times out or no app receipt arrives within 30 seconds of submission. It may already have arrived. **Retry message** asks for confirmation and reuses its ID, with at most two retries in the same connection. Disappearing messages and attachments do not have this retry control. There is no automatic resend or retry after reconnection. A receipt still does not mean a colleague accepted a task. The linked APK remains the validated web-reading preview until a newer release is linked.
+
 Android connects to Android; iPhone connects to iPhone. Each mobile session supports **one connected peer**. Switching apps or locking the phone stops the session, cancels check-in timers and clears its messages. This preview has no background messaging.
 
 ### Mobile capabilities

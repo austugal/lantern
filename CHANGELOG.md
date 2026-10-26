@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased mobile — bounded text retry
+
+- Text submission and receipt deadlines expose unconfirmed delivery.
+- Confirmed manual retry reuses the original text ID, with three submissions total.
+- Bounded session duplicate records and pending native calls prevent repeated retries from growing without limit.
+- Late receipts win over timeout and error races; old-session callbacks cannot change a new conversation.
+- Composer clears on admission; disappearing text and media remain excluded from retry.
+
+No transport, background, signing or interoperability capability changed. Physical-device validation remains outstanding; existing download links retain the last validated preview.
+
 ## Mobile 0.2.0 — communication and field tools
 
 - Photo attachments from camera/gallery, resized and re-encoded before sending.

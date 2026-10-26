@@ -608,7 +608,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             children: [
               _help(
                 'Conversation',
-                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
+                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. Lantern waits up to 10 seconds to submit text, then up to 30 seconds for an app receipt. You can explicitly retry ordinary text twice in this connection; it may already have arrived. Disappearing messages and attachments cannot be retried here. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
               ),
               IconButton(
                 tooltip: 'Disconnect and clear conversation',
@@ -698,7 +698,10 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                       Delivery.sent =>
                                         'Sent · awaiting receipt',
                                       Delivery.delivered => 'Delivered',
-                                      Delivery.failed => 'Failed · send again',
+                                      Delivery.failed =>
+                                        note.attachmentBytes == null
+                                            ? 'Delivery unconfirmed'
+                                            : 'Transfer failed',
                                     }
                                   : '${note.time.hour.toString().padLeft(2, '0')}:${note.time.minute.toString().padLeft(2, '0')}',
                               style: TextStyle(
@@ -708,6 +711,38 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                     : Colors.black54,
                               ),
                             ),
+                            if (c.canRetry(note))
+                              TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () => _retryMessage(note),
+                                icon: const Icon(Icons.refresh, size: 18),
+                                label: const Text('Retry message'),
+                              ),
+                            if (note.mine && note.deliveryDetail != null)
+                              Text(
+                                note.deliveryDetail!,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            if (note.mine &&
+                                note.attachmentBytes == null &&
+                                note.delivery == Delivery.failed &&
+                                (note.expiresAt != null ||
+                                    note.sendAttempts >=
+                                        LanternController.maxTextSubmissions))
+                              Text(
+                                note.expiresAt != null
+                                    ? 'Retry unavailable for disappearing messages.'
+                                    : 'Retry limit reached. Confirm with your colleague.',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white70,
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -797,6 +832,34 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  Future<void> _retryMessage(Note note) async {
+    if (!c.canRetry(note)) {
+      return;
+    }
+    final retry = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Retry this message?'),
+        content: const Text(
+          'The message may already have arrived without a receipt. Retry sends the same message ID to this colleague in this connection. It does not confirm that they read or accepted the request.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Retry now'),
+          ),
+        ],
+      ),
+    );
+    if (mounted && retry == true) {
+      await c.retry(note);
+    }
   }
 
   Widget _attachment(Note note) {
@@ -1395,12 +1458,19 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     }
     final text = _message.text;
     setState(() => _sending = true);
-    final success = await c.send(text);
+    final existing = c.notes.toSet();
+    final submission = c.send(text);
+    // An admitted note owns this draft even if its native call later times out.
+    // Leaving it in the composer would create a new ID on the next Send tap.
+    final admitted = c.notes.any(
+      (note) => note.mine && !existing.contains(note),
+    );
+    if (admitted && _message.text == text) {
+      _message.clear();
+    }
+    await submission;
     if (!mounted) {
       return;
-    }
-    if (success && _message.text == text) {
-      _message.clear();
     }
     setState(() => _sending = false);
   }

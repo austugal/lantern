@@ -1,5 +1,13 @@
 # Mobile verification record
 
+## 26 October 2026 — bounded text retry source milestone
+
+Scope: ordinary text only, 10-second native submission deadline, 30-second receipt deadline, explicit same-ID retry up to three submissions, bounded session duplicate records and unresolved native-call accounting. No native transport or permission changes. The linked mobile 0.3.0 release below remains the working download until this source passes PR and native validation.
+
+Regression and CI results are recorded here before the milestone is marked validated. Tests target missing and late receipts, native deadlines, unchanged retry IDs, the three-submission limit, stale completion races, same-endpoint reconnection, both eight-operation budgets, receiver-history trimming, mixed-traffic deduplication and the 1,024-ID receive limit. Manual retry deliberately excludes relative-expiry text and media.
+
+These checks cannot establish radio delivery, battery use, mixed-platform operation, production signing or an independent security audit. Physical checks remain pending in [DEVICE_TESTS.md](DEVICE_TESTS.md).
+
 ## Mobile 0.3.0 web reading
 
 [Validation run 38902303778](https://github.com/austugal/lantern/actions/runs/38902303778) passed on source `1308ce82b57a160dd4c28df4264e143b848fd54d`, merged through PR #6 at `e99ac83ace6f9eebc33a463515239559f1420420`.
