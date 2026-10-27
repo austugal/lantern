@@ -65,7 +65,6 @@ void main() {
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
-    controller.dispose();
     await transport.stream.close();
     await location.stream.close();
   });
@@ -73,7 +72,7 @@ void main() {
   testWidgets('recipient gets both choices and records one final response', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(320, 640);
+    tester.view.physicalSize = const Size(320, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -93,11 +92,13 @@ void main() {
       }).encode(),
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Accept request'));
-    expect(find.text('Accept request'), findsOneWidget);
+    final acceptRequest = find.widgetWithText(FilledButton, 'Accept request');
+    await tester.ensureVisible(acceptRequest);
+    await tester.pumpAndSettle();
+    expect(acceptRequest, findsOneWidget);
     expect(find.text('Decline request'), findsOneWidget);
 
-    await tester.tap(find.text('Accept request'));
+    await tester.tap(acceptRequest);
     await tester.pumpAndSettle();
     expect(find.text('Accept request?'), findsOneWidget);
     expect(
@@ -123,7 +124,6 @@ void main() {
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
-    controller.dispose();
     await transport.stream.close();
     await location.stream.close();
   });
