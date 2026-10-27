@@ -38,11 +38,12 @@ const guideTopics = <GuideTopic>[
     'hotel staff hospitality shift colleague reception housekeeping maintenance message handover template',
     'Use a short message with the task, location, owner and requested reply. '
         'Avoid guest names, payment data or other sensitive details. '
-        'Copy this template, edit it in Conversation and send only after checking the recipient. '
-        'Delivered means the other app acknowledged the message, not that your colleague read it. '
+        'Copy this template, edit it in Conversation, choose Request acknowledgement and send only after checking the recipient. '
+        'Delivered means the other app acknowledged the message. Accepted or Declined means your connected colleague tapped that response; acceptance does not prove the work is complete. '
+        'Acknowledgement is unavailable for disappearing messages and ends with the current connection. '
         'This preview is not a group dispatch or background staff-paging system.',
     template:
-        'Shift handover\nArea: [area]\nTask: [task]\nOwner: [colleague]\nNeeded by: [time]\nPlease reply to confirm.',
+        'Shift handover\nArea: [area]\nTask: [task]\nOwner: [colleague]\nNeeded by: [time]\nPlease accept or decline this request.',
   ),
   GuideTopic(
     'Location and privacy',

@@ -98,6 +98,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   final _message = TextEditingController();
   int _tab = 0;
   bool _sending = false;
+  bool _requestAcknowledgement = false;
   bool _notifications = false;
   String? _playingNoteId;
   final _device = const PlatformDeviceTools();
@@ -131,6 +132,9 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   void _sessionChanged() {
+    if (c.connected == null) {
+      _requestAcknowledgement = false;
+    }
     if (_playingNoteId != null &&
         !c.notes.any((note) => note.id == _playingNoteId)) {
       _playingNoteId = null;
@@ -608,7 +612,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             children: [
               _help(
                 'Conversation',
-                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. Lantern waits up to 10 seconds to submit text, then up to 30 seconds for an app receipt. You can explicitly retry ordinary text twice in this connection; it may already have arrived. Disappearing messages and attachments cannot be retried here. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
+                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. For an ordinary non-expiring work request, choose Request acknowledgement before sending. The recipient can accept or decline once. That response has its own delivery status; acceptance does not prove the work is complete. Lantern waits up to 10 seconds to submit text, then up to 30 seconds for an app receipt. You can explicitly retry ordinary text twice in this connection; it may already have arrived. Disappearing messages and attachments cannot be retried here. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
               ),
               IconButton(
                 tooltip: 'Disconnect and clear conversation',
@@ -690,6 +694,43 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                       : Colors.black54,
                                 ),
                               ),
+                            if (note.replyTo != null)
+                              Text(
+                                'Response to request',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: note.mine
+                                      ? Colors.white70
+                                      : Colors.black54,
+                                ),
+                              ),
+                            if (note.responseRequested) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                switch (note.workDecision) {
+                                  WorkDecision.accepted =>
+                                    note.mine
+                                        ? 'Accepted by colleague'
+                                        : 'You accepted',
+                                  WorkDecision.declined =>
+                                    note.mine
+                                        ? 'Declined by colleague'
+                                        : 'You declined',
+                                  null =>
+                                    note.mine
+                                        ? 'Response requested · waiting'
+                                        : 'Response requested',
+                                },
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: note.mine
+                                      ? Colors.white
+                                      : const Color(0xFF244B3F),
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 6),
                             Text(
                               note.mine
@@ -719,6 +760,27 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                 onPressed: () => _retryMessage(note),
                                 icon: const Icon(Icons.refresh, size: 18),
                                 label: const Text('Retry message'),
+                              ),
+                            if (c.canRespondToRequest(note))
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: [
+                                  FilledButton(
+                                    onPressed: () => _respondToRequest(
+                                      note,
+                                      WorkDecision.accepted,
+                                    ),
+                                    child: const Text('Accept request'),
+                                  ),
+                                  OutlinedButton(
+                                    onPressed: () => _respondToRequest(
+                                      note,
+                                      WorkDecision.declined,
+                                    ),
+                                    child: const Text('Decline request'),
+                                  ),
+                                ],
                               ),
                             if (note.mine && note.deliveryDetail != null)
                               Text(
@@ -804,28 +866,50 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
         ),
         Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _message,
-                  maxLength: 1000,
-                  minLines: 1,
-                  maxLines: 4,
-                  decoration: const InputDecoration(
-                    hintText: 'A message for right here…',
-                    counterText: '',
-                  ),
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => _send(),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: _requestAcknowledgement,
+                onChanged: c.messageLifetimeSeconds == null
+                    ? (value) => setState(
+                        () => _requestAcknowledgement = value ?? false,
+                      )
+                    : null,
+                title: const Text('Request acknowledgement'),
+                subtitle: Text(
+                  c.messageLifetimeSeconds == null
+                      ? 'The recipient can accept or decline once.'
+                      : 'Turn off message expiry to request a response.',
                 ),
               ),
-              const SizedBox(width: 8),
-              IconButton.filled(
-                onPressed: _sending ? null : _send,
-                tooltip: 'Send message',
-                icon: const Icon(Icons.arrow_upward),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _message,
+                      maxLength: 1000,
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        hintText: 'A message for right here…',
+                        counterText: '',
+                      ),
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _send(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    onPressed: _sending ? null : _send,
+                    tooltip: 'Send message',
+                    icon: const Icon(Icons.arrow_upward),
+                  ),
+                ],
               ),
             ],
           ),
@@ -859,6 +943,37 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     );
     if (mounted && retry == true) {
       await c.retry(note);
+    }
+  }
+
+  Future<void> _respondToRequest(Note note, WorkDecision decision) async {
+    if (!c.canRespondToRequest(note)) {
+      return;
+    }
+    final verb = decision == WorkDecision.accepted ? 'accept' : 'decline';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${verb[0].toUpperCase()}${verb.substring(1)} request?'),
+        content: Text(
+          'This tells ${c.connected?.name ?? 'your connected colleague'} that you chose to $verb this request. It does not confirm that the work is complete.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              decision == WorkDecision.accepted ? 'Accept' : 'Decline',
+            ),
+          ),
+        ],
+      ),
+    );
+    if (mounted && confirmed == true) {
+      await c.respondToRequest(note, decision);
     }
   }
 
@@ -1184,8 +1299,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 DropdownMenuItem(value: 900, child: Text('15 minutes')),
                 DropdownMenuItem(value: 3600, child: Text('1 hour')),
               ],
-              onChanged: (value) =>
-                  c.setMessageLifetime(value == 0 ? null : value),
+              onChanged: (value) {
+                c.setMessageLifetime(value == 0 ? null : value);
+                if (value != null && value != 0 && _requestAcknowledgement) {
+                  setState(() => _requestAcknowledgement = false);
+                }
+              },
             ),
           ],
         ),
@@ -1459,7 +1578,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     final text = _message.text;
     setState(() => _sending = true);
     final existing = c.notes.toSet();
-    final submission = c.send(text);
+    final submission = c.send(text, responseRequested: _requestAcknowledgement);
     // An admitted note owns this draft even if its native call later times out.
     // Leaving it in the composer would create a new ID on the next Send tap.
     final admitted = c.notes.any(
@@ -1467,6 +1586,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     );
     if (admitted && _message.text == text) {
       _message.clear();
+      _requestAcknowledgement = false;
     }
     await submission;
     if (!mounted) {

@@ -15,7 +15,7 @@ UTF-8 JSON, maximum 8,192 bytes. Envelope: `v` = 1, `kind`, random 128-bit hexad
 
 | Kind | Body | Meaning |
 | --- | --- | --- |
-| `text` | `text` (1–1,000 characters), optional `ttl` | Chat message |
+| `text` | ordinary: `text` plus optional `ttl`; request: `text`, `responseRequested: true`; response: fixed `text`, `replyTo`, `decision` | Chat message or bounded work-request acknowledgement |
 | `attachmentStart` | `mime`, `size`, `chunks`, optional `ttl` | Announces bounded photo/voice transfer |
 | `attachmentChunk` | `transfer`, `index`, base64 `data` | One chunk of announced transfer |
 | `ack` | `id` of original message/transfer | Peer app received text or completed validated attachment; not a human read receipt |
@@ -25,7 +25,7 @@ UTF-8 JSON, maximum 8,192 bytes. Envelope: `v` = 1, `kind`, random 128-bit hexad
 | `guardianResponse` | Boolean `accepted` | Explicit guardian response |
 | `guardianAlert` | empty object | Check-in alert to an accepting guardian; no automatic coordinate attachment |
 
-Optional message lifetimes are 60, 300, 900 or 3,600 seconds. Receiver expiry starts at receipt, so it is not globally synchronized deletion. Non-text packet deduplication retains 512 IDs. Accepted text IDs have a separate non-evicting session ledger capped at 1,024: accepted duplicates receive another receipt without another displayed message, even after history trimming. At capacity new text is rejected without a receipt and the UI asks for reconnection. Notes are memory-only, limited to 200 entries and 8 MiB of attachment bytes; disconnect clears the conversation. Recipients can retain screenshots or other copies.
+Optional message lifetimes are 60, 300, 900 or 3,600 seconds. Receiver expiry starts at receipt, so it is not globally synchronized deletion. Requests and responses cannot carry a lifetime. Non-text packet deduplication retains 512 IDs. Accepted text has a separate non-evicting session ledger capped at 1,024 IDs and their canonical packet data: an exact retry receives another receipt without another displayed message, while changed content reusing an accepted ID is rejected. At capacity new text is rejected without a receipt and the UI asks for reconnection. Notes are memory-only, limited to 200 entries and 8 MiB of attachment bytes; disconnect clears the conversation. Recipients can retain screenshots or other copies.
 
 ### Bounded text delivery
 
@@ -33,7 +33,15 @@ Native text submission times out visibly after 10 seconds. Successful submission
 
 Manual retry is restricted to retained, failed, non-disappearing text in the current foreground connection. It reuses the original ID and text, requires UI confirmation, and permits three submissions total. Relative-TTL packets are excluded so retry cannot restart disappearance. There is no automatic resend, persistence, background retry or cross-session queue.
 
-At most eight text attempts await submission or receipts, and at most eight real native text calls may remain unresolved across the controller's lifetime. A timeout cannot cancel an underlying platform call; reconnect does not reset this latter budget. A real completion frees its slot. Session generations and attempt identities guard callbacks; disconnect, expiry, trimming and disposal cancel attempt deadlines. This changes no native transport or wire contract.
+At most eight text attempts await submission or receipts, and at most eight real native text calls may remain unresolved across the controller's lifetime. A timeout cannot cancel an underlying platform call; reconnect does not reset this latter budget. A real completion frees its slot. Session generations and attempt identities guard callbacks; disconnect, expiry, trimming and disposal cancel attempt deadlines. These deadlines and limits change no native transport.
+
+### Work-request acknowledgement
+
+The sender explicitly marks an ordinary text with `responseRequested: true`. The current recipient may answer once with another `text` packet whose `replyTo` targets that request and whose `decision` is `accepted` or `declined`; its visible text must be exactly `Accepted` or `Declined`. Requests and responses reject `ttl` and unknown or mixed fields.
+
+A response target is validated before its packet enters the accepted-text ledger or receives an app receipt. It must refer to a retained, outgoing, unanswered request in the current connection. The first valid decision is final. Unknown, late and conflicting responses receive no receipt. An exact retry of a previously accepted response is re-acknowledged without redisplay. The response itself follows the normal delivery deadline, receipt and retry path.
+
+This records a peer's explicit choice, not completion, assignment, escalation, identity proof or emergency response. The state is memory-only and clears on disconnect. Native Android and iOS transports are unchanged.
 
 ## Media boundary
 

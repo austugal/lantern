@@ -35,13 +35,15 @@ Use the small **help buttons** for short instructions. Opening help does not sta
 
 Ordinary text becomes **Delivery unconfirmed** if submission times out or no app receipt arrives within 30 seconds of submission. It may already have arrived. **Retry message** asks for confirmation and reuses its ID, with at most two retries in the same connection. Disappearing messages and attachments do not have this retry control. There is no automatic resend or retry after reconnection. A receipt still does not mean a colleague accepted a task.
 
+For an ordinary non-expiring work request, choose **Request acknowledgement**. The connected colleague can accept or decline once. Their linked response has its own delivery receipt and retry status. Acceptance records that the colleague tapped Accept; it does not prove completion, escalation or supervisor approval. Requests and responses remain in the current foreground connection and clear on disconnect.
+
 Android connects to Android; iPhone connects to iPhone. Each mobile session supports **one connected peer**. Switching apps or locking the phone stops the session, cancels check-in timers and clears its messages. This preview has no background messaging.
 
 ### Mobile capabilities
 
 | Feature | What the phone app does |
 | --- | --- |
-| Private text messages | Encrypted nearby connection, receipts and visible failures |
+| Private text messages | Encrypted nearby connection, receipts, visible failures and optional one-time Accept/Decline request acknowledgement |
 | Emojis, photos and voice notes | Emoji text, camera/gallery photo attachments and short recorded voice messages |
 | Message notifications | Optional generic local alerts when messages arrive over an active session |
 | Torch and SOS flash | Steady light or repeating Morse SOS; immediate Stop, switches off on background |
@@ -78,7 +80,7 @@ These are proposed pilot uses of the existing one-to-one messaging feature, not 
 | Construction and field work | Nearby colleagues share a meeting point or routine progress update; optional coordinates are useful only where GPS has a usable fix. |
 | Community groups | People together in person exchange updates when internet access is unavailable. |
 
-**Example staff message:** “Housekeeping request — Floor 2 service cupboard — need towels — routine priority — please reply when accepted.” Use work-area labels rather than guest names or booking information. The offline guide includes a template you can copy, edit and send yourself.
+**Example staff message:** “Housekeeping request — Floor 2 service cupboard — need towels — routine priority.” Use work-area labels rather than guest names or booking information, then choose **Request acknowledgement** if you need an explicit Accept/Decline response. The offline guide includes a template you can copy and edit.
 
 Start with two same-platform phones and routine, noncritical tasks. Test the actual rooms, floors and service areas: walls and distance can break a connection. “Delivered” confirms app receipt, not that a colleague read or accepted the job; ask for a reply. Indoor GPS may be inaccurate, so room or area labels are often more useful.
 

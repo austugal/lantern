@@ -6,6 +6,10 @@ Lantern aims to help colleagues communicate where internet access is unavailable
 
 Two colleagues on the same mobile platform open Lantern, enable their radios, choose each other and accept a connection. They can exchange acknowledged text messages, optionally share location and use foreground check-in alerts. Short help dialogs explain controls. Android and iPhone have separate transports; mobile and desktop do not interoperate. No internet service is required for nearby messages, but Android currently requires Google Play services.
 
+For an ordinary text request, the sender can choose **Request acknowledgement**. The connected recipient then chooses **Accept request** or **Decline request** once. That human response is linked to the original request and is sent as a separate bounded text response with its own app delivery status and retry control. A pending or delivered request is not automatically accepted, and acceptance does not prove that the work was completed.
+
+Acknowledgement is limited to the current foreground connection. It is unavailable for disappearing messages and attachments, is cleared on disconnect, and does not assign work to an account, department or queue.
+
 This preview ends the session when a phone is locked or backgrounded. It is not yet a pocket pager, group radio, emergency dispatch system or hotel-wide communications network.
 
 ## Workplace acceptance requirements (not implemented claims)
@@ -13,7 +17,7 @@ This preview ends the session when a phone is locked or backgrounded. It is not 
 1. Mixed Android/iPhone communication, tested with representative managed and personal devices.
 2. Department and incident group channels with explicit membership and removal.
 3. Reliable background delivery within platform rules, with clear availability and battery status.
-4. Acknowledged requests such as maintenance needed or assistance requested; distinguish sent, received and accepted.
+4. Work completion, escalation, reassignment and supervisor visibility beyond the current one-peer acknowledgement.
 5. Physical testing across walls, floors, stairwells and service areas, including interference and disconnection recovery.
 6. Authentication appropriate for staff teams, lost-device removal, retention controls and security review.
 7. An agreed fallback to established emergency procedures whenever Lantern is disconnected.

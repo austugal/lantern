@@ -128,6 +128,16 @@ class Packet {
       }
       switch (kind) {
         case 'text':
+          const textFields = {
+            'text',
+            'ttl',
+            'responseRequested',
+            'replyTo',
+            'decision',
+          };
+          if (body.keys.any((field) => !textFields.contains(field))) {
+            return null;
+          }
           if (body['text'] is! String ||
               (body['text'] as String).trim().isEmpty ||
               (body['text'] as String).length > 1000) {
@@ -137,6 +147,31 @@ class Packet {
               (body['ttl'] is! int ||
                   ![60, 300, 900, 3600].contains(body['ttl']))) {
             return null;
+          }
+          final responseRequested = body.containsKey('responseRequested');
+          if (responseRequested && body['responseRequested'] != true) {
+            return null;
+          }
+          final hasReplyTo = body.containsKey('replyTo');
+          final hasDecision = body.containsKey('decision');
+          if (hasReplyTo != hasDecision ||
+              (responseRequested && hasReplyTo) ||
+              ((responseRequested || hasReplyTo) && body.containsKey('ttl'))) {
+            return null;
+          }
+          if (hasReplyTo) {
+            if (body['replyTo'] is! String ||
+                !RegExp(r'^[a-f0-9]{32}$').hasMatch(body['replyTo']) ||
+                body['replyTo'] == id ||
+                !{'accepted', 'declined'}.contains(body['decision'])) {
+              return null;
+            }
+            final expectedText = body['decision'] == 'accepted'
+                ? 'Accepted'
+                : 'Declined';
+            if (body['text'] != expectedText) {
+              return null;
+            }
           }
         case 'attachmentStart':
           if (body['mime'] is! String ||

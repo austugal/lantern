@@ -50,6 +50,10 @@ Development coordination: inspect current PRs and CI before starting a milestone
 
 Released and validated: 10-second submission and 30-second receipt deadlines, explicit same-session ordinary-text retry with three submissions total, stable IDs, a bounded accepted-text ledger and late-callback guards. Disappearing messages and media remain outside retry. No automatic reconnection, new transport, background operation or human job acceptance was added. See [verification](../mobile/docs/VERIFICATION.md) and [development record](DEVELOPMENT-2026-10-26.md). Physical reliability and mixed Android/iPhone communication remain open priorities.
 
+### 27 October 2026: bounded work-request acknowledgement
+
+Implemented for PR validation: a sender can mark an ordinary, non-expiring text as requiring a response. The connected recipient can accept or decline once; the linked response uses the existing bounded text delivery, receipt and retry path. Unknown, late and conflicting responses are rejected without a false receipt. This is current-session acknowledgement only, not job completion, assignment, escalation or dispatch. Native transports, permissions and background behaviour remain unchanged. See [mobile verification](../mobile/docs/VERIFICATION.md) and [development record](DEVELOPMENT-2026-10-27.md).
+
 ## Longer-term ideas
 
 1. Consent receipts. A signed log, readable by you, of every grant given, used and revoked,
