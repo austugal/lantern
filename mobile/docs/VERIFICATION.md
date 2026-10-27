@@ -1,14 +1,20 @@
 # Mobile verification record
 
-## 27 October 2026 — bounded work-request acknowledgement source milestone
+## 27 October 2026 — bounded work-request acknowledgement
 
-Scope: an ordinary, non-expiring text may explicitly request a human response. The connected recipient may accept or decline once, and that linked response uses the existing bounded text receipt and retry path. Unknown, late, conflicting or cross-session responses must not update a request or receive a false acknowledgement. No native transport, permission or background change is included.
+Scope: an ordinary, non-expiring text may explicitly request a human response. The connected recipient may accept or decline once, and that linked response uses the existing bounded text receipt and retry path. Unknown, late, conflicting or cross-session responses do not update a request or receive a false acknowledgement. No native transport, permission or background change was included.
 
-Regression and CI evidence will be recorded here before the milestone is marked validated. Tests target strict packet combinations, response opt-in, current-session target checks, one final human decision, duplicate suppression, ordinary delivery receipts/retry for the response, disappearing-message exclusion and disconnect cleanup.
+[PR #9](https://github.com/austugal/lantern/pull/9) was validated on source `1c6ec9fadac7416a83ef72aef2a171c76ea4b0d6` in [mobile run 40515912420](https://github.com/austugal/lantern/actions/runs/40515912420) and [desktop CI run 40515912477](https://github.com/austugal/lantern/actions/runs/40515912477), then merged at `2baaffd3d1e2a140e2bb25167940c950e6229929`.
 
-Local checks passed: Dart 3.9.2 formatting for all mobile library/test/tool files, standalone protocol analysis, a strict request/response packet smoke test, and the unchanged desktop suite (91 tests, Ruff and strict mypy). The Flutter suite and native builds remain PR validation gates.
+- Formatting and static analysis passed; **93 Flutter tests passed**.
+- Android testing APK, iPhone simulator and unsigned iPhone device builds passed.
+- The Android API 35 emulator installed and exercised the actual APK successfully.
+- Desktop lint, strict typing and **91 tests** passed on Python 3.10, 3.12 and 3.13.
+- New coverage includes strict request/response packet combinations, current-session target checks, first-decision finality, changed same-ID rejection, response receipts and retry metadata, disappearing-message exclusion, resource bounds, reconnect cleanup, stale callbacks and narrow-screen confirmation UI.
 
-These checks cannot establish that a person completed work, physical radio delivery, mixed Android/iPhone operation, production signing or security assurance. The [26 October validated release](https://github.com/austugal/lantern/releases/tag/mobile-preview-2c05cf8828df) remains the working download until this exact source passes PR and release validation.
+[Main release run 40518535828](https://github.com/austugal/lantern/actions/runs/40518535828) repeated the mobile checks, native builds and actual-APK emulator gate before publication. [Main desktop CI 40518535861](https://github.com/austugal/lantern/actions/runs/40518535861) and [desktop preview run 40518535910](https://github.com/austugal/lantern/actions/runs/40518535910) passed. [Download the validated preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-2baaffd3d1e2): Android testing APK, iPhone simulator ZIP, unsigned iPhone device ZIP and SHA256SUMS.txt.
+
+These checks establish app behaviour in automated tests and an Android emulator. They cannot establish that a person completed work, physical radio delivery, battery use, mixed Android/iPhone operation, production signing or independent security assurance. Physical checks remain pending in [DEVICE_TESTS.md](DEVICE_TESTS.md).
 
 ## 26 October 2026 — bounded text retry
 

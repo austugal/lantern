@@ -52,7 +52,7 @@ Released and validated: 10-second submission and 30-second receipt deadlines, ex
 
 ### 27 October 2026: bounded work-request acknowledgement
 
-Implemented for PR validation: a sender can mark an ordinary, non-expiring text as requiring a response. The connected recipient can accept or decline once; the linked response uses the existing bounded text delivery, receipt and retry path. Unknown, late and conflicting responses are rejected without a false receipt. This is current-session acknowledgement only, not job completion, assignment, escalation or dispatch. Native transports, permissions and background behaviour remain unchanged. See [mobile verification](../mobile/docs/VERIFICATION.md) and [development record](DEVELOPMENT-2026-10-27.md).
+Released and validated: a sender can mark an ordinary, non-expiring text as requiring a response. The connected recipient can accept or decline once; the linked response uses the existing bounded text delivery, receipt and retry path. Unknown, late and conflicting responses are rejected without a false receipt. This is current-session acknowledgement only, not job completion, assignment, escalation or dispatch. Native transports, permissions and background behaviour remain unchanged. See [mobile verification](../mobile/docs/VERIFICATION.md) and [development record](DEVELOPMENT-2026-10-27.md).
 
 ## Longer-term ideas
 
