@@ -19,6 +19,8 @@ class Invitation {
 
 enum Delivery { sending, sent, delivered, failed }
 
+enum WorkDecision { accepted, declined }
+
 class Note {
   Note(
     this.id,
@@ -29,6 +31,9 @@ class Note {
     this.expiresAt,
     this.attachmentBytes,
     this.attachmentMime,
+    this.responseRequested = false,
+    this.replyTo,
+    this.workDecision,
   });
   final Uint8List? attachmentBytes;
   final String? attachmentMime;
@@ -38,10 +43,13 @@ class Note {
       ? 'photo'
       : 'voice';
   final DateTime? expiresAt;
+  final bool responseRequested;
+  final String? replyTo;
   final String id, text;
   final bool mine;
   final DateTime time;
   Delivery delivery;
+  WorkDecision? workDecision;
   String? deliveryDetail;
   int sendAttempts = 0;
 
@@ -137,7 +145,7 @@ class LanternController extends ChangeNotifier {
   final _nativeTextSends = <_TextSendAttempt>{};
   int _textSession = 0;
   final _seen = <String>{};
-  final _receivedTextIds = <String>{};
+  final _receivedTextPackets = <String, String>{};
   final peers = <String, Peer>{};
   final notes = <Note>[];
   final _incomingAttachments = <String, _IncomingAttachment>{};
@@ -590,23 +598,61 @@ class LanternController extends ChangeNotifier {
           return;
         }
         if (packet.kind == 'text') {
-          final duplicate = _receivedTextIds.contains(packet.id);
+          final acceptedPacket = _receivedTextPackets[packet.id];
+          if (acceptedPacket != null) {
+            // Re-ack only the exact packet previously accepted. Reusing an ID
+            // with changed content must not receive a false delivery receipt.
+            if (acceptedPacket != packet.encode()) {
+              return;
+            }
+            unawaited(
+              _sendPacket(
+                Packet('ack', newId(), {'id': packet.id}),
+              ).catchError((Object _) {}),
+            );
+            return;
+          }
           // Never evict accepted text IDs during a session: the sender may
           // retain and retry an older note after this peer has trimmed it.
-          if (!duplicate && _receivedTextIds.length >= 1024) {
+          if (_receivedTextPackets.length >= 1024) {
             error =
                 'Text receipt limit reached. Reconnect to receive more texts.';
             _notify();
             return;
           }
-          _receivedTextIds.add(packet.id);
+          Note? responseTarget;
+          if (packet.body['replyTo'] is String) {
+            final replyTo = packet.body['replyTo'] as String;
+            for (final note in notes.reversed) {
+              if (note.mine &&
+                  note.id == replyTo &&
+                  note.responseRequested &&
+                  note.workDecision == null) {
+                responseTarget = note;
+                break;
+              }
+            }
+            // Never acknowledge a response that cannot be tied to a current,
+            // unanswered request in this connection.
+            if (responseTarget == null) {
+              return;
+            }
+          }
+          _receivedTextPackets[packet.id] = packet.encode();
           unawaited(
             _sendPacket(
               Packet('ack', newId(), {'id': packet.id}),
             ).catchError((Object _) {}),
           );
-          if (duplicate) {
-            return;
+          if (responseTarget != null) {
+            responseTarget.workDecision = WorkDecision.values.byName(
+              packet.body['decision'] as String,
+            );
+            // A human response proves that this request reached the current
+            // session even if its earlier app receipt was lost.
+            responseTarget.delivery = Delivery.delivered;
+            responseTarget.deliveryDetail = null;
+            _textAttempts.remove(responseTarget.id)?.cancel(true);
           }
         } else if (!_seen.add(packet.id)) {
           return;
@@ -626,6 +672,13 @@ class LanternController extends ChangeNotifier {
                 expiresAt: packet.body['ttl'] is int
                     ? DateTime.now().add(
                         Duration(seconds: packet.body['ttl'] as int),
+                      )
+                    : null,
+                responseRequested: packet.body['responseRequested'] == true,
+                replyTo: packet.body['replyTo'] as String?,
+                workDecision: packet.body['decision'] is String
+                    ? WorkDecision.values.byName(
+                        packet.body['decision'] as String,
                       )
                     : null,
               ),
@@ -888,7 +941,7 @@ class LanternController extends ChangeNotifier {
     // Unresolved native calls are deliberately retained across reconnects.
     // A Dart timeout cannot cancel platform work, so clearing this set would
     // let each new session bypass the controller-lifetime resource bound.
-    _receivedTextIds.clear();
+    _receivedTextPackets.clear();
   }
 
   bool _currentTextAttempt(_TextSendAttempt attempt) =>
@@ -907,6 +960,16 @@ class LanternController extends ChangeNotifier {
       connected != null &&
       notes.contains(note) &&
       note.canRetry;
+
+  bool canRespondToRequest(Note note) =>
+      !_disposed &&
+      active &&
+      foreground &&
+      connected != null &&
+      notes.contains(note) &&
+      !note.mine &&
+      note.responseRequested &&
+      note.workDecision == null;
 
   bool _textCapacityAvailable() {
     if (_textAttempts.length < maxPendingTextSends &&
@@ -927,6 +990,25 @@ class LanternController extends ChangeNotifier {
       return false;
     }
     return _submitText(note, null);
+  }
+
+  Future<bool> respondToRequest(Note note, WorkDecision decision) async {
+    if (!canRespondToRequest(note) || !_textCapacityAvailable()) {
+      return false;
+    }
+    final response = Note(
+      newId(),
+      decision == WorkDecision.accepted ? 'Accepted' : 'Declined',
+      true,
+      DateTime.now(),
+      Delivery.sending,
+      replyTo: note.id,
+      workDecision: decision,
+    );
+    note.workDecision = decision;
+    notes.add(response);
+    _trimNotes();
+    return _submitText(response, null);
   }
 
   Future<bool> _submitText(Note note, int? ttl) {
@@ -952,10 +1034,15 @@ class LanternController extends ChangeNotifier {
     attempt.nativeDeadline = Timer(textSendTimeout, () {
       fail('Text submission timed out. Receipt is unconfirmed.');
     });
+    final body = <String, dynamic>{'text': note.text, 'ttl': ?ttl};
+    if (note.responseRequested) {
+      body['responseRequested'] = true;
+    } else if (note.replyTo != null && note.workDecision != null) {
+      body['replyTo'] = note.replyTo;
+      body['decision'] = note.workDecision!.name;
+    }
     unawaited(
-      _sendPacket(
-        Packet('text', note.id, {'text': note.text, 'ttl': ?ttl}),
-      ).then(
+      _sendPacket(Packet('text', note.id, body)).then(
         (_) {
           final removed = _nativeTextSends.remove(attempt);
           if (!_currentTextAttempt(attempt)) {
@@ -993,15 +1080,22 @@ class LanternController extends ChangeNotifier {
     return attempt.completion.future;
   }
 
-  Future<bool> send(String text) async {
+  Future<bool> send(String text, {bool responseRequested = false}) async {
     text = text.trim();
     if (_disposed ||
         !active ||
         !foreground ||
         connected == null ||
         text.isEmpty ||
-        text.length > 1000 ||
-        !_textCapacityAvailable()) {
+        text.length > 1000) {
+      return false;
+    }
+    if (responseRequested && messageLifetimeSeconds != null) {
+      error = 'Turn off message expiry before requesting a work response.';
+      _notify();
+      return false;
+    }
+    if (!_textCapacityAvailable()) {
       return false;
     }
     final ttl = messageLifetimeSeconds;
@@ -1014,6 +1108,7 @@ class LanternController extends ChangeNotifier {
       expiresAt: ttl == null
           ? null
           : DateTime.now().add(Duration(seconds: ttl)),
+      responseRequested: responseRequested,
     );
     notes.add(note);
     _trimNotes();

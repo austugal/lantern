@@ -1,5 +1,15 @@
 # Mobile verification record
 
+## 27 October 2026 — bounded work-request acknowledgement source milestone
+
+Scope: an ordinary, non-expiring text may explicitly request a human response. The connected recipient may accept or decline once, and that linked response uses the existing bounded text receipt and retry path. Unknown, late, conflicting or cross-session responses must not update a request or receive a false acknowledgement. No native transport, permission or background change is included.
+
+Regression and CI evidence will be recorded here before the milestone is marked validated. Tests target strict packet combinations, response opt-in, current-session target checks, one final human decision, duplicate suppression, ordinary delivery receipts/retry for the response, disappearing-message exclusion and disconnect cleanup.
+
+Local checks passed: Dart 3.9.2 formatting for all mobile library/test/tool files, standalone protocol analysis, a strict request/response packet smoke test, and the unchanged desktop suite (91 tests, Ruff and strict mypy). The Flutter suite and native builds remain PR validation gates.
+
+These checks cannot establish that a person completed work, physical radio delivery, mixed Android/iPhone operation, production signing or security assurance. The [26 October validated release](https://github.com/austugal/lantern/releases/tag/mobile-preview-2c05cf8828df) remains the working download until this exact source passes PR and release validation.
+
 ## 26 October 2026 — bounded text retry
 
 Scope: ordinary text only, 10-second native submission deadline, 30-second receipt deadline, explicit same-ID retry up to three submissions, bounded session duplicate records and unresolved native-call accounting. No native transport, permission or background changes were made.

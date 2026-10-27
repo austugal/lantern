@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased mobile — bounded text retry
+## Unreleased mobile — bounded request acknowledgement
+
+- Ordinary non-expiring text can explicitly request a human response.
+- The connected recipient can accept or decline once; the decision is linked to the original request.
+- Responses use the existing bounded text delivery, receipt, retry and duplicate protections.
+- Unknown, late and conflicting responses are rejected without a false receipt.
+
+This is current-session acknowledgement, not job completion, assignment, escalation or emergency dispatch. No transport, permission or background capability changed.
+
+## Mobile preview — bounded text retry
 
 - Text submission and receipt deadlines expose unconfirmed delivery.
 - Confirmed manual retry reuses the original text ID, with three submissions total.
