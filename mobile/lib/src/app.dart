@@ -1,3 +1,6 @@
+Warning: Package resolution error when reading "analysis_options.yaml" file:
+Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include.
+Formatted 1 file (0 changed) in 0.51 seconds.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'controller.dart';
@@ -200,24 +203,31 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     listenable: c,
     builder: (context, _) => Scaffold(
       appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(Icons.flare_rounded, size: 26),
-            SizedBox(width: 6),
-            Expanded(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  'lantern',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                    fontSize: 29,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 110) {
+              return const Icon(Icons.flare_rounded, size: 26);
+            }
+            return const Row(
+              children: [
+                Icon(Icons.flare_rounded, size: 26),
+                SizedBox(width: 6),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'lantern',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1,
+                        fontSize: 29,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
         actions: [
           IconButton(
