@@ -32,7 +32,7 @@ Text submission has a 10-second deadline. After submission, the app waits up to 
 
 For ordinary text, tap **Retry message**, read the warning and confirm **Retry now**. The same ID is reused, with at most three submissions total per message in the current connection. The receiver remembers accepted text IDs until the connection ends, so retrying does not display another copy. Retry does not mean the recipient read or accepted a work request. Disappearing messages and attachments cannot be retried with this control. Disconnecting, backgrounding or restarting clears the conversation; messages are never queued for automatic reconnection.
 
-At most eight text submissions can await receipts at once. If a native send never completes, it stays counted toward a separate eight-call limit even after reconnecting; wait for it to finish or restart Lantern. Each connection accepts at most 1,024 distinct incoming text IDs, then asks you to reconnect. These bounds prevent an unlimited retry queue. This behaviour is included in the [current validated preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-2baaffd3d1e2).
+At most eight text submissions can await receipts at once. If a native send never completes, it stays counted toward a separate eight-call limit even after reconnecting; wait for it to finish or restart Lantern. Each connection accepts at most 1,024 distinct incoming text IDs, then asks you to reconnect. These bounds prevent an unlimited retry queue. This behaviour is included in the [current validated preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-966ecdf1c0f6).
 
 ### Request acknowledgement
 
