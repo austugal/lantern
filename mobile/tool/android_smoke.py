@@ -198,8 +198,16 @@ class Smoke:
         size = adb("shell", "wm", "size").decode()
         width, height = map(int, re.findall(r"(\d+)x(\d+)", size)[-1])
         for _ in range(4):
-            adb("shell", "input", "swipe", str(width // 2), str(height // 3),
-                str(width // 2), str(height * 3 // 4), "300")
+            adb(
+                "shell",
+                "input",
+                "swipe",
+                str(width // 2),
+                str(height // 3),
+                str(width // 2),
+                str(height * 3 // 4),
+                "300",
+            )
         self.scroll_to("Compass · find north")
         self.find("Magnetic north")
         self.find("Start compass")
