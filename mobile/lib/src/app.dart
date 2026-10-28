@@ -132,6 +132,9 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   void _sessionChanged() {
+    if (c.reconnectReason != null) {
+      _tab = 0;
+    }
     if (c.connected == null) {
       _requestAcknowledgement = false;
     }
@@ -154,6 +157,28 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.detached) {
       unawaited(_media.background());
+    }
+  }
+
+  String _reconnectMessage() {
+    const cleared =
+        'Nothing was queued. The conversation and connection request were cleared.';
+    return switch (c.reconnectReason!) {
+      ReconnectReason.backgrounded =>
+        'Lantern stopped when the app left the foreground. $cleared Turn on Lantern again, then choose and confirm the person again.',
+      ReconnectReason.nativeStopped =>
+        'The nearby session stopped. $cleared Turn on Lantern again, then choose and confirm the person again.',
+      ReconnectReason.peerDisconnected =>
+        'The nearby connection ended.${c.reconnectPeerName == null ? '' : ' It was with ${c.reconnectPeerName}.'} $cleared Choose and confirm the person again.',
+    };
+  }
+
+  void _continueAfterInterruption() {
+    setState(() => _tab = 0);
+    if (c.restartNeeded) {
+      unawaited(c.start());
+    } else {
+      c.dismissReconnectNotice();
     }
   }
 
@@ -235,6 +260,30 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     actions: [
                       TextButton(
                         onPressed: c.clearError,
+                        child: const Text('Dismiss'),
+                      ),
+                    ],
+                  ),
+                if (c.reconnectReason != null)
+                  MaterialBanner(
+                    key: const Key('reconnect-notice'),
+                    leading: const Icon(Icons.link_off),
+                    forceActionsBelow: true,
+                    content: Semantics(
+                      liveRegion: true,
+                      label: 'Connection interrupted. ${_reconnectMessage()}',
+                      excludeSemantics: true,
+                      child: Text(_reconnectMessage()),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: _continueAfterInterruption,
+                        child: Text(
+                          c.restartNeeded ? 'Turn on Lantern' : 'Find nearby',
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: c.dismissReconnectNotice,
                         child: const Text('Dismiss'),
                       ),
                     ],
