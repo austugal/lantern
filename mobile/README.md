@@ -76,7 +76,7 @@ Offline mode cannot fetch new websites. Websites receive online requests; JavaSc
 
 ## What happens when I close or lock the app?
 
-The connection stops, location sharing stops, the check-in timer is cancelled and the conversation is cleared. Opening the app again does not silently reconnect or restart sharing. There is **no background rescue monitoring**.
+The connection stops, location sharing stops, the check-in timer is cancelled and the conversation is cleared. Opening the app again does not silently reconnect or restart sharing. There is **no background rescue monitoring**. If an active session was interrupted, Lantern shows why it stopped and says that nothing was queued. Tap **Turn on Lantern** to restart discovery, then choose and confirm the person again. A failed restart stays visible so you can retry or dismiss it.
 
 Your display name is saved. Conversation messages and attachments are held in memory; temporary audio playback/recording files are cleaned up by the app. Local trails and waypoints are held in memory until cleared or the app closes; stopping GPS clears the current fix but retains the trail. **Clear trail** removes the trail and waypoints.
 
@@ -104,7 +104,7 @@ There is no Lantern account server, advertising or application analytics integra
 
 ## Verified builds
 
-Flutter analysis and **93 automated tests passed**. GitHub Actions compiled the Android testing APK, iOS simulator app and unsigned iOS device app. [Verification details](docs/VERIFICATION.md).
+Flutter analysis and **111 automated tests passed**. GitHub Actions compiled the Android testing APK, iOS simulator app and unsigned iOS device app. [Verification details](docs/VERIFICATION.md).
 
 The Android emulator also passed APK installation/navigation and a native browser/offline-reader fixture. These checks do not test physical radios, real-device GPS, battery life or real-world range. Complete the [two-phone acceptance checklist](docs/DEVICE_TESTS.md) before relying on a deployment.
 
