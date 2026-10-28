@@ -3,21 +3,29 @@ import UIKit
 import MultipeerConnectivity
 import AVFoundation
 import UserNotifications
+import CoreLocation
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
   private var nearby: LanternNearby?
   private var device: LanternDevice?
+  private var compass: LanternCompass?
   override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     if let controller = window?.rootViewController as? FlutterViewController {
       nearby = LanternNearby(messenger: controller.binaryMessenger)
       device = LanternDevice(messenger: controller.binaryMessenger)
+      compass = LanternCompass(messenger: controller.binaryMessenger, window: window)
       UNUserNotificationCenter.current().delegate = self
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+  override func applicationWillResignActive(_ application: UIApplication) {
+    compass?.stop()
+    super.applicationWillResignActive(application)
+  }
   override func applicationDidEnterBackground(_ application: UIApplication) {
+    compass?.stop()
     nearby?.stop()
     device?.background()
     super.applicationDidEnterBackground(application)
@@ -27,6 +35,7 @@ import UserNotifications
     super.applicationWillEnterForeground(application)
   }
   override func applicationWillTerminate(_ application: UIApplication) {
+    compass?.stop()
     device?.background()
     super.applicationWillTerminate(application)
   }
@@ -37,6 +46,103 @@ import UserNotifications
       super.userNotificationCenter(center, willPresent: notification, withCompletionHandler: completionHandler)
     }
   }
+}
+
+/// Local magnetic heading only. This manager never starts location updates or asks for authorization.
+final class LanternCompass: NSObject, CLLocationManagerDelegate {
+  private let manager = CLLocationManager()
+  private weak var appWindow: UIWindow?
+  private var running = false
+  private var startedAt: Date?
+  private var heading: Double?
+  private var accuracy = "unreliable"
+  private var sampleUptime: TimeInterval?
+
+  init(messenger: FlutterBinaryMessenger, window: UIWindow?) {
+    appWindow = window
+    super.init()
+    manager.delegate = self
+    // Keep static headings fresh; Dart polls the latest sample at no more than 4 Hz.
+    manager.headingFilter = kCLHeadingFilterNone
+    FlutterMethodChannel(name: "org.austugal.lantern/compass", binaryMessenger: messenger).setMethodCallHandler { [weak self] call, result in
+      guard let self = self else { result(FlutterError(code: "unavailable", message: "Compass unavailable", details: nil)); return }
+      switch call.method {
+      case "start": self.start(result)
+      case "stop": self.stop(); result(nil)
+      case "read": result(self.read())
+      default: result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+  private func start(_ result: FlutterResult) {
+    guard UIApplication.shared.applicationState == .active else {
+      result(FlutterError(code: "state", message: "Keep Lantern open to use the compass", details: nil)); return
+    }
+    guard CLLocationManager.headingAvailable() else {
+      result(FlutterError(code: "unsupported", message: "A magnetic compass sensor is unavailable on this device", details: nil)); return
+    }
+    if !running {
+      running = true
+      startedAt = Date()
+      updateOrientation()
+      manager.startUpdatingHeading()
+    }
+    result(nil)
+  }
+  /// Core Location device orientations and interface orientations use opposite landscape names.
+  private func updateOrientation() {
+    let orientation = appWindow?.windowScene?.interfaceOrientation ?? .portrait
+    let next: CLDeviceOrientation
+    switch orientation {
+    case .portraitUpsideDown: next = .portraitUpsideDown
+    case .landscapeLeft: next = .landscapeRight
+    case .landscapeRight: next = .landscapeLeft
+    default: next = .portrait
+    }
+    if manager.headingOrientation != next {
+      manager.headingOrientation = next
+      // Do not present a sample computed for the previous top-of-screen orientation.
+      startedAt = Date()
+      clearSample()
+    }
+  }
+  private func clearSample() {
+    heading = nil
+    accuracy = "unreliable"
+    sampleUptime = nil
+  }
+  private func read() -> [String: Any] {
+    if UIApplication.shared.applicationState != .active { stop() }
+    if running { updateOrientation() }
+    let elapsed = sampleUptime.map { ProcessInfo.processInfo.systemUptime - $0 }
+    let ageMillis = elapsed.map { Int(max(0, $0 * 1000)) } ?? -1
+    let fresh = running && elapsed != nil && elapsed! >= 0 && elapsed! <= 2
+    return ["heading": fresh ? (heading.map { $0 as Any } ?? NSNull()) : NSNull(),
+            "accuracy": accuracy, "ageMillis": ageMillis]
+  }
+  func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+    guard running, UIApplication.shared.applicationState == .active,
+          let startedAt = startedAt, newHeading.timestamp >= startedAt else { return }
+    let age = Date().timeIntervalSince(newHeading.timestamp)
+    guard age >= 0, age <= 2, newHeading.magneticHeading.isFinite,
+          newHeading.magneticHeading >= 0, newHeading.magneticHeading < 360,
+          newHeading.headingAccuracy.isFinite, newHeading.headingAccuracy >= 0 else {
+      clearSample(); return
+    }
+    heading = newHeading.magneticHeading
+    accuracy = newHeading.headingAccuracy <= 15 ? "high" : newHeading.headingAccuracy <= 30 ? "medium" : "low"
+    sampleUptime = ProcessInfo.processInfo.systemUptime - age
+  }
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) { clearSample() }
+  func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool { false }
+  func stop() {
+    running = false
+    startedAt = nil
+    manager.stopUpdatingHeading()
+    manager.dismissHeadingCalibrationDisplay()
+    clearSample()
+  }
+  deinit { manager.stopUpdatingHeading(); manager.delegate = nil }
 }
 
 /// iOS-only, encrypted Multipeer transport. Display names are NOT authenticated.

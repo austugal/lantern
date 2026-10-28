@@ -7,6 +7,8 @@ import 'media_service.dart';
 import 'device_tools.dart';
 import 'web_screen.dart';
 import 'map_screen.dart';
+import 'compass.dart';
+import 'measurement_tools.dart';
 
 const ink = Color(0xFF182E2B);
 const paper = Color(0xFFF6F3EA);
@@ -1311,6 +1313,22 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     padding: const EdgeInsets.all(20),
     children: [
       _devicePanel(),
+      OutlinedButton.icon(
+        onPressed: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const CompassScreen())),
+        icon: const Icon(Icons.explore_outlined),
+        label: const Text('Compass · find north'),
+      ),
+      OutlinedButton.icon(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const MeasurementToolsScreen(),
+          ),
+        ),
+        icon: const Icon(Icons.calculate_outlined),
+        label: const Text('Calculator & measurements'),
+      ),
       OutlinedButton.icon(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute<void>(builder: (_) => MapScreen(controller: c)),

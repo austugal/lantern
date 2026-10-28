@@ -51,12 +51,16 @@ Android connects to Android; iPhone connects to iPhone. Each mobile session supp
 | Find me / I need help | Review and send coordinates, accuracy and fix time to the connected colleague |
 | Disappearing messages | Optional 1-minute, 5-minute, 15-minute or 1-hour expiry |
 | Location sharing | Separate opt-in, stop button, 15-minute limit; stale fixes disappear |
+| Compass | Local magnetic-north heading, explicit Start/Stop, sensor and interference warnings |
+| Calculator & measurements | Offline arithmetic, length/area/volume conversion, rectangle area/perimeter and box volume from entered dimensions |
 | Local navigation | GPS breadcrumbs, named waypoints, distance and true-north bearing |
 | Guardian alerts | Connected peer must accept the role; alerts do not automatically send location |
 | Check-in timer | Foreground only; cancels on disconnect or background |
 | Local profile | Saves your display name |
 | Simple instructions | Tappable help beside features |
 | Offline guide | Searchable built-in guidance and a staff request template |
+
+Open **Field tools → Compass · find north** for the magnetic compass, or **Calculator & measurements** for offline calculations. Hold the phone flat, away from metal and magnets. The compass requires a heading sensor and stops when left or interrupted. It does not start GPS or send coordinates. Magnetic north differs from the true-north bearings calculated between GPS points. Measurements use dimensions you enter; this is not a camera tape measure or calibrated screen ruler.
 
 Navigation gives a direction and straight-line distance, **not a road route or a safe path**. Mobile GPS requires permission and a usable fix. Desktop browser location may depend on an online provider; manually entered coordinates are supported and labelled.
 

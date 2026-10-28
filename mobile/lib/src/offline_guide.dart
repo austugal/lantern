@@ -9,6 +9,17 @@ class GuideTopic {
 
 const guideTopics = <GuideTopic>[
   GuideTopic(
+    'Find north and calculate measurements',
+    'compass north heading magnetic calculator measure convert units length area volume perimeter',
+    'Open Field tools, then Compass · find north. Tap Start compass and hold the phone flat, '
+        'with the top of the screen pointing ahead. The compass shows magnetic north, not true north. '
+        'Metal, magnets and electrical equipment can distort readings; it needs a working heading sensor. '
+        'Leaving the compass or backgrounding the app stops it. It does not start GPS or share location. '
+        'Calculator & measurements works offline: calculate arithmetic, convert units and calculate '
+        'area, perimeter or volume from dimensions you enter. It does not measure objects using a camera or the screen. '
+        'For coordinates and GPS distance, use Offline navigation and explicitly start local GPS.',
+  ),
+  GuideTopic(
     'Read web pages offline',
     'web browser internet offline save website reading',
     'Open Field tools, then Web & saved pages. Browse online requires internet. '
