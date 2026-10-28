@@ -5,6 +5,22 @@ import 'package:lantern/src/protocol.dart';
 import 'package:lantern/src/services.dart';
 import 'fakes.dart';
 
+class _DelayedTransport extends FakeTransport {
+  final heldMethods = <String>{};
+  final pending = <String, Completer<void>>{};
+
+  @override
+  Future<void> call(String method, [Map<String, dynamic>? args]) {
+    if (heldMethods.contains(method)) {
+      calls.add((method, args));
+      final completion = Completer<void>();
+      pending[method] = completion;
+      return completion.future;
+    }
+    return super.call(method, args);
+  }
+}
+
 void main() {
   late FakeTransport transport;
   late FakeLocation location;
@@ -177,4 +193,311 @@ void main() {
       expect(c.invitation, isNull);
     },
   );
+  test('background interruption requires explicit discovery restart', () async {
+    await connect();
+    await c.send('Memory-only session');
+    await c.startSharing();
+    final starts = transport.calls.where((call) => call.$1 == 'start').length;
+
+    c.setForeground(false);
+    expect(c.reconnectReason, ReconnectReason.backgrounded);
+    expect(c.reconnectPeerName, 'Alex');
+    expect(c.restartNeeded, isTrue);
+    expect(c.active, isFalse);
+    expect(c.connected, isNull);
+    expect(c.notes, isEmpty);
+    expect(c.sharing, isFalse);
+
+    // Native shutdown can arrive after the Dart lifecycle callback. It must
+    // preserve the more useful explanation of why this session ended.
+    transport.emit('stopped');
+    expect(c.reconnectReason, ReconnectReason.backgrounded);
+    c.setForeground(true);
+    expect(c.restartNeeded, isTrue);
+    expect(c.active, isFalse);
+    expect(transport.calls.where((call) => call.$1 == 'start').length, starts);
+    expect(transport.calls.where((call) => call.$1 == 'accept').length, 1);
+
+    await c.start();
+    expect(c.active, isTrue);
+    expect(c.reconnectReason, isNull);
+    expect(c.restartNeeded, isFalse);
+    expect(c.connected, isNull);
+    expect(c.sharing, isFalse);
+  });
+
+  test(
+    'backgrounding an already stopped Lantern creates no restart notice',
+    () async {
+      await c.stop();
+      c.setForeground(false);
+      c.setForeground(true);
+      expect(c.reconnectReason, isNull);
+      expect(c.restartNeeded, isFalse);
+      expect(c.active, isFalse);
+      expect(transport.calls.where((call) => call.$1 == 'start').length, 1);
+    },
+  );
+
+  test(
+    'intentional stop and its native completion create no interruption notice',
+    () async {
+      await connect();
+      await c.stop();
+      transport.emit('stopped');
+      expect(c.reconnectReason, isNull);
+      expect(c.restartNeeded, isFalse);
+      expect(c.connected, isNull);
+      expect(c.active, isFalse);
+    },
+  );
+
+  test(
+    'intentional disconnect and its native event create no interruption notice',
+    () async {
+      await connect();
+      await c.disconnect();
+      transport.emit('disconnected');
+      expect(c.reconnectReason, isNull);
+      expect(c.restartNeeded, isFalse);
+      expect(c.connected, isNull);
+      expect(c.active, isTrue);
+    },
+  );
+
+  test(
+    'unexpected native stop preserves peer context without restarting',
+    () async {
+      await connect();
+      transport.emit('stopped');
+      expect(c.reconnectReason, ReconnectReason.nativeStopped);
+      expect(c.reconnectPeerName, 'Alex');
+      expect(c.restartNeeded, isTrue);
+      expect(c.active, isFalse);
+      expect(c.connected, isNull);
+      c.setForeground(true);
+      transport.emit('connected');
+      expect(c.connected, isNull);
+      expect(transport.calls.where((call) => call.$1 == 'start').length, 1);
+      await c.start();
+      expect(c.active, isTrue);
+      expect(c.reconnectReason, isNull);
+    },
+  );
+
+  test(
+    'native stop clears an invitation and requires a fresh invitation',
+    () async {
+      transport.emit('invitation');
+      expect(c.invitation, isNotNull);
+      transport.emit('stopped');
+      expect(c.reconnectReason, ReconnectReason.nativeStopped);
+      expect(c.reconnectPeerName, 'Alex');
+      expect(c.invitation, isNull);
+      expect(c.requesting, isNull);
+      expect(c.restartNeeded, isTrue);
+      await c.respond(true);
+      expect(transport.calls.where((call) => call.$1 == 'accept'), isEmpty);
+      await c.start();
+      transport.emit('connected');
+      expect(c.connected, isNull);
+      expect(c.reconnectReason, isNull);
+    },
+  );
+
+  test(
+    'failed explicit restart retains the interruption recovery notice',
+    () async {
+      transport.emit('stopped');
+      transport.failMethod = 'start';
+      await c.start();
+      expect(c.active, isFalse);
+      expect(c.busy, isFalse);
+      expect(c.reconnectReason, ReconnectReason.nativeStopped);
+      expect(c.restartNeeded, isTrue);
+      expect(c.error, contains('Transport failed'));
+      transport.failMethod = null;
+      await c.start();
+      expect(c.active, isTrue);
+      expect(c.reconnectReason, isNull);
+    },
+  );
+
+  test(
+    'native stop during pending start cannot be undone by late completion',
+    () async {
+      final delayed = _DelayedTransport();
+      final source = FakeLocation();
+      final controller = LanternController(delayed, source, FakeProfile());
+      try {
+        await controller.initialize();
+        delayed.heldMethods.add('start');
+        final starting = controller.start();
+        expect(controller.busy, isTrue);
+        delayed.emit('stopped');
+        expect(controller.reconnectReason, ReconnectReason.nativeStopped);
+        expect(controller.restartNeeded, isTrue);
+        delayed.pending['start']!.complete();
+        await starting;
+        expect(controller.active, isFalse);
+        expect(controller.busy, isFalse);
+        expect(controller.restartNeeded, isTrue);
+        controller.setForeground(true);
+        expect(delayed.calls.where((call) => call.$1 == 'start').length, 1);
+        delayed.heldMethods.clear();
+        await controller.start();
+        expect(controller.active, isTrue);
+        expect(controller.reconnectReason, isNull);
+      } finally {
+        controller.dispose();
+        await delayed.stream.close();
+        await source.stream.close();
+      }
+    },
+  );
+
+  test(
+    'peer disconnect requires fresh consent and never restores private state',
+    () async {
+      await connect();
+      await c.send('Old conversation');
+      await c.startSharing();
+      transport.emit('disconnected');
+      expect(c.reconnectReason, ReconnectReason.peerDisconnected);
+      expect(c.reconnectPeerName, 'Alex');
+      expect(c.active, isTrue);
+      expect(c.notes, isEmpty);
+      expect(c.sharing, isFalse);
+      expect(c.connected, isNull);
+      final accepts = transport.calls
+          .where((call) => call.$1 == 'accept')
+          .length;
+
+      transport.emit('connected');
+      transport.emit(
+        'data',
+        data: Packet('text', newId(), {
+          'text': 'Without renewed consent',
+        }).encode(),
+      );
+      expect(c.connected, isNull);
+      expect(c.notes, isEmpty);
+      expect(
+        transport.calls.where((call) => call.$1 == 'accept').length,
+        accepts,
+      );
+      transport.emit('invitation', code: '5678');
+      expect(c.invitation?.code, '5678');
+      expect(c.connected, isNull);
+      await c.respond(true);
+      transport.emit('connected');
+      expect(c.connected?.name, 'Alex');
+      expect(c.reconnectReason, isNull);
+      expect(c.notes, isEmpty);
+      expect(c.sharing, isFalse);
+      expect(c.guardianAccepted, isFalse);
+      expect(c.checkInUntil, isNull);
+    },
+  );
+
+  test(
+    'unrelated peer disconnect does not interrupt the current session',
+    () async {
+      await connect();
+      transport.emit('disconnected', id: 'stranger');
+      expect(c.connected?.id, 'peer');
+      expect(c.reconnectReason, isNull);
+      expect(c.restartNeeded, isFalse);
+    },
+  );
+
+  test('dismissing interruption notice does not enable discovery', () async {
+    transport.emit('stopped');
+    c.dismissReconnectNotice();
+    expect(c.reconnectReason, isNull);
+    expect(c.active, isFalse);
+    expect(c.connected, isNull);
+    expect(transport.calls.where((call) => call.$1 == 'start').length, 1);
+  });
+
+  test(
+    'old native request failure cannot clear a new connection request',
+    () async {
+      final delayed = _DelayedTransport();
+      final source = FakeLocation();
+      final controller = LanternController(delayed, source, FakeProfile());
+      try {
+        await controller.initialize();
+        await controller.start();
+        delayed.heldMethods.add('request');
+        final oldRequest = controller.request(
+          const Peer('old-peer', 'Old peer'),
+        );
+        expect(controller.requesting, 'old-peer');
+        await controller.disconnect();
+        delayed.heldMethods.clear();
+        await controller.request(const Peer('new-peer', 'New peer'));
+        expect(controller.requesting, 'new-peer');
+        delayed.pending['request']!.completeError(
+          StateError('Old request failed'),
+        );
+        await oldRequest;
+        expect(controller.requesting, 'new-peer');
+        expect(controller.error, isEmpty);
+        expect(controller.reconnectReason, isNull);
+      } finally {
+        controller.dispose();
+        await delayed.stream.close();
+        await source.stream.close();
+      }
+    },
+  );
+
+  for (final accept in [true, false]) {
+    test(
+      'old native ${accept ? 'accept' : 'reject'} failure cannot disconnect a new session',
+      () async {
+        final delayed = _DelayedTransport();
+        final source = FakeLocation();
+        final controller = LanternController(delayed, source, FakeProfile());
+        try {
+          await controller.initialize();
+          await controller.start();
+          final method = accept ? 'accept' : 'reject';
+          delayed.heldMethods.add(method);
+          delayed.emit('invitation', id: 'old-peer', name: 'Old peer');
+          final oldResponse = controller.respond(accept);
+          await controller.disconnect();
+          delayed.heldMethods.clear();
+          delayed.emit(
+            'invitation',
+            id: 'new-peer',
+            name: 'New peer',
+            code: '5678',
+          );
+          await controller.respond(true);
+          delayed.emit('connected', id: 'new-peer', name: 'New peer');
+          expect(controller.connected?.id, 'new-peer');
+          final disconnects = delayed.calls
+              .where((call) => call.$1 == 'disconnect')
+              .length;
+          delayed.pending[method]!.completeError(
+            StateError('Old response failed'),
+          );
+          await oldResponse;
+          expect(controller.connected?.id, 'new-peer');
+          expect(controller.error, isEmpty);
+          expect(controller.reconnectReason, isNull);
+          expect(
+            delayed.calls.where((call) => call.$1 == 'disconnect').length,
+            disconnects,
+          );
+        } finally {
+          controller.dispose();
+          await delayed.stream.close();
+          await source.stream.close();
+        }
+      },
+    );
+  }
 }
