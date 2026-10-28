@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 28 October 2026 — field instruments (validation pending)
+
+Scope: explicit local magnetic compass, offline arithmetic, length/area/volume conversions and rectangle/box calculations. Existing opt-in GPS/true-north waypoint bearings remain separate. No new permission, transport, GPS sharing or background service is added. Primary SDK sources are recorded in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+New tests cover compass lifecycle, stale and delayed readings, bounded polling, unavailable sensors, native channel stop/clear, arithmetic precedence/errors/bounds, unit factors, geometry, small-screen enlarged text and entry from Field tools. The Android installed-APK smoke adds the compass-off and calculator screens. Executable Flutter and native CI results will be recorded before this candidate is released. Local direct Dart formatting and the extracted 148-check calculation harness passed; no physical compass accuracy, orientation, GPS or range test is claimed.
+
 ## 28 October 2026 — explicit foreground reconnection recovery
 
 Scope: foreground recovery guidance over the existing native session. Background, unexpected native stop and peer connection loss clear current-session state and display a reason. Restarting discovery requires a tap; reconnecting requires fresh peer choice and confirmation. No message, request, location, guardian or check-in state is queued or restored. No native transport, permission or background execution change was included.

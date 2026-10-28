@@ -168,7 +168,9 @@ class Smoke:
         self.find("Torch on")
         self.record("03-field-tools")
         self.tap("Open offline guide")
-        self.find("Connect two phones")
+        # Verify the fixed guide heading, rather than a topic that can scroll
+        # off screen when new guidance is added.
+        self.find("Built-in guidance, not AI.")
         self.record("04-offline-guide")
         adb("shell", "input", "keyevent", "KEYCODE_BACK")
         self.find("Torch on")
@@ -190,6 +192,23 @@ class Smoke:
         adb("shell", "input", "keyevent", "KEYCODE_BACK")
         self.find("No saved pages")
         self.record("09-browser-return")
+        adb("shell", "input", "keyevent", "KEYCODE_BACK")
+        # Restore the field list to its top before opening the new instruments.
+        adb("shell", "input", "keyevent", "KEYCODE_MOVE_HOME")
+        size = adb("shell", "wm", "size").decode()
+        width, height = map(int, re.findall(r"(\d+)x(\d+)", size)[-1])
+        for _ in range(4):
+            adb("shell", "input", "swipe", str(width // 2), str(height // 3),
+                str(width // 2), str(height * 3 // 4), "300")
+        self.scroll_to("Compass · find north")
+        self.find("Magnetic north")
+        self.find("Start compass")
+        self.record("10-compass-off")
+        adb("shell", "input", "keyevent", "KEYCODE_BACK")
+        self.scroll_to("Calculator & measurements")
+        self.find("Calculator & measures")
+        self.find("Calculate")
+        self.record("11-calculator")
         if not adb("shell", "pidof", PACKAGE, check=False).strip():
             raise AssertionError("Lantern process exited")
         crashes = adb("logcat", "-d", "-b", "crash").decode(errors="replace")
@@ -221,6 +240,7 @@ class Smoke:
                         "two-phone nearby connection",
                         "radio range",
                         "physical GPS",
+                        "physical compass accuracy and orientation",
                         "camera/torch hardware",
                         "iPhone",
                         "background delivery",

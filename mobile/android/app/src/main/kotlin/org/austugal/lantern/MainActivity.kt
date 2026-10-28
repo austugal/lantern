@@ -8,6 +8,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.os.SystemClock
+import android.view.Surface
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.net.Uri
@@ -39,12 +45,37 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private var foreground = true
     private val notificationChannel = "lantern_messages"
     private val service = "org.austugal.lantern.v1"
+    private val compassSensors by lazy { getSystemService(SensorManager::class.java) }
+    private var compassRunning = false
+    private var compassForeground = false
+    private var compassStartedNanos = 0L
+    private var compassSampleNanos = 0L
+    private var compassAccuracy = SensorManager.SENSOR_STATUS_UNRELIABLE
+    private val compassVector = FloatArray(5)
+    private var compassVectorLength = 0
+    private val compassMatrix = FloatArray(9)
+    private val compassDisplayMatrix = FloatArray(9)
+    private val compassAngles = FloatArray(3)
+    private val compassListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent) {
+            if (!compassRunning || !compassForeground || event.timestamp < compassStartedNanos) return
+            if (event.values.size < 3 || event.values.any { !it.isFinite() }) return
+            compassVectorLength = minOf(event.values.size, compassVector.size)
+            event.values.copyInto(compassVector, endIndex = compassVectorLength)
+            compassSampleNanos = event.timestamp
+            compassAccuracy = event.accuracy
+        }
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+            if (compassRunning) compassAccuracy = accuracy
+        }
+    }
 
     override fun configureFlutterEngine(engine: FlutterEngine) {
         super.configureFlutterEngine(engine)
         EventChannel(engine.dartExecutor.binaryMessenger, "org.austugal.lantern/events").setStreamHandler(this)
         MethodChannel(engine.dartExecutor.binaryMessenger, "org.austugal.lantern/nearby").setMethodCallHandler(::handle)
         MethodChannel(engine.dartExecutor.binaryMessenger, "org.austugal.lantern/device").setMethodCallHandler(::handleDevice)
+        MethodChannel(engine.dartExecutor.binaryMessenger, "org.austugal.lantern/compass").setMethodCallHandler(::handleCompass)
     }
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) { sink = events }
     override fun onCancel(arguments: Any?) { shutdown(); sink = null }
@@ -246,6 +277,75 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
             }
         } catch (e: Exception) { result.error("device", e.localizedMessage ?: "Device operation unavailable", null) }
     }
+    /** Magnetic north only: never starts GPS, requests location, or sends data. */
+    private fun handleCompass(call: MethodCall, result: MethodChannel.Result) {
+        try {
+            when (call.method) {
+                "start" -> {
+                    if (!compassForeground) { result.error("state", "Keep Lantern open to use the compass", null); return }
+                    if (compassRunning) { result.success(null); return }
+                    val sensor = compassSensors.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+                    if (sensor == null) { result.error("unsupported", "A magnetic compass sensor is unavailable on this device", null); return }
+                    compassStartedNanos = SystemClock.elapsedRealtimeNanos()
+                    compassRunning = true
+                    // UI sampling only. TYPE_GAME_ROTATION_VECTOR must never be used: it has no north reference.
+                    if (!compassSensors.registerListener(compassListener, sensor, SensorManager.SENSOR_DELAY_UI)) {
+                        stopCompass()
+                        result.error("unsupported", "The compass sensor could not be started", null)
+                    } else result.success(null)
+                }
+                "stop" -> { stopCompass(); result.success(null) }
+                "read" -> result.success(readCompass())
+                else -> result.notImplemented()
+            }
+        } catch (error: Exception) {
+            stopCompass()
+            result.error("compass", "Compass unavailable: ${error.localizedMessage}", null)
+        }
+    }
+    private fun readCompass(): Map<String, Any?> {
+        val ageMillis = if (compassSampleNanos == 0L) -1L else
+            (SystemClock.elapsedRealtimeNanos() - compassSampleNanos) / 1_000_000L
+        var accuracy = when (compassAccuracy) {
+            SensorManager.SENSOR_STATUS_ACCURACY_HIGH -> "high"
+            SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM -> "medium"
+            SensorManager.SENSOR_STATUS_ACCURACY_LOW -> "low"
+            else -> "unreliable"
+        }
+        var heading: Double? = null
+        if (compassRunning && compassForeground && ageMillis in 0L..2000L &&
+            compassVectorLength >= 3 && accuracy != "unreliable") {
+            SensorManager.getRotationMatrixFromVector(compassMatrix, compassVector.copyOf(compassVectorLength))
+            @Suppress("DEPRECATION")
+            val rotation = if (Build.VERSION.SDK_INT >= 30) display?.rotation ?: Surface.ROTATION_0
+                else windowManager.defaultDisplay.rotation
+            val (axisX, axisY) = when (rotation) {
+                Surface.ROTATION_90 -> Pair(SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X)
+                Surface.ROTATION_180 -> Pair(SensorManager.AXIS_MINUS_X, SensorManager.AXIS_MINUS_Y)
+                Surface.ROTATION_270 -> Pair(SensorManager.AXIS_MINUS_Y, SensorManager.AXIS_X)
+                else -> Pair(SensorManager.AXIS_X, SensorManager.AXIS_Y)
+            }
+            if (SensorManager.remapCoordinateSystem(compassMatrix, axisX, axisY, compassDisplayMatrix)) {
+                // A face-up, approximately level screen gives the top edge a meaningful azimuth.
+                if (compassDisplayMatrix[8] < 0.5f) accuracy = "tilted"
+                else {
+                    SensorManager.getOrientation(compassDisplayMatrix, compassAngles)
+                    val degrees = Math.toDegrees(compassAngles[0].toDouble())
+                    if (degrees.isFinite()) heading = (degrees + 360.0) % 360.0
+                }
+            }
+        }
+        return mapOf("heading" to heading, "accuracy" to accuracy, "ageMillis" to ageMillis)
+    }
+    private fun stopCompass() {
+        compassRunning = false
+        compassSensors.unregisterListener(compassListener)
+        compassSampleNanos = 0L
+        compassStartedNanos = 0L
+        compassVectorLength = 0
+        compassAccuracy = SensorManager.SENSOR_STATUS_UNRELIABLE
+        compassVector.fill(0f)
+    }
     private fun setTorch(enabled: Boolean, result: MethodChannel.Result) {
         try {
             val manager = getSystemService(CameraManager::class.java)
@@ -293,8 +393,12 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         permissionResult = null
     }
     override fun onStart() { super.onStart(); foreground = true }
-    override fun onStop() { foreground = false; turnTorchOff(); shutdown(); emit("stopped"); super.onStop() }
+    override fun onResume() { super.onResume(); compassForeground = true }
+    override fun onPause() { compassForeground = false; stopCompass(); super.onPause() }
+    override fun onStop() { compassForeground = false; stopCompass(); foreground = false; turnTorchOff(); shutdown(); emit("stopped"); super.onStop() }
     override fun onDestroy() {
+        compassForeground = false
+        stopCompass()
         foreground = false
         turnTorchOff()
         notificationPermissionResult?.error("cancelled", "Notification request cancelled", null)

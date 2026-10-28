@@ -93,3 +93,11 @@ There is no application account server or application analytics integration. Goo
 - https://pub.dev/packages/record
 - https://pub.dev/packages/geolocator
 - https://pub.dev/packages/shared_preferences
+
+## Field instruments
+
+`org.austugal.lantern/compass` exposes start/stop/read without starting a location stream or requesting authorization. Android uses a magnetically referenced rotation vector and remaps device axes to display rotation; it never uses the north-free game rotation vector. iOS uses a separate CLLocationManager for magnetic CLHeading only, with interface orientation mapped to headingOrientation. Native lifecycle shutdown is independent of Dart. The Dart controller polls at most four times per second, hides stale/invalid data and requires a new Start after interruption. No heading is sent through the nearby transport.
+
+Primary SDK references reviewed before implementation: [Android SensorManager](https://developer.android.com/reference/android/hardware/SensorManager), [Android position sensors](https://developer.android.com/develop/sensors-and-location/sensors/sensors_position), [Apple heading and course](https://developer.apple.com/documentation/corelocation/getting-heading-and-course-information), [CLHeading](https://developer.apple.com/documentation/corelocation/clheading), [CLDeviceOrientation](https://developer.apple.com/documentation/corelocation/cldeviceorientation) and [UIInterfaceOrientation.landscapeLeft](https://developer.apple.com/documentation/uikit/uiinterfaceorientation/landscapeleft). Magnetic and true north are intentionally not conflated.
+
+Arithmetic uses a length/depth-bounded numeric parser, not code evaluation. Measurement formulas validate finite, non-negative conversion values or positive dimensions and use fixed documented units. All calculation input and results are memory-only.

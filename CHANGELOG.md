@@ -1,5 +1,14 @@
 # Changelog
 
+## Mobile preview — field instruments
+
+- Local magnetic compass with explicit Start/Stop, freshness and sensor-quality checks, display-orientation mapping and interruption shutdown.
+- Offline bounded arithmetic calculator and metric/imperial length, area and volume conversions.
+- Rectangle area/perimeter and box volume from entered dimensions in metres.
+- Built-in guidance distinguishes magnetic north from GPS true-north bearings, and entered dimensions from physical measurement.
+
+No GPS, sharing, camera, network or permission starts automatically. Physical sensor accuracy and orientation remain unverified pending device tests. Desktop and nearby transports are unchanged.
+
 ## Mobile preview — explicit foreground reconnection recovery
 
 - Background, native-stop and peer-disconnect events show a visible reason and state-clearing notice.

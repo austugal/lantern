@@ -6,6 +6,9 @@ Record phone models, OS versions, app commit, tester, date and observed result f
 
 | Test | Expected result | Result |
 | --- | --- | --- |
+| Compass hardware and orientation | Check north against a reference compass outdoors, portrait/landscape top-of-screen, interference and low-accuracy warnings; no GPS or sharing starts | Pending |
+| Compass lifecycle and sensor absence | Stop/back/inactive/background clears heading and stops sensors; no automatic resume; absent sensors show unavailable, not 0° | Pending |
+| Calculator and measurements | Enter known dimensions, compare with a reference calculation, verify units and decimal comma; no network or permission prompt | Pending |
 | First launch | No discovery/location permission prompt before user action | Pending |
 | Turn on / deny permission | Clear error, no false connected state; granting in Settings allows retry | Pending |
 | Radios disabled | Actionable OS/error state; no fake peers | Pending |

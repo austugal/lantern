@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -11,6 +12,38 @@ import 'dart:convert';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('native compass reports capability and clears its sample on Stop', (
+    tester,
+  ) async {
+    const compass = MethodChannel('org.austugal.lantern/compass');
+    await tester.pumpWidget(const MaterialApp(home: Scaffold()));
+    await tester.pumpAndSettle();
+    await compass.invokeMethod<void>('stop');
+    var reading = await compass.invokeMapMethod<String, Object?>('read');
+    expect(reading?['heading'], isNull);
+    expect(reading?['ageMillis'], -1);
+    try {
+      await compass.invokeMethod<void>('start');
+      await tester.pump(const Duration(milliseconds: 500));
+      reading = await compass.invokeMapMethod<String, Object?>('read');
+      expect(reading, contains('accuracy'));
+      expect(reading?['ageMillis'], isA<num>());
+      if (reading?['heading'] case final num heading) {
+        expect(heading.isFinite, isTrue);
+        expect(heading, inInclusiveRange(0, 359.999999999));
+      }
+    } on PlatformException catch (error) {
+      // Missing sensor is valid on an emulator, but missing channel/wrong API is not.
+      expect(error.code, 'unsupported');
+    } finally {
+      await compass.invokeMethod<void>('stop');
+    }
+    reading = await compass.invokeMapMethod<String, Object?>('read');
+    expect(reading?['heading'], isNull);
+    expect(reading?['ageMillis'], -1);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('native browser disables scripts and public text opens offline', (
     tester,

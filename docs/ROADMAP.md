@@ -58,6 +58,10 @@ Released and validated: a sender can mark an ordinary, non-expiring text as requ
 
 Validated source now distinguishes background interruption, unexpected native shutdown and peer connection loss. A visible notice says that nothing was queued, routes the user to Nearby and requires an explicit restart when discovery stopped. The user must choose and confirm a peer again; messages, requests, location sharing, guardian state and check-ins remain cleared. Delayed failures from an earlier native request or consent action cannot alter a newer session. This adds no automatic reconnect, persistence, transport change or background execution. See [mobile verification](../mobile/docs/VERIFICATION.md) and [development record](DEVELOPMENT-2026-10-28.md).
 
+### Field instruments: compass and offline calculations
+
+Adds an explicit local magnetic compass, arithmetic calculator, length/area/volume conversions and rectangle/box calculations from entered dimensions. Existing GPS position and true-north point bearings remain separate and opt-in. Sensor accuracy, real-device orientation and interference testing remain pending; no camera ranging or calibrated screen ruler is claimed. Build and test status is recorded in [mobile verification](../mobile/docs/VERIFICATION.md).
+
 ## Longer-term ideas
 
 1. Consent receipts. A signed log, readable by you, of every grant given, used and revoked,
