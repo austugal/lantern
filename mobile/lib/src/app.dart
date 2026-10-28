@@ -1,6 +1,3 @@
-Warning: Package resolution error when reading "analysis_options.yaml" file:
-Failed to resolve package URI "package:flutter_lints/flutter.yaml" in include.
-Formatted 1 file (0 changed) in 0.51 seconds.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'controller.dart';
