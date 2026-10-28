@@ -37,7 +37,7 @@ Ordinary text becomes **Delivery unconfirmed** if submission times out or no app
 
 For an ordinary non-expiring work request, choose **Request acknowledgement**. The connected colleague can accept or decline once. Their linked response has its own delivery receipt and retry status. Acceptance records that the colleague tapped Accept; it does not prove completion, escalation or supervisor approval. Requests and responses remain in the current foreground connection and clear on disconnect.
 
-Android connects to Android; iPhone connects to iPhone. Each mobile session supports **one connected peer**. Switching apps or locking the phone stops the session, cancels check-in timers and clears its messages. This preview has no background messaging.
+Android connects to Android; iPhone connects to iPhone. Each mobile session supports **one connected peer**. Switching apps or locking the phone stops the session, cancels check-in timers and clears its messages. This preview has no background messaging. When Lantern returns to the foreground after an interruption, a visible notice explains that nothing was queued. Restarting discovery requires a tap, and reconnecting still requires choosing and confirming the person again; location sharing, check-ins and messages do not restart.
 
 ### Mobile capabilities
 
@@ -125,7 +125,7 @@ Lantern is an experimental preview. Do not use it as your only emergency communi
 - **Explicit consent:** people accept connections; location sharing and guardian roles require separate choices.
 - **Limited exposure:** location sharing expires, stale positions are removed, and mobile sessions end when the app backgrounds.
 - **Reviewable releases:** download from this repository's release pages. The mobile release includes `SHA256SUMS.txt` for file-integrity checking; checksums do not prove a file is harmless.
-- **Verified checks:** 91 desktop tests and 93 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
+- **Verified checks:** 91 desktop tests and 111 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
 
 The Android APK uses development signing and desktop packages are unsigned. No “anti-hack”, malware-free or unhackable guarantee is made. Test on noncritical devices and workflows before operational use.
 
@@ -140,7 +140,7 @@ No independent security audit or immunity from hacking is claimed. For details, 
 | Area | Completed checks |
 | --- | --- |
 | Desktop | 91 Python tests; lint and strict type checks; integration checks; Windows, macOS and Linux builds and executable checks |
-| Mobile | Flutter analyzer and **93 automated tests** passed; Android testing APK, iOS simulator app and unsigned iOS device app compiled |
+| Mobile | Flutter analyzer and **111 automated tests** passed; Android testing APK, iOS simulator app and unsigned iOS device app compiled |
 | Mobile wire format | 10,019 standalone offline packet checks passed |
 
 See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification](mobile/docs/VERIFICATION.md) for evidence and limits. Real phone-to-phone radio, GPS, range and battery tests are still outstanding. A successful build does not prove those behaviours.

@@ -1,5 +1,19 @@
 # Mobile verification record
 
+## 28 October 2026 — explicit foreground reconnection recovery
+
+Scope: foreground recovery guidance over the existing native session. Background, unexpected native stop and peer connection loss clear current-session state and display a reason. Restarting discovery requires a tap; reconnecting requires fresh peer choice and confirmation. No message, request, location, guardian or check-in state is queued or restored. No native transport, permission or background execution change was included.
+
+[PR #11](https://github.com/austugal/lantern/pull/11) validated code source `39a99c457443c7018129d76ef889373b3ca89061` in [mobile run 40697447557](https://github.com/austugal/lantern/actions/runs/40697447557) and [desktop CI run 40697445599](https://github.com/austugal/lantern/actions/runs/40697445599).
+
+- Formatting and static analysis passed; **111 Flutter tests passed**.
+- Android testing APK, iPhone simulator and unsigned iPhone device builds passed.
+- The Android API 35 emulator installed and exercised the actual APK successfully.
+- Desktop lint, strict typing and **91 tests** passed on Python 3.10, 3.12 and 3.13.
+- New coverage includes background and native-stop recovery, deliberate stop/disconnect suppression, explicit restart failure, renewed consent, late callback rejection, delayed native failure isolation and a 320-pixel-wide UI at 1.5× text scale.
+
+The first candidate run exposed narrow-screen banner and app-title overflow. The final source shortens the notice and collapses the title at constrained widths; the full gate then passed. Automated checks did not use physical phones and do not establish real lifecycle behaviour, radio delivery, mixed Android/iPhone operation, battery use, production signing, security assurance, background messaging or emergency-service contact. Physical checks remain pending in [DEVICE_TESTS.md](DEVICE_TESTS.md).
+
 ## 27 October 2026 — bounded work-request acknowledgement
 
 Scope: an ordinary, non-expiring text may explicitly request a human response. The connected recipient may accept or decline once, and that linked response uses the existing bounded text receipt and retry path. Unknown, late, conflicting or cross-session responses do not update a request or receive a false acknowledgement. No native transport, permission or background change was included.

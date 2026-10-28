@@ -10,7 +10,7 @@ For an ordinary text request, the sender can choose **Request acknowledgement**.
 
 Acknowledgement is limited to the current foreground connection. It is unavailable for disappearing messages and attachments, is cleared on disconnect, and does not assign work to an account, department or queue.
 
-This preview ends the session when a phone is locked or backgrounded. It is not yet a pocket pager, group radio, emergency dispatch system or hotel-wide communications network.
+This preview ends the session when a phone is locked or backgrounded. A visible recovery notice says that nothing was queued and requires a deliberate discovery restart followed by fresh peer confirmation. It does not restore messages, requests, location sharing, guardian state or check-ins. This preview is not yet a pocket pager, group radio, emergency dispatch system or hotel-wide communications network.
 
 ## Workplace acceptance requirements (not implemented claims)
 

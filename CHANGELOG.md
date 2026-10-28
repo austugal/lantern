@@ -1,5 +1,15 @@
 # Changelog
 
+## Mobile preview — explicit foreground reconnection recovery
+
+- Background, native-stop and peer-disconnect events show a visible reason and state-clearing notice.
+- Restarting discovery requires a user tap; reconnecting requires fresh peer choice and confirmation.
+- Messages, requests, sharing, guardian and check-in state do not resume or queue.
+- Delayed native request and consent failures cannot alter a newer session.
+- A failed restart stays visible for an explicit retry or dismissal.
+
+This remains one-peer, same-platform and foreground-only. No transport, permission, background service, automatic resend or persistent message queue was added. Physical-device lifecycle and radio validation remain outstanding.
+
 ## Mobile preview — bounded request acknowledgement
 
 - Ordinary non-expiring text can explicitly request a human response.

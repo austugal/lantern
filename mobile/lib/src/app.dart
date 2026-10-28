@@ -132,6 +132,9 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   void _sessionChanged() {
+    if (c.reconnectReason != null) {
+      _tab = 0;
+    }
     if (c.connected == null) {
       _requestAcknowledgement = false;
     }
@@ -157,6 +160,27 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     }
   }
 
+  String _reconnectMessage() {
+    const cleared = 'Messages and requests were cleared; nothing was queued.';
+    return switch (c.reconnectReason!) {
+      ReconnectReason.backgrounded =>
+        'Lantern stopped in the background. $cleared Turn it on and confirm the person again.',
+      ReconnectReason.nativeStopped =>
+        'The nearby session stopped. $cleared Turn Lantern on and confirm the person again.',
+      ReconnectReason.peerDisconnected =>
+        'The nearby connection${c.reconnectPeerName == null ? '' : ' to ${c.reconnectPeerName}'} ended. $cleared Choose and confirm the person again.',
+    };
+  }
+
+  void _continueAfterInterruption() {
+    setState(() => _tab = 0);
+    if (c.restartNeeded) {
+      unawaited(c.start());
+    } else {
+      c.dismissReconnectNotice();
+    }
+  }
+
   LanternController get c => widget.controller;
   @override
   void dispose() {
@@ -176,24 +200,31 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     listenable: c,
     builder: (context, _) => Scaffold(
       appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(Icons.flare_rounded, size: 30),
-            SizedBox(width: 10),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  'lantern',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1,
-                    fontSize: 29,
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 110) {
+              return const Icon(Icons.flare_rounded, size: 26);
+            }
+            return const Row(
+              children: [
+                Icon(Icons.flare_rounded, size: 26),
+                SizedBox(width: 6),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'lantern',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -1,
+                        fontSize: 29,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
         actions: [
           IconButton(
@@ -235,6 +266,30 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                     actions: [
                       TextButton(
                         onPressed: c.clearError,
+                        child: const Text('Dismiss'),
+                      ),
+                    ],
+                  ),
+                if (c.reconnectReason != null)
+                  MaterialBanner(
+                    key: const Key('reconnect-notice'),
+                    leading: const Icon(Icons.link_off),
+                    forceActionsBelow: true,
+                    content: Semantics(
+                      liveRegion: true,
+                      label: 'Connection interrupted. ${_reconnectMessage()}',
+                      excludeSemantics: true,
+                      child: Text(_reconnectMessage()),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: _continueAfterInterruption,
+                        child: Text(
+                          c.restartNeeded ? 'Turn on Lantern' : 'Find nearby',
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: c.dismissReconnectNotice,
                         child: const Text('Dismiss'),
                       ),
                     ],

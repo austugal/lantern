@@ -21,6 +21,9 @@ enum Delivery { sending, sent, delivered, failed }
 
 enum WorkDecision { accepted, declined }
 
+/// Recovery always requires a new foreground user action and fresh peer consent.
+enum ReconnectReason { backgrounded, nativeStopped, peerDisconnected }
+
 class Note {
   Note(
     this.id,
@@ -100,8 +103,11 @@ class LanternController extends ChangeNotifier {
     _events = transport.events.listen(
       _onEvent,
       onError: (Object e) {
+        if (_disposed || (!active && !busy)) {
+          return;
+        }
         error = describe(e);
-        unawaited(stop());
+        unawaited(_stopNearby(reason: ReconnectReason.nativeStopped));
       },
     );
     _expiry = Timer.periodic(const Duration(seconds: 5), (_) {
@@ -169,6 +175,18 @@ class LanternController extends ChangeNotifier {
   bool foreground = true, _disposed = false;
   int _epoch = 0, _locationEpoch = 0;
   Peer? connected;
+  ReconnectReason? reconnectReason;
+  String? reconnectPeerName;
+  bool get restartNeeded =>
+      reconnectReason == ReconnectReason.backgrounded ||
+      reconnectReason == ReconnectReason.nativeStopped;
+
+  void dismissReconnectNotice() {
+    reconnectReason = null;
+    reconnectPeerName = null;
+    _notify();
+  }
+
   Invitation? invitation;
   String? requesting;
   RemoteLocation? remoteLocation;
@@ -401,7 +419,7 @@ class LanternController extends ChangeNotifier {
   }
 
   Future<void> start() async {
-    if (busy || active || !foreground || name.isEmpty) {
+    if (_disposed || busy || active || !foreground || name.isEmpty) {
       return;
     }
     final epoch = ++_epoch;
@@ -412,6 +430,10 @@ class LanternController extends ChangeNotifier {
       await transport.call('start', {'name': name});
       if (epoch == _epoch && foreground) {
         active = true;
+        if (restartNeeded) {
+          reconnectReason = null;
+          reconnectPeerName = null;
+        }
       }
     } catch (e) {
       if (epoch == _epoch) {
@@ -425,8 +447,20 @@ class LanternController extends ChangeNotifier {
     }
   }
 
-  Future<void> stop() async {
-    ++_epoch;
+  Future<void> stop() => _stopNearby();
+
+  String? get _currentPeerName =>
+      connected?.name ?? invitation?.peer.name ?? peers[requesting]?.name;
+
+  Future<void> _stopNearby({ReconnectReason? reason}) async {
+    if (_disposed) {
+      return;
+    }
+    final epoch = ++_epoch;
+    reconnectPeerName = reason == null
+        ? null
+        : _currentPeerName ?? reconnectPeerName;
+    reconnectReason = reason;
     active = false;
     busy = false;
     _resetConnection();
@@ -435,8 +469,10 @@ class LanternController extends ChangeNotifier {
     try {
       await transport.call('stop');
     } catch (e) {
-      error = describe(e);
-      _notify();
+      if (!_disposed && epoch == _epoch) {
+        error = describe(e);
+        _notify();
+      }
     }
   }
 
@@ -465,18 +501,30 @@ class LanternController extends ChangeNotifier {
   }
 
   Future<void> request(Peer peer) async {
-    if (!active ||
+    if (_disposed ||
+        !active ||
+        !foreground ||
         connected != null ||
         requesting != null ||
         invitation != null) {
       return;
     }
+    final epoch = ++_epoch;
     requesting = peer.id;
     _armInvitationTimeout();
     _notify();
     try {
       await transport.call('request', {'id': peer.id});
     } catch (e) {
+      if (_disposed ||
+          epoch != _epoch ||
+          !active ||
+          !foreground ||
+          requesting != peer.id ||
+          connected != null ||
+          invitation != null) {
+        return;
+      }
       requesting = null;
       error = describe(e);
       _notify();
@@ -495,9 +543,10 @@ class LanternController extends ChangeNotifier {
 
   Future<void> respond(bool accept) async {
     final pending = invitation;
-    if (pending == null || !active) {
+    if (_disposed || pending == null || !active || !foreground) {
       return;
     }
+    final epoch = ++_epoch;
     invitation = null;
     requesting = accept ? pending.peer.id : null;
     _notify();
@@ -506,29 +555,58 @@ class LanternController extends ChangeNotifier {
         'id': pending.peer.id,
       });
     } catch (e) {
+      if (_disposed ||
+          epoch != _epoch ||
+          !active ||
+          !foreground ||
+          connected != null ||
+          invitation != null ||
+          requesting != (accept ? pending.peer.id : null)) {
+        return;
+      }
       error = describe(e);
       await disconnect();
     }
   }
 
   Future<void> disconnect() async {
+    if (_disposed) {
+      return;
+    }
+    final epoch = ++_epoch;
     final id = connected?.id ?? invitation?.peer.id ?? requesting;
+    reconnectReason = null;
+    reconnectPeerName = null;
     _resetConnection();
     _notify();
     if (id != null) {
       try {
         await transport.call('disconnect', {'id': id});
       } catch (e) {
-        error = describe(e);
-        _notify();
+        if (!_disposed && epoch == _epoch) {
+          error = describe(e);
+          _notify();
+        }
       }
     }
   }
 
   void _onEvent(Map<String, dynamic> e) {
+    if (_disposed) {
+      return;
+    }
     final type = e['type'];
     if (type == 'stopped') {
+      // Expected shutdown and repeated native callbacks must not replace a
+      // deliberate stop or background notice with a new recovery request.
+      if (!active && !busy) {
+        return;
+      }
       ++_epoch;
+      reconnectPeerName = _currentPeerName ?? reconnectPeerName;
+      reconnectReason = foreground
+          ? ReconnectReason.nativeStopped
+          : ReconnectReason.backgrounded;
       active = false;
       busy = false;
       peers.clear();
@@ -574,6 +652,8 @@ class LanternController extends ChangeNotifier {
           return;
         }
         _cancelTextSends();
+        reconnectReason = null;
+        reconnectPeerName = null;
         connected = Peer(
           id,
           e['name'] as String? ?? peers[id]?.name ?? 'Nearby person',
@@ -587,6 +667,10 @@ class LanternController extends ChangeNotifier {
         if (connected?.id == id ||
             requesting == id ||
             invitation?.peer.id == id) {
+          ++_epoch;
+          reconnectReason = ReconnectReason.peerDisconnected;
+          reconnectPeerName =
+              connected?.name ?? invitation?.peer.name ?? peers[id]?.name;
           _resetConnection();
         }
       case 'data':
@@ -1202,10 +1286,28 @@ class LanternController extends ChangeNotifier {
   }
 
   void setForeground(bool value) {
+    if (_disposed || foreground == value) {
+      return;
+    }
     foreground = value;
     if (!value) {
+      final interrupted =
+          active ||
+          busy ||
+          connected != null ||
+          requesting != null ||
+          invitation != null ||
+          reconnectReason == ReconnectReason.nativeStopped;
       unawaited(stopNavigation());
-      unawaited(stop());
+      unawaited(
+        _stopNearby(
+          reason: interrupted ? ReconnectReason.backgrounded : reconnectReason,
+        ),
+      );
+    } else {
+      // Returning to the foreground only exposes the recovery action. It never
+      // restarts discovery, a connection, location sharing, or a check-in.
+      _notify();
     }
   }
 
@@ -1217,6 +1319,7 @@ class LanternController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    ++_epoch;
     _cancelTextSends();
     ++_attachmentSendEpoch;
     _incomingAttachments.clear();
