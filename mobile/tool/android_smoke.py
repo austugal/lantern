@@ -168,7 +168,9 @@ class Smoke:
         self.find("Torch on")
         self.record("03-field-tools")
         self.tap("Open offline guide")
-        self.find("Connect two phones")
+        # Verify the fixed guide heading, rather than a topic that can scroll
+        # off screen when new guidance is added.
+        self.find("Built-in guidance, not AI.")
         self.record("04-offline-guide")
         adb("shell", "input", "keyevent", "KEYCODE_BACK")
         self.find("Torch on")
@@ -238,6 +240,7 @@ class Smoke:
                         "two-phone nearby connection",
                         "radio range",
                         "physical GPS",
+                        "physical compass accuracy and orientation",
                         "camera/torch hardware",
                         "iPhone",
                         "background delivery",
