@@ -161,15 +161,14 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   String _reconnectMessage() {
-    const cleared =
-        'Nothing was queued. The conversation and connection request were cleared.';
+    const cleared = 'Messages and requests were cleared; nothing was queued.';
     return switch (c.reconnectReason!) {
       ReconnectReason.backgrounded =>
-        'Lantern stopped when the app left the foreground. $cleared Turn on Lantern again, then choose and confirm the person again.',
+        'Lantern stopped in the background. $cleared Turn it on and confirm the person again.',
       ReconnectReason.nativeStopped =>
-        'The nearby session stopped. $cleared Turn on Lantern again, then choose and confirm the person again.',
+        'The nearby session stopped. $cleared Turn Lantern on and confirm the person again.',
       ReconnectReason.peerDisconnected =>
-        'The nearby connection ended.${c.reconnectPeerName == null ? '' : ' It was with ${c.reconnectPeerName}.'} $cleared Choose and confirm the person again.',
+        'The nearby connection${c.reconnectPeerName == null ? '' : ' to ${c.reconnectPeerName}'} ended. $cleared Choose and confirm the person again.',
     };
   }
 
@@ -203,9 +202,9 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Row(
           children: [
-            Icon(Icons.flare_rounded, size: 30),
-            SizedBox(width: 10),
-            Flexible(
+            Icon(Icons.flare_rounded, size: 26),
+            SizedBox(width: 6),
+            Expanded(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
