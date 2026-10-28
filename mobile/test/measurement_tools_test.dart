@@ -145,34 +145,46 @@ void main() {
     await tester.scrollUntilVisible(
       find.widgetWithText(TextField, 'Value to convert'),
       200,
+      scrollable: find.byType(Scrollable).first,
     );
     await tester.enterText(
       find.widgetWithText(TextField, 'Value to convert'),
       '1',
     );
-    await tester.scrollUntilVisible(find.text('Convert'), 100);
+    await tester.scrollUntilVisible(
+      find.text('Convert'),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Convert'));
     await tester.pump();
     expect(find.text('3.280839895 ft'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.widgetWithText(TextField, 'Length (m)'),
       150,
+      scrollable: find.byType(Scrollable).first,
     );
     await tester.enterText(find.widgetWithText(TextField, 'Length (m)'), '3');
     await tester.scrollUntilVisible(
       find.widgetWithText(TextField, 'Width (m)'),
       100,
+      scrollable: find.byType(Scrollable).first,
     );
     await tester.enterText(find.widgetWithText(TextField, 'Width (m)'), '4');
     await tester.scrollUntilVisible(
       find.widgetWithText(TextField, 'Height (m), optional'),
       100,
+      scrollable: find.byType(Scrollable).first,
     );
     await tester.enterText(
       find.widgetWithText(TextField, 'Height (m), optional'),
       '2',
     );
-    await tester.scrollUntilVisible(find.text('Calculate dimensions'), 100);
+    await tester.scrollUntilVisible(
+      find.text('Calculate dimensions'),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('Calculate dimensions'));
     await tester.pump();
     expect(
