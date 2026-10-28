@@ -1,5 +1,7 @@
 # Lantern Comms
 
+[Project contributors](CONTRIBUTORS.md)
+
 ![A robot writes Lantern — Stay connected. Even offline.](assets/lantern-robot.gif)
 
 [View the still banner](assets/lantern-banner.png)

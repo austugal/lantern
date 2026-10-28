@@ -143,7 +143,7 @@ double convertMeasurement(double value, MeasureUnit from, MeasureUnit to) {
   double width, {
   double? height,
 }) {
-  for (final dimension in [length, width, if (height != null) height]) {
+  for (final dimension in [length, width, ?height]) {
     if (!dimension.isFinite || dimension <= 0 || dimension > 1e6) {
       throw const FormatException(
         'Each dimension must be above 0 and at most 1,000,000 metres.',
