@@ -6,6 +6,8 @@ Scope: foreground recovery guidance over the existing native session. Background
 
 [PR #11](https://github.com/austugal/lantern/pull/11) validated code source `39a99c457443c7018129d76ef889373b3ca89061` in [mobile run 40697447557](https://github.com/austugal/lantern/actions/runs/40697447557) and [desktop CI run 40697445599](https://github.com/austugal/lantern/actions/runs/40697445599).
 
+[PR #11](https://github.com/austugal/lantern/pull/11) final head `d812730f730d0d861c73c01ced78e8f0e7c540ab` passed [mobile run 40700274716](https://github.com/austugal/lantern/actions/runs/40700274716) and [desktop CI run 40700274439](https://github.com/austugal/lantern/actions/runs/40700274439), then merged as `966ecdf1c0f61233e2624f74ec804e5e8e93a2d4`. [Main release run 40703204234](https://github.com/austugal/lantern/actions/runs/40703204234) repeated the mobile checks, native builds and actual-APK emulator gate before publication. [Main desktop CI 40703204218](https://github.com/austugal/lantern/actions/runs/40703204218) and [desktop preview run 40703204474](https://github.com/austugal/lantern/actions/runs/40703204474) passed. [Download the validated preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-966ecdf1c0f6): Android testing APK, iPhone simulator ZIP, unsigned iPhone device ZIP and SHA256SUMS.txt.
+
 - Formatting and static analysis passed; **111 Flutter tests passed**.
 - Android testing APK, iPhone simulator and unsigned iPhone device builds passed.
 - The Android API 35 emulator installed and exercised the actual APK successfully.
