@@ -1,10 +1,25 @@
 # Mobile verification record
 
-## 28 October 2026 — field instruments (validation pending)
+## 28 October 2026 — field instruments
 
 Scope: explicit local magnetic compass, offline arithmetic, length/area/volume conversions and rectangle/box calculations. Existing opt-in GPS/true-north waypoint bearings remain separate. No new permission, transport, GPS sharing or background service is added. Primary SDK sources are recorded in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-New tests cover compass lifecycle, stale and delayed readings, bounded polling, unavailable sensors, native channel stop/clear, arithmetic precedence/errors/bounds, unit factors, geometry, small-screen enlarged text and entry from Field tools. The Android installed-APK smoke adds the compass-off and calculator screens. Executable Flutter and native CI results will be recorded before this candidate is released. Local direct Dart formatting and the extracted 148-check calculation harness passed; no physical compass accuracy, orientation, GPS or range test is claimed.
+New tests cover compass lifecycle, stale and delayed readings, bounded polling, unavailable sensors, native channel stop/clear, arithmetic precedence/errors/bounds, unit factors, geometry, small-screen enlarged text and entry from Field tools. The Android installed-APK smoke adds the compass-off and calculator screens. The completed PR and main-release checks are recorded below. Local direct Dart formatting and the extracted 148-check calculation harness passed; no physical compass accuracy, orientation, GPS or range test is claimed.
+
+[PR #13](https://github.com/austugal/lantern/pull/13) validated source `f828ba9191e88bb2a9e7ad5ce9bbc5014c03f5c8` in [mobile run 40776050809](https://github.com/austugal/lantern/actions/runs/40776050809), then merged as `7060afce7e971fec67824e8f562510e00bf2b98c`. The main desktop package gate found Python formatting in the APK harness; [PR #14](https://github.com/austugal/lantern/pull/14) corrected only whitespace, with identical before/after Python ASTs, and merged as `3b9a0e88899008b7e72fa0f69b617b49c5a1e5c0`.
+
+[Final main mobile run 40778887313](https://github.com/austugal/lantern/actions/runs/40778887313) passed:
+
+- Formatting, static analysis and **130 Flutter tests**.
+- Android testing APK, iOS simulator and unsigned iOS device builds.
+- All **11 installed-APK navigation checks**, including the compass-off and calculator screens, on Android API 35.
+- Both native integration fixtures: compass capability/Stop clearing and offline reading.
+
+[Main desktop CI 40778887394](https://github.com/austugal/lantern/actions/runs/40778887394) passed **91 tests**, lint and strict typing on Python 3.10, 3.12 and 3.13. [Desktop packaging run 40778887458](https://github.com/austugal/lantern/actions/runs/40778887458) passed formatting, builds and executable checks on Linux, macOS and Windows.
+
+[Download the validated mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-3b9a0e888990), published **28 October 2026 at 22:37:07 UTC**: Android testing APK, iOS simulator ZIP, unsigned iOS device ZIP and SHA256SUMS.txt. [Desktop preview](https://github.com/austugal/lantern/releases/tag/desktop-preview-3b9a0e888990) contains the three desktop packages.
+
+These checks do not establish physical compass accuracy, real-device orientation or interference behaviour, GPS/radio performance, battery use, mixed Android–iPhone communication, background execution, production signing, independent security assurance or emergency-service contact. Physical checks remain pending in [DEVICE_TESTS.md](DEVICE_TESTS.md).
 
 ## 28 October 2026 — explicit foreground reconnection recovery
 

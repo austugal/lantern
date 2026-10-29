@@ -60,7 +60,11 @@ Validated source now distinguishes background interruption, unexpected native sh
 
 ### Field instruments: compass and offline calculations
 
-Adds an explicit local magnetic compass, arithmetic calculator, length/area/volume conversions and rectangle/box calculations from entered dimensions. Existing GPS position and true-north point bearings remain separate and opt-in. Sensor accuracy, real-device orientation and interference testing remain pending; no camera ranging or calibrated screen ruler is claimed. Build and test status is recorded in [mobile verification](../mobile/docs/VERIFICATION.md).
+Released and validated: an explicit local magnetic compass, arithmetic calculator, length/area/volume conversions and rectangle/box calculations from entered dimensions. Existing GPS position and true-north point bearings remain separate and opt-in. Sensor accuracy, real-device orientation and interference testing remain pending; no camera ranging or calibrated screen ruler is claimed. Build and test status is recorded in [mobile verification](../mobile/docs/VERIFICATION.md).
+
+### 29 October 2026: PR formatting gate
+
+The release-readiness milestone adds `ruff format --check .` to PR CI before typing and tests, so the Python formatting failure previously found only during desktop packaging is checked before merge. Application source, transports, permissions and background behaviour are unchanged. The validated field-instruments release is preserved. See [development record](DEVELOPMENT-2026-10-29.md).
 
 ## Longer-term ideas
 

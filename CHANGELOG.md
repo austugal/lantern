@@ -2,6 +2,8 @@
 
 ## Mobile preview — field instruments
 
+Published as [mobile-preview-3b9a0e888990](https://github.com/austugal/lantern/releases/tag/mobile-preview-3b9a0e888990), after 130 Flutter tests, native builds and the installed-APK gate passed.
+
 - Local magnetic compass with explicit Start/Stop, freshness and sensor-quality checks, display-orientation mapping and interruption shutdown.
 - Offline bounded arithmetic calculator and metric/imperial length, area and volume conversions.
 - Rectangle area/perimeter and box volume from entered dimensions in metres.
