@@ -146,3 +146,9 @@ For coordinates, fix accuracy and distance to a waypoint, use the existing **Off
 - Rectangle area/perimeter and box volume, from measured dimensions entered in metres.
 
 Results are rounded to 10 significant digits. These tools do not measure objects through the camera or screen, and do not replace a calibrated measuring instrument. Inputs/results stay in memory and are not sent to a peer.
+
+### Attachment delivery status
+
+Photos and voice notes have a 10-second deadline for each native submission and wait up to 30 seconds for an app receipt after the complete transfer is submitted. **Delivery unconfirmed** means no receipt was observed; the attachment may already have arrived. A later matching receipt can update it to Delivered in the same connection. There is no automatic resend or attachment retry. Confirm with your colleague before sending another copy. A receipt does not prove reading, listening or task acceptance.
+
+Only one attachment transfer submits at a time. At most four genuinely unresolved native attachment calls remain admitted across reconnects; a timeout does not cancel native work. If that limit is reached, wait for native completion or restart Lantern. Disconnect/background still clears the conversation and receipt timers.
