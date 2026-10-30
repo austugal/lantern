@@ -669,7 +669,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             children: [
               _help(
                 'Conversation',
-                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. For an ordinary non-expiring work request, choose Request acknowledgement before sending. The recipient can accept or decline once. That response has its own delivery status; acceptance does not prove the work is complete. Lantern waits up to 10 seconds to submit text, then up to 30 seconds for an app receipt. You can explicitly retry ordinary text twice in this connection; it may already have arrived. Disappearing messages and attachments cannot be retried here. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
+                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. For an ordinary non-expiring work request, choose Request acknowledgement before sending. The recipient can accept or decline once. That response has its own delivery status; acceptance does not prove the work is complete. Lantern waits up to 10 seconds to submit text, then up to 30 seconds for an app receipt. You can explicitly retry ordinary text twice in this connection; it may already have arrived. For photos and voice notes, the app waits up to 30 seconds for a receipt after transfer submission. If delivery is unconfirmed, it may already have arrived; confirm with your colleague before sending another copy. Disappearing messages and attachments cannot be retried here. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
               ),
               IconButton(
                 tooltip: 'Disconnect and clear conversation',
@@ -796,10 +796,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                       Delivery.sent =>
                                         'Sent · awaiting receipt',
                                       Delivery.delivered => 'Delivered',
-                                      Delivery.failed =>
-                                        note.attachmentBytes == null
-                                            ? 'Delivery unconfirmed'
-                                            : 'Transfer failed',
+                                      Delivery.failed => 'Delivery unconfirmed',
                                     }
                                   : '${note.time.hour.toString().padLeft(2, '0')}:${note.time.minute.toString().padLeft(2, '0')}',
                               style: TextStyle(
@@ -911,7 +908,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             ),
             _help(
               'Photos and voice',
-              'Choose or take a photo, or record up to 30 seconds. Review the draft before sending. Photos are resized and re-encoded without embedded location metadata; each attachment is limited to 1 MiB. The photo picker may disconnect this foreground-only app. Your draft stays on this phone until you reconnect, send or discard it. Voice recording stops and is discarded when the app backgrounds. Recipients can copy attachments. Voice never plays automatically.',
+              'Choose or take a photo, or record up to 30 seconds. Review the draft before sending. Photos are resized and re-encoded without embedded location metadata; each attachment is limited to 1 MiB. The photo picker may disconnect this foreground-only app. Your draft stays on this phone until you reconnect, send or discard it. Voice recording stops and is discarded when the app backgrounds. Recipients can copy attachments. Voice never plays automatically. After transfer submission, Lantern waits 30 seconds for an app receipt, then shows Delivery unconfirmed. It may already have arrived; there is no automatic resend. Confirm with your colleague before sending another copy.',
             ),
             if (_media.recording) const Text('Recording · maximum 30 seconds'),
             if (_media.playing)

@@ -66,6 +66,10 @@ Released and validated: an explicit local magnetic compass, arithmetic calculato
 
 The release-readiness milestone adds `ruff format --check .` to PR CI before typing and tests, so the Python formatting failure previously found only during desktop packaging is checked before merge. Application source, transports, permissions and background behaviour are unchanged. The validated field-instruments release is preserved. See [development record](DEVELOPMENT-2026-10-29.md).
 
+### 30 October 2026: bounded attachment delivery status
+
+Implementation on an isolated branch extends workplace delivery-failure handling to photos and voice notes: a 30-second app-receipt deadline after complete submission, visible uncertainty, late-receipt recovery, old-session callback guards and a four-call unresolved-native budget retained across reconnects. No attachment retry, protocol/transport change, new permission or background capability is added. Current release remains available while PR Android/iOS and desktop checks run. See [development record](DEVELOPMENT-2026-10-30.md) and [verification](../mobile/docs/VERIFICATION.md).
+
 ## Longer-term ideas
 
 1. Consent receipts. A signed log, readable by you, of every grant given, used and revoked,

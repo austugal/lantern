@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — bounded attachment delivery status
+
+- Photos and voice notes become Delivery unconfirmed if no app receipt arrives within 30 seconds after complete submission.
+- A late matching receipt can recover the status; native submission errors cannot overwrite Delivered.
+- Late transfer callbacks cannot alter a new connection, and four unresolved native attachment calls form a controller-lifetime bound.
+- Receipt timers stop on acknowledgement, session cleanup, note removal and disposal.
+
+No automatic resend, attachment retry, transport or background capability is added. The prior validated preview remains available while CI runs.
+
 ## Mobile preview — field instruments
 
 Published as [mobile-preview-3b9a0e888990](https://github.com/austugal/lantern/releases/tag/mobile-preview-3b9a0e888990), after 130 Flutter tests, native builds and the installed-APK gate passed.

@@ -27,3 +27,11 @@ Both contain a Claude co-author trailer and session marker. These commits are ab
 Please confirm which refs feed the repository homepage Contributors sidebar. If it is intended to reflect the default branch, please rebuild its contributor data to match corrected main and the Contributors REST response. If old release tags, retained branches or immutable pull-request refs intentionally contribute, please explain the supported remediation that preserves released history. The legacy refs above are disclosed for a complete diagnosis; cache invalidation alone may not resolve the entry.
 
 This evidence is prepared for review. No support request or public message was sent.
+
+## Recheck — 30 October 2026
+
+- Current main before this milestone: `44fe19a1e358b945680b54057fa63d8f9f14369a`.
+- At **13:42:30 UTC**, `GET https://api.github.com/repos/austugal/lantern/contributors?anon=1` returned only `austugal`, **58 contributions**.
+- The fully loaded repository homepage at `https://github.com/austugal/lantern` independently displayed **Contributors (2)**, **austugal** and **claude** in its sidebar. The observation used the live browser after the initial loading skeleton resolved. The sidebar has not refreshed to match the API/default-branch attribution. More than 24 hours have passed since the 16 October correction.
+- The old branches, immutable PR refs and release tags listed above remain disclosed. This run did not delete or rewrite them. No assertion is made that Claude is absent from all retained history.
+- The exact support request above remains ready to submit; no support message was sent. GitHub controls the generated sidebar; repository credits cannot force a refresh.

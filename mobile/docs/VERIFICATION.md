@@ -1,5 +1,13 @@
 # Mobile verification record
 
+## 30 October 2026 — bounded attachment delivery status
+
+Candidate source adds a 30-second app-receipt deadline after complete attachment submission, honest uncertainty, late-receipt recovery, callback isolation and a four-call unresolved native attachment budget across reconnects. It retains the existing transport, packet format, foreground-only behaviour and explicit media/location/notification consent. No automatic resend or attachment retry is added.
+
+Regression tests cover final-submission timing, missing/late/wrong-peer receipts, independent deadlines, early receipts racing native completion/error/timeout, native budget across reconnects, stale session results, teardown and trimming; a conversation widget test checks the visible unconfirmed status and absence of retry. Local Dart 3.9.2 formatting and full-repository Ruff lint/format passed. Flutter analyzer/tests and Android/iOS CI results are pending; no successful execution of these new tests is claimed yet. The current validated download remains [mobile-preview-3b9a0e888990](https://github.com/austugal/lantern/releases/tag/mobile-preview-3b9a0e888990).
+
+No physical devices, radio delivery, mixed Android–iPhone operation, background execution, production signing or independent security audit were used or established.
+
 ## 28 October 2026 — field instruments
 
 Scope: explicit local magnetic compass, offline arithmetic, length/area/volume conversions and rectangle/box calculations. Existing opt-in GPS/true-north waypoint bearings remain separate. No new permission, transport, GPS sharing or background service is added. Primary SDK sources are recorded in [ARCHITECTURE.md](ARCHITECTURE.md).

@@ -37,6 +37,8 @@ Use the small **help buttons** for short instructions. Opening help does not sta
 
 Ordinary text becomes **Delivery unconfirmed** if submission times out or no app receipt arrives within 30 seconds of submission. It may already have arrived. **Retry message** asks for confirmation and reuses its ID, with at most two retries in the same connection. Disappearing messages and attachments do not have this retry control. There is no automatic resend or retry after reconnection. A receipt still does not mean a colleague accepted a task.
 
+Photos and voice notes wait up to 30 seconds for a receipt after transfer submission. **Delivery unconfirmed** means the app has no receipt; the attachment may already have arrived. There is no automatic resend or attachment retry. Confirm with your colleague before sending another copy.
+
 For an ordinary non-expiring work request, choose **Request acknowledgement**. The connected colleague can accept or decline once. Their linked response has its own delivery receipt and retry status. Acceptance records that the colleague tapped Accept; it does not prove completion, escalation or supervisor approval. Requests and responses remain in the current foreground connection and clear on disconnect.
 
 Android connects to Android; iPhone connects to iPhone. Each mobile session supports **one connected peer**. Switching apps or locking the phone stops the session, cancels check-in timers and clears its messages. This preview has no background messaging. When Lantern returns to the foreground after an interruption, a visible notice explains that nothing was queued. Restarting discovery requires a tap, and reconnecting still requires choosing and confirming the person again; location sharing, check-ins and messages do not restart.

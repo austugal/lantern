@@ -124,6 +124,7 @@ class LanternController extends ChangeNotifier {
       );
       if (notes.length != before) {
         _pruneTextAttempts();
+        _pruneAttachmentReceipts();
         _notify();
       }
       if (remoteLocation != null &&
@@ -156,7 +157,14 @@ class LanternController extends ChangeNotifier {
   final notes = <Note>[];
   final _incomingAttachments = <String, _IncomingAttachment>{};
   bool sendingAttachment = false;
-  int _attachmentSendEpoch = 0;
+  int _attachmentSendEpoch = 0, _attachmentSession = 0;
+  static const attachmentSendTimeout = Duration(seconds: 10);
+  static const attachmentReceiptTimeout = Duration(seconds: 30);
+  static const maxPendingAttachmentSends = 4;
+  // Keep actual platform calls counted until they settle. A Dart timeout or
+  // reconnection cannot cancel them or bypass this controller-lifetime bound.
+  final _nativeAttachmentSends = <Object>{};
+  final _attachmentReceipts = <String, Timer>{};
   void Function(Note)? onNoteReceived;
 
   void _receivedNote(Note note) {
@@ -478,8 +486,7 @@ class LanternController extends ChangeNotifier {
 
   void _resetConnection() {
     _cancelTextSends();
-    ++_attachmentSendEpoch;
-    sendingAttachment = false;
+    _cancelAttachmentSends();
     _incomingAttachments.clear();
     _guardianDeadline?.cancel();
     _checkInTimer?.cancel();
@@ -652,6 +659,7 @@ class LanternController extends ChangeNotifier {
           return;
         }
         _cancelTextSends();
+        _cancelAttachmentSends();
         reconnectReason = null;
         reconnectPeerName = null;
         connected = Peer(
@@ -790,6 +798,7 @@ class LanternController extends ChangeNotifier {
                 note.delivery = Delivery.delivered;
                 note.deliveryDetail = null;
                 _textAttempts.remove(note.id)?.cancel(true);
+                _attachmentReceipts.remove(note.id)?.cancel();
               }
             }
           case 'location':
@@ -887,9 +896,57 @@ class LanternController extends ChangeNotifier {
     );
   }
 
+  bool _currentAttachment(Note note, Peer peer, int session) =>
+      !_disposed &&
+      active &&
+      foreground &&
+      session == _attachmentSession &&
+      identical(connected, peer) &&
+      notes.contains(note) &&
+      (note.expiresAt == null || DateTime.now().isBefore(note.expiresAt!));
+
+  Future<void> _sendAttachmentPacket(Packet packet) {
+    final token = Object();
+    _nativeAttachmentSends.add(token);
+    return _sendPacket(packet)
+        .whenComplete(() {
+          _nativeAttachmentSends.remove(token);
+        })
+        .timeout(attachmentSendTimeout);
+  }
+
+  void _pruneAttachmentReceipts() {
+    final retained = notes.map((note) => note.id).toSet();
+    for (final id in _attachmentReceipts.keys.toList()) {
+      if (!retained.contains(id)) {
+        _attachmentReceipts.remove(id)?.cancel();
+      }
+    }
+  }
+
+  void _cancelAttachmentSends() {
+    ++_attachmentSession;
+    ++_attachmentSendEpoch;
+    sendingAttachment = false;
+    for (final timer in _attachmentReceipts.values) {
+      timer.cancel();
+    }
+    _attachmentReceipts.clear();
+  }
+
   Future<bool> sendAttachment(Uint8List bytes, String mime) async {
     final peer = connected;
-    if (peer == null || !foreground || !active || sendingAttachment) {
+    if (_disposed ||
+        peer == null ||
+        !foreground ||
+        !active ||
+        sendingAttachment) {
+      return false;
+    }
+    if (_nativeAttachmentSends.length >= maxPendingAttachmentSends) {
+      error =
+          'Attachment sends are still pending. Wait for them or restart Lantern before sending more.';
+      _notify();
       return false;
     }
     if (!validAttachment(bytes, mime)) {
@@ -899,7 +956,9 @@ class LanternController extends ChangeNotifier {
       return false;
     }
     final epoch = ++_attachmentSendEpoch;
+    final session = _attachmentSession;
     sendingAttachment = true;
+    error = '';
     final immutable = Uint8List.fromList(bytes);
     final ttl = messageLifetimeSeconds;
     final note = Note(
@@ -920,55 +979,77 @@ class LanternController extends ChangeNotifier {
     final count =
         (immutable.length + attachmentChunkBytes - 1) ~/ attachmentChunkBytes;
     final deadline = DateTime.now().add(const Duration(minutes: 2));
+    bool current() =>
+        epoch == _attachmentSendEpoch &&
+        _currentAttachment(note, peer, session);
+    void requireCurrent() {
+      if (!current() || !DateTime.now().isBefore(deadline)) {
+        throw StateError('Attachment transfer ended before completion.');
+      }
+    }
+
     try {
-      await _sendPacket(
+      // A listener may stop or dispose Lantern during the notification above.
+      requireCurrent();
+      await _sendAttachmentPacket(
         Packet('attachmentStart', note.id, {
           'mime': mime,
           'size': immutable.length,
           'chunks': count,
           'ttl': ?ttl,
         }),
-      ).timeout(const Duration(seconds: 10));
+      );
       for (var index = 0; index < count; index++) {
-        if (connected != peer ||
-            epoch != _attachmentSendEpoch ||
-            !foreground ||
-            DateTime.now().isAfter(deadline) ||
-            (note.expiresAt != null &&
-                !DateTime.now().isBefore(note.expiresAt!))) {
-          throw StateError('Attachment transfer ended before completion.');
-        }
+        requireCurrent();
         final start = index * attachmentChunkBytes;
         final end = (start + attachmentChunkBytes).clamp(0, immutable.length);
-        await _sendPacket(
+        await _sendAttachmentPacket(
           Packet('attachmentChunk', newId(), {
             'transfer': note.id,
             'index': index,
             'data': base64Encode(immutable.sublist(start, end)),
           }),
-        ).timeout(const Duration(seconds: 10));
+        );
         if (index + 1 < count) {
           await Future<void>.delayed(const Duration(milliseconds: 10));
         }
       }
-      if (connected != peer || epoch != _attachmentSendEpoch) {
-        return false;
-      }
-      if (note.delivery == Delivery.sending) {
+      requireCurrent();
+      if (note.delivery != Delivery.delivered) {
         note.delivery = Delivery.sent;
+        _attachmentReceipts[note.id] = Timer(attachmentReceiptTimeout, () {
+          _attachmentReceipts.remove(note.id);
+          if (!_currentAttachment(note, peer, session) ||
+              note.delivery == Delivery.delivered) {
+            return;
+          }
+          note.delivery = Delivery.failed;
+          note.deliveryDetail =
+              'No attachment receipt after 30 seconds. Delivery is unconfirmed; it may already have arrived.';
+          _notify();
+        });
       }
       return true;
     } catch (e) {
-      note.delivery = Delivery.failed;
-      if (connected == peer && epoch == _attachmentSendEpoch) {
-        error = describe(e);
+      if (!current()) {
+        return false;
       }
+      // A valid app receipt can race a native rejection or submission timeout.
+      // It is stronger evidence than that native result and must remain visible.
+      if (note.delivery == Delivery.delivered) {
+        return true;
+      }
+      note.delivery = Delivery.failed;
+      note.deliveryDetail = e is TimeoutException
+          ? 'Attachment submission timed out. Delivery is unconfirmed; it may already have arrived.'
+          : 'Attachment submission failed. Delivery is unconfirmed; it may already have arrived.';
+      error = describe(e);
       return false;
     } finally {
       if (epoch == _attachmentSendEpoch) {
         sendingAttachment = false;
+        _notify();
       }
-      _notify();
     }
   }
 
@@ -1005,6 +1086,7 @@ class LanternController extends ChangeNotifier {
       notes.removeRange(0, notes.length - 200);
     }
     _pruneTextAttempts();
+    _pruneAttachmentReceipts();
   }
 
   void _pruneTextAttempts() {
@@ -1321,7 +1403,7 @@ class LanternController extends ChangeNotifier {
     _disposed = true;
     ++_epoch;
     _cancelTextSends();
-    ++_attachmentSendEpoch;
+    _cancelAttachmentSends();
     _incomingAttachments.clear();
     onNoteReceived = null;
     ++_locationEpoch;
