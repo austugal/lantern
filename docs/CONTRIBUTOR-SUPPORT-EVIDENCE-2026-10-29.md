@@ -35,3 +35,5 @@ This evidence is prepared for review. No support request or public message was s
 - The fully loaded repository homepage at `https://github.com/austugal/lantern` independently displayed **Contributors (2)**, **austugal** and **claude** in its sidebar. The observation used the live browser after the initial loading skeleton resolved. The sidebar has not refreshed to match the API/default-branch attribution. More than 24 hours have passed since the 16 October correction.
 - The old branches, immutable PR refs and release tags listed above remain disclosed. This run did not delete or rewrite them. No assertion is made that Claude is absent from all retained history.
 - The exact support request above remains ready to submit; no support message was sent. GitHub controls the generated sidebar; repository credits cannot force a refresh.
+
+The retained remote branch, PR-head and release-tag refs listed above were rechecked with `git ls-remote` on 30 October and still match the earlier snapshot. Corrected main before today’s merge again showed only austugal/GitHub author and committer identities. Neither those retained refs nor released history were rewritten.

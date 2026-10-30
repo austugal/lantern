@@ -2,9 +2,18 @@
 
 ## 30 October 2026 — bounded attachment delivery status
 
-Candidate source adds a 30-second app-receipt deadline after complete attachment submission, honest uncertainty, late-receipt recovery, callback isolation and a four-call unresolved native attachment budget across reconnects. It retains the existing transport, packet format, foreground-only behaviour and explicit media/location/notification consent. No automatic resend or attachment retry is added.
+Validated source adds a 30-second app-receipt deadline after complete attachment submission, honest uncertainty, late-receipt recovery, callback isolation and a four-call unresolved native attachment budget across reconnects. It retains the existing transport, packet format, foreground-only behaviour and explicit media/location/notification consent. No automatic resend or attachment retry is added.
 
-Regression tests cover final-submission timing, missing/late/wrong-peer receipts, independent deadlines, early receipts racing native completion/error/timeout, native budget across reconnects, stale session results, teardown and trimming; a conversation widget test checks the visible unconfirmed status and absence of retry. Local Dart 3.9.2 formatting and full-repository Ruff lint/format passed. Flutter analyzer/tests and Android/iOS CI results are pending; no successful execution of these new tests is claimed yet. The current validated download remains [mobile-preview-3b9a0e888990](https://github.com/austugal/lantern/releases/tag/mobile-preview-3b9a0e888990).
+Regression tests cover final-submission timing, missing/late/wrong-peer receipts, independent deadlines, early receipts racing native completion/error/timeout, native budget across reconnects, stale session results, teardown and trimming; a conversation widget test checks the visible unconfirmed status and absence of retry. Local Dart 3.9.2 formatting and full-repository Ruff lint/format passed. A read-only specialist review found no blocker.
+
+[PR #17](https://github.com/austugal/lantern/pull/17) validated head `bc352f927a4f2fabf1aa51b450d4c0ba9650854e` in [mobile run 41066100434](https://github.com/austugal/lantern/actions/runs/41066100434) and [desktop CI 41066100401](https://github.com/austugal/lantern/actions/runs/41066100401), then merged as `b810cdf371a52e92c3d3a5af2d964a526fcd17f9`. The merge and validated head have the identical tree `5b7bb97139810d85ff9c05d94b9b3cb61144fafd`.
+
+- Formatting, static analysis and **147 Flutter tests** passed, including **17 new cases**.
+- Android APK, iOS simulator and unsigned iOS device builds passed.
+- All **11 installed-APK navigation checks** and **both native integration fixtures** passed on Android API 35. The PR smoke result is true and all check exit codes are zero; no system launcher ANR recovery was needed.
+- Desktop lint, formatting, strict typing and **91 tests** passed on Python 3.10, 3.12 and 3.13.
+
+[Main mobile run 41068600810](https://github.com/austugal/lantern/actions/runs/41068600810) passed every gate again: clean analysis, all 147 tests, Android/iOS builds, all 11 installed-APK navigation checks, both native fixtures and publication. [Main desktop CI 41068600774](https://github.com/austugal/lantern/actions/runs/41068600774) and [desktop packaging 41068601103](https://github.com/austugal/lantern/actions/runs/41068601103) passed. [Desktop preview](https://github.com/austugal/lantern/releases/tag/desktop-preview-b810cdf371a5), published 30 October at 14:05:53 UTC, contains Linux, macOS and Windows packages. [Download the validated mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-b810cdf371a5), published **30 October 2026 at 14:19:52 UTC**: Android testing APK, iOS simulator ZIP, unsigned iOS device ZIP and SHA256SUMS.txt. All four assets are uploaded and target the validated merge commit. Previous releases remain available.
 
 No physical devices, radio delivery, mixed Android–iPhone operation, background execution, production signing or independent security audit were used or established.
 
