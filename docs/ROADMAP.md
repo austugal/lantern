@@ -68,7 +68,7 @@ The release-readiness milestone adds `ruff format --check .` to PR CI before typ
 
 ### 30 October 2026: bounded attachment delivery status
 
-Implementation on an isolated branch extends workplace delivery-failure handling to photos and voice notes: a 30-second app-receipt deadline after complete submission, visible uncertainty, late-receipt recovery, old-session callback guards and a four-call unresolved-native budget retained across reconnects. No attachment retry, protocol/transport change, new permission or background capability is added. Current release remains available while PR Android/iOS and desktop checks run. See [development record](DEVELOPMENT-2026-10-30.md) and [verification](../mobile/docs/VERIFICATION.md).
+Merged through [PR #17](https://github.com/austugal/lantern/pull/17), this milestone extends workplace delivery-failure handling to photos and voice notes: a 30-second app-receipt deadline after complete submission, visible uncertainty, late-receipt recovery, old-session callback guards and a four-call unresolved-native budget retained across reconnects. No attachment retry, protocol/transport change, new permission or background capability is added. PR formatting, analysis, 147 Flutter tests, Android/iOS builds, 11 APK navigation checks, both native fixtures and desktop CI passed. Main repeated all gates and published [mobile-preview-b810cdf371a5](https://github.com/austugal/lantern/releases/tag/mobile-preview-b810cdf371a5) on 30 October; the previous release remains available. See [development record](DEVELOPMENT-2026-10-30.md) and [verification](../mobile/docs/VERIFICATION.md).
 
 ## Longer-term ideas
 
