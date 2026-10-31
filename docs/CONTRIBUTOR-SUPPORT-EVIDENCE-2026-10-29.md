@@ -37,3 +37,7 @@ This evidence is prepared for review. No support request or public message was s
 - The exact support request above remains ready to submit; no support message was sent. GitHub controls the generated sidebar; repository credits cannot force a refresh.
 
 The retained remote branch, PR-head and release-tag refs listed above were rechecked with `git ls-remote` on 30 October and still match the earlier snapshot. Corrected main before today’s merge again showed only austugal/GitHub author and committer identities. Neither those retained refs nor released history were rewritten.
+
+## Recheck — 31 October 2026
+
+Main inspected at `275d9801dd5a6b9c833faa51a4ef12da758ee321`. At **13:24:16 UTC**, the Contributors REST response returned only `austugal`, **61 contributions**. The fully loaded live homepage again displayed **Contributors (2)**, `austugal` and `claude`. The display has not refreshed to match the corrected-main/API view. The legacy-ref evidence and exact support request above remain applicable; no ref, tag, access setting or released history was changed and no support message was sent. ChatGPT assistance remains separately credited in CONTRIBUTORS.md.
