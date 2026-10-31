@@ -70,6 +70,10 @@ The release-readiness milestone adds `ruff format --check .` to PR CI before typ
 
 Merged through [PR #17](https://github.com/austugal/lantern/pull/17), this milestone extends workplace delivery-failure handling to photos and voice notes: a 30-second app-receipt deadline after complete submission, visible uncertainty, late-receipt recovery, old-session callback guards and a four-call unresolved-native budget retained across reconnects. No attachment retry, protocol/transport change, new permission or background capability is added. PR formatting, analysis, 147 Flutter tests, Android/iOS builds, 11 APK navigation checks, both native fixtures and desktop CI passed. Main repeated all gates and published [mobile-preview-b810cdf371a5](https://github.com/austugal/lantern/releases/tag/mobile-preview-b810cdf371a5) on 30 October; the previous release remains available. See [development record](DEVELOPMENT-2026-10-30.md) and [verification](../mobile/docs/VERIFICATION.md).
 
+### 31 October 2026: cross-platform SDK feasibility evaluation
+
+Completed a source-backed comparison of Nearby Swift against the current Android/iPhone adapters, with an [SDK evaluation](../mobile/docs/NEARBY-SWIFT-EVALUATION-2026-10-31.md) and [method/consent mapping and physical acceptance matrix](../mobile/docs/NEARBY-ADAPTER-CONTRACT.md). Upstream radio-medium documentation disagrees and transitive dependency locking remains a gate. This completes the evaluation slice of priority 2, not Android–iPhone implementation or hardware validation. The 30 October release remains unchanged. Physical same-platform baseline testing remains the first hardware priority.
+
 ## Longer-term ideas
 
 1. Consent receipts. A signed log, readable by you, of every grant given, used and revoked,

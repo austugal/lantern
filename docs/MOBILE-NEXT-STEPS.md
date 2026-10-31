@@ -1,10 +1,14 @@
 # Mobile interoperability and background delivery
 
-Engineering plan, reviewed 16 October 2026. **These are proposed changes, not implemented capabilities.**
+Engineering plan, reviewed 16 October 2026; SDK feasibility re-evaluated 31 October 2026. **These are proposed changes, not implemented capabilities.**
 
 ## Current boundary
 
 The mobile Android adapter uses Google Nearby Connections; the iPhone adapter uses Apple Multipeer Connectivity. They do not communicate with each other. Both are foreground-only and support one accepted peer. The desktop transport is separate. A successful native build does not demonstrate physical radio interoperability, range or reliability.
+
+## SDK evaluation completed, implementation remains gated
+
+See the [31 October source-backed SDK evaluation](../mobile/docs/NEARBY-SWIFT-EVALUATION-2026-10-31.md) and [adapter/acceptance contract](../mobile/docs/NEARBY-ADAPTER-CONTRACT.md). Current Google setup guidance and upstream Apple-medium documentation disagree; dependency resolution also needs an explicit transitive lock. Treat the migration below as an experimental proposal, with separate LAN/hotspot/no-access-point hardware results, not a ready replacement. The existing release is preserved.
 
 ## Next milestone: one protocol across Android and iPhone
 

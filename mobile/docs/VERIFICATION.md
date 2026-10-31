@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 31 October 2026 — SDK evaluation only
+
+Reviewed main `275d9801dd5a6b9c833faa51a4ef12da758ee321`, both native adapters, channel contract, current Google SDK documentation and upstream package/source. The [evaluation](NEARBY-SWIFT-EVALUATION-2026-10-31.md) and [adapter contract](NEARBY-ADAPTER-CONTRACT.md) distinguish documented APIs, inspected source, proposed mapping and unexecuted physical gates. No SDK was installed or compiled; no transport, app source, dependency, entitlement or permission changed.
+
+Inspected existing mobile CI run [41068600810](https://github.com/austugal/lantern/actions/runs/41068600810), desktop CI [41068600774](https://github.com/austugal/lantern/actions/runs/41068600774) and packaging [41068601103](https://github.com/austugal/lantern/actions/runs/41068601103): all successful on release source `b810cdf371a52e92c3d3a5af2d964a526fcd17f9`. Its 147 Flutter tests, native builds, emulator checks and 91 desktop tests are previous release evidence, not new tests run for this evaluation. Markdown/link/scope checks and specialist review validate this documentation milestone. No new binary release is needed.
+
 ## 30 October 2026 — bounded attachment delivery status
 
 Validated source adds a 30-second app-receipt deadline after complete attachment submission, honest uncertainty, late-receipt recovery, callback isolation and a four-call unresolved native attachment budget across reconnects. It retains the existing transport, packet format, foreground-only behaviour and explicit media/location/notification consent. No automatic resend or attachment retry is added.
