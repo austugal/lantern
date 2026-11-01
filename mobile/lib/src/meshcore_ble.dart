@@ -61,8 +61,11 @@ class BleMeshRadioLink implements MeshRadioLink {
 
   @override
   Future<void> open(String id) async {
+    final epoch = _epoch + 1;
     await close();
-    final epoch = _epoch;
+    if (epoch != _epoch) {
+      throw StateError("Canceled.");
+    }
     final ready = Completer<void>();
     // Canceling this subscription disconnects the GATT connection.
     _connection = _ble
@@ -156,7 +159,11 @@ class BleMeshRadioLink implements MeshRadioLink {
     _notifications = null;
     final connection = _connection;
     _connection = null;
-    await notifications?.cancel();
-    await connection?.cancel();
+    // Initiate both cancellations before awaiting either, so delayed
+    // notification cleanup cannot defer disconnection into a newer session.
+    await Future.wait<void>([
+      if (notifications != null) notifications.cancel(),
+      if (connection != null) connection.cancel(),
+    ]);
   }
 }

@@ -60,6 +60,20 @@ class FakeRadio implements MeshRadioLink {
   }
 }
 
+class DelayedScanRadio extends FakeRadio {
+  final cancelFirstScan = Completer<void>();
+  final scanControllers = <StreamController<MeshRadio>>[];
+  @override
+  Stream<MeshRadio> scan() {
+    final first = scanControllers.isEmpty;
+    final controller = StreamController<MeshRadio>(
+      onCancel: first ? () => cancelFirstScan.future : null,
+    );
+    scanControllers.add(controller);
+    return controller.stream;
+  }
+}
+
 List<int> radioMessage(
   String text, {
   int channel = 0,
@@ -317,6 +331,30 @@ void main() {
     await c.disconnect();
     c.dispose();
   });
+
+  test(
+    'delayed old scan cleanup cannot close a newer radio connection',
+    () async {
+      final link = DelayedScanRadio();
+      final c = MeshController(link);
+      await c.scan();
+      final oldCleanup = c.disconnect();
+      await Future<void>.delayed(Duration.zero);
+      await c.disconnect();
+      expect(link.closes, 1);
+      await c.scan();
+      link.scanControllers.last.add(const MeshRadio('new-radio', 'New radio'));
+      await Future<void>.delayed(Duration.zero);
+      await c.connect(c.radios.values.single);
+      expect(c.connected, isTrue);
+      link.cancelFirstScan.complete();
+      await oldCleanup;
+      expect(link.closes, 1);
+      expect(c.connected, isTrue);
+      await c.disconnect();
+      c.dispose();
+    },
+  );
   testWidgets(
     'screen opens offline with no plugin access, works at enlarged text',
     (tester) async {

@@ -421,8 +421,9 @@ class MeshController extends ChangeNotifier {
   }
 
   Future<void> _fail(String message) async {
+    final cleanupEpoch = _epoch + 1;
     await disconnect();
-    if (_disposed) {
+    if (_disposed || _epoch != cleanupEpoch) {
       return;
     }
     error = message;
@@ -453,6 +454,9 @@ class MeshController extends ChangeNotifier {
     _frames = null;
     await stopScan();
     await frames?.cancel();
+    if (epoch != _epoch) {
+      return;
+    }
     try {
       await link.close().timeout(const Duration(seconds: 3));
     } catch (_) {
