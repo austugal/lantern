@@ -4,7 +4,7 @@ Status: prepared for review; not posted to an external forum. Choose a specific 
 
 ## Title
 
-Lantern: an open-source mobile-first nearby messaging preview for colleagues without internet
+Lantern: a mobile-first nearby messaging preview for colleagues without internet
 
 ## Post
 
@@ -18,7 +18,7 @@ Android has a downloadable testing APK. The iPhone code builds successfully, but
 
 Code, instructions, test results and downloads: https://github.com/austugal/lantern
 
-Copyright © 2026 Tiago Fitas (austugal). MIT licensed.
+Copyright © 2026 Tiago Fitas (austugal). New original additions and changes are proprietary; earlier MIT grants remain valid. See [licence](../LICENSE).
 
 ## Publication record
 

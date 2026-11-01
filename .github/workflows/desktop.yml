@@ -39,10 +39,11 @@ jobs:
           name = "Lantern-" + os.environ["RUNNER_OS"] + "-" + os.environ["RUNNER_ARCH"] + "-preview.zip"
           executable = pathlib.Path("dist/Lantern.exe" if os.name == "nt" else "dist/Lantern")
           members = [executable, pathlib.Path("README.md"), pathlib.Path("LICENSE"), pathlib.Path("docs/DESKTOP.md")]
+          members += [pathlib.Path("THIRD-PARTY-NOTICES.md"), pathlib.Path("docs/LEGACY-MIT-LICENSE.txt")]
           members += list(pathlib.Path("dist").glob("*.whl"))
           with zipfile.ZipFile("dist/" + name, "w", zipfile.ZIP_DEFLATED) as archive:
               for path in members:
-                  archive.write(path, path.name)
+                  archive.write(path, str(path) if path.name == "LEGACY-MIT-LICENSE.txt" else path.name)
               archive.writestr("SHA256SUMS.txt", "".join(hashlib.sha256(p.read_bytes()).hexdigest() + "  " + p.name + "\n" for p in members))
       - uses: actions/upload-artifact@v4
         with:
@@ -71,11 +72,13 @@ jobs:
           tag="desktop-preview-${RELEASE_SHA:0:12}"
           cat > release-notes.md <<'NOTES'
           Experimental Lantern 0.3 desktop preview for consent-based encrypted LAN messaging.
-          
+
           Download the ZIP for your operating system, extract it, and run Lantern (Lantern.exe on Windows). On macOS/Linux you may need chmod +x Lantern. These binaries are not code-signed or notarized; this is a developer preview.
-          
+
+          New original additions and changes are proprietary, copyright 2026 Tiago Fitas. Preview use is limited to personal, non-commercial evaluation. Earlier MIT grants and third-party licences remain valid; notices are included in the archive.
+
           Includes verified pairing, expiring permissions, app delivery receipts, encrypted local vault, location controls, guardian check-ins, navigation helpers and Explain controls popups.
-          
+
           All three platform builds passed lint, formatting, strict typing, tests and executable demo checks. Physical-device networking and visual accessibility still need testing. No independent security audit, mobile APK/iOS app, BLE/LoRa hardware support or emergency-service guarantee.
           NOTES
           if gh release view "$tag" > /dev/null 2>&1; then

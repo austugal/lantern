@@ -7,6 +7,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_reactive_ble: 5.4.0
   geolocator: ^14.0.2
   shared_preferences: ^2.5.3
   image_picker: 1.2.0
@@ -27,3 +28,5 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 flutter:
   uses-material-design: true
+  assets:
+    - assets/LANTERN-LICENCES.txt

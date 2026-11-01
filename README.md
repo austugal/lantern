@@ -1,4 +1,4 @@
-# Lantern Comms
+# Lantern Comms™
 
 [Project contributors](CONTRIBUTORS.md)
 
@@ -10,7 +10,7 @@
 
 Lantern Comms, or **Lantern** for short, brings nearby messaging, location tools and practical offline help together for people working side by side.
 
-Lantern is a **mobile-first, open-source nearby messaging tool** for Android and iPhone, with a separate desktop companion preview. The aim is simple: help colleagues exchange requests and updates when internet access is unavailable. After installation, phones communicate through their nearby radios; they still need Wi-Fi/Bluetooth enabled, suitable permissions and a working local connection. They do not need an internet-connected Wi-Fi access point for nearby messaging.
+Lantern is a **mobile-first nearby messaging tool** for Android and iPhone, with a separate desktop companion preview. The aim is simple: help colleagues exchange requests and updates when internet access is unavailable. After installation, phones communicate through their nearby radios; they still need Wi-Fi/Bluetooth enabled, suitable permissions and a working local connection. They do not need an internet-connected Wi-Fi access point for nearby messaging.
 
 The current mobile preview connects **two phones of the same platform with both apps open**. It is a starting point for workplace trials, not yet a hotel-wide team network.
 
@@ -94,6 +94,10 @@ Start with two same-platform phones and routine, noncritical tasks. Test the act
 
 Lantern may provide an additional local communication option during an internet outage, but it cannot guarantee communication during an emergency or reach emergency services. Keep established radios, telephones and emergency procedures available. Group channels, mixed Android/iPhone teams and locked-screen delivery remain future work.
 
+### Optional MeshCore radio mode
+
+Source now includes **Field tools → MeshCore radio**: Bluetooth discovery, existing-channel selection, short channel text and explicit radio inbox retrieval. It requires a separate compatible LoRa radio with MeshCore BLE companion firmware; radio/region/channel setup stays in MeshCore tools. **Accepted by radio** does not confirm recipient delivery. Inbox reading consumes queued items and displays channel text only; a confirmation explains that unsupported direct/data messages are consumed without display. No automatic GPS, retries or background connection is added. See [setup, limits and hardware validation gates](mobile/docs/MESHCORE.md). The existing download above remains the previously validated preview until the new build is released.
+
 ## Desktop version — Windows, Mac and Linux
 
 Desktop is a separate implementation for computers on a shared LAN, Wi-Fi network or hotspot. It does not currently connect to the phone app. Internet access is not required for local conversations, but a working local network is.
@@ -119,7 +123,7 @@ Desktop includes signed invitations and safety-number verification, encrypted me
 
 - No Android-to-iPhone, phone-to-desktop or group-chat interoperability yet.
 - No guaranteed distance or hotel-wide coverage. Walls, devices and radio conditions matter. The core's 1,000 m relay test is a **simulation**, not a measured radio range.
-- No mobile mesh relay, LoRa bridge, voice calls, background rescue monitoring or mobile evidence vault.
+- No phone-based mesh relay, voice calls, background rescue monitoring or mobile evidence vault. Optional MeshCore companion mode requires external LoRa hardware; its physical-radio behaviour is unvalidated.
 - The instructions are **help text, not an AI assistant**. Online AI, local AI and telephone-style conversation are ideas for future work, not current features.
 - No Wi-Fi password bypass, covert phone access, account intrusion or tracking someone through their phone number, email or username.
 
@@ -127,7 +131,7 @@ Lantern is an experimental preview. Do not use it as your only emergency communi
 
 ## Privacy and security
 
-**Secure communication is a core design priority.** Lantern is a working, open-source developer preview with downloadable builds and published automated test results. It is not an independently certified or audited security product.
+**Secure communication is a core design priority.** Lantern is a working developer preview with downloadable builds and published automated test results. It is not an independently certified or audited security product.
 
 - **Encrypted communication:** desktop messages are signed and encrypted; mobile sessions use the native platform's encrypted transport.
 - **Explicit consent:** people accept connections; location sharing and guardian roles require separate choices.
@@ -176,7 +180,7 @@ Mobile uses Flutter 3.35.7; see [mobile build instructions](mobile/README.md). G
 
 ## Copyright and licence
 
-Copyright © 2026 Tiago Fitas (austugal). Lantern is distributed under the [MIT License](LICENSE). Existing third-party notices remain in place, including [Flutter scaffold attribution](mobile/docs/FLUTTER-LICENSE). This notice does not represent a copyright or trademark registration.
+Copyright © 2026 Pedro Tiago Saldanha Fitas (Tiago Fitas / austugal). All rights reserved for new original additions and changes under the [proprietary licence](LICENSE). Developer preview downloads may be used for personal, non-commercial evaluation. Earlier MIT grants remain valid; see the [preserved notice](docs/LEGACY-MIT-LICENSE.txt). [Third-party licences](THIRD-PARTY-NOTICES.md), including Flutter scaffold attribution, remain in force. Lantern™ and Lantern Comms™ identify the owner’s claimed brands; no verified registration details are recorded here.
 
 [Roadmap](docs/ROADMAP.md) · [Community introduction](docs/COMMUNITY-INTRODUCTION.md)
 

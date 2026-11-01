@@ -90,8 +90,12 @@ An offline [record validator](DEVICE-EVIDENCE.md) prepares and checks a bounded 
 5. Battery-aware relaying. A relay budget that stops forwarding below a charge level, and
    prefers plugged-in devices.
 6. Push-to-talk voice bursts, signed per sender.
-7. LoRa bridge transport (Meshtastic-class hardware) for 2 to 15 km hops.
+7. External LoRa radio support: the MeshCore companion preview adds short channel text via BLE. Physical radio testing, direct-message support and broader integration remain open; no hop range is claimed.
 8. Full ratchet for forward secrecy on both sides.
 9. Reliable message retransmission and reconnect negotiation.
 10. QR invitation exchange (text invitations and safety-number screen are implemented).
 11. External security review before a production release.
+
+### 1 November 2026: MeshCore companion and ownership changes
+
+New source adds an optional MeshCore BLE companion screen for short channel text and explicit inbox reads, plus proprietary terms for new original work and preserved legacy/third-party licences. [MeshCore setup and validation gates](../mobile/docs/MESHCORE.md) describe the bounded protocol subset. Automated CI and native-build results must be checked on the implementation PR; physical radios remain untested.

@@ -1,0 +1,74 @@
+Lantern Comms — Proprietary Licence
+
+Copyright © 2026 Pedro Tiago Saldanha Fitas (Tiago Fitas / austugal).
+All rights reserved.
+
+Effective for original Lantern additions and changes first published under this
+licence on or after 1 November 2026. Earlier material and third-party material
+are subject to the exceptions below.
+
+No permission is granted to copy, modify, distribute, sublicense, sell, host as a
+service, or otherwise commercially exploit material covered by this licence
+without prior written permission from the copyright holder. Public visibility
+of this repository does not grant a software licence. Viewing and forking via
+GitHub remain subject to rights granted by GitHub's applicable terms.
+
+Developer preview downloads published by the owner may be installed and run
+for personal, non-commercial evaluation only. No redistribution, resale,
+commercial deployment, or derivative distribution is permitted for material
+covered by this licence without written permission.
+
+Earlier releases / existing grants
+---------------------------------
+This licence does not revoke, replace, or restrict MIT permissions already
+granted for material previously distributed under MIT. That material remains
+available under its original terms, including when it is present in this tree.
+The prior MIT notice is preserved in docs/LEGACY-MIT-LICENSE.txt. The main-branch
+baseline immediately before this change was commit
+54acce7f3b8374ef26e0581f36aad8267adea6fd. New original changes after that baseline
+are reserved under this licence unless explicitly stated otherwise.
+
+Third-party material
+--------------------
+Third-party components, dependencies and platform scaffolding retain their
+respective licences. This licence does not claim ownership of or override
+those terms. See THIRD-PARTY-NOTICES.md and component-specific notices.
+
+Branding
+--------
+Lantern, Lantern Comms, the Lantern logo and original project branding are
+claimed as trade marks of Tiago Fitas. No trade mark licence is granted.
+Compatibility references to third-party products do not imply affiliation,
+ownership, endorsement or certification. This notice does not establish or
+verify a trade mark registration or entitlement to the registered symbol.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. TO THE EXTENT PERMITTED BY LAW, THE COPYRIGHT HOLDER SHALL
+NOT BE LIABLE FOR CLAIMS, DAMAGES OR OTHER LIABILITY ARISING FROM THE SOFTWARE.
+
+
+Preserved legacy MIT notice
+===========================
+
+MIT License
+
+Copyright (c) 2026 Tiago Fitas (austugal)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

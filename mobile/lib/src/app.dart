@@ -9,6 +9,7 @@ import 'web_screen.dart';
 import 'map_screen.dart';
 import 'compass.dart';
 import 'measurement_tools.dart';
+import 'meshcore_screen.dart';
 
 const ink = Color(0xFF182E2B);
 const paper = Color(0xFFF6F3EA);
@@ -1310,6 +1311,24 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
     padding: const EdgeInsets.all(20),
     children: [
       _devicePanel(),
+      OutlinedButton.icon(
+        onPressed: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const MeshCoreScreen())),
+        icon: const Icon(Icons.cell_tower),
+        label: const Text('MeshCore radio'),
+      ),
+      OutlinedButton.icon(
+        onPressed: () => showLicensePage(
+          context: context,
+          applicationName: 'Lantern Comms™',
+          applicationVersion: 'Developer preview',
+          applicationLegalese:
+              'Copyright © 2026 Tiago Fitas. All rights reserved for new original changes. Earlier MIT grants and third-party licences remain valid. See repository LICENSE.',
+        ),
+        icon: const Icon(Icons.copyright),
+        label: const Text('Licences & ownership'),
+      ),
       OutlinedButton.icon(
         onPressed: () => Navigator.of(
           context,
