@@ -1,5 +1,14 @@
 # Changelog
 
+## Development tooling — physical baseline preparation
+
+- Added an offline JSON template and validator for ten human-reported two-Android-phone baseline checks.
+- Bounded input, strict schema, artifact comparison and explicit incomplete/failed status; no independent physical verification or release approval.
+- Added 27 synthetic CLI cases; Python CI now runs 118 tests including the existing 91 checks.
+- Moved blocked desktop packaging from the retiring macOS 14 image to macOS 15; all three platform builds and executable checks passed.
+
+The mobile app and its 30 October release are unchanged. Physical-device tests remain unexecuted.
+
 ## Mobile preview — bounded attachment delivery status
 
 - Photos and voice notes become Delivery unconfirmed if no app receipt arrives within 30 seconds after complete submission.

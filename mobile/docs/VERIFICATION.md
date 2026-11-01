@@ -1,5 +1,12 @@
 # Mobile verification record
 
+## 1 November 2026 — physical baseline preparation tool
+
+[Offline evidence tooling](../../docs/DEVICE-EVIDENCE.md) now prepares and validates human-reported two-Android-phone baseline records. It checks bounded JSON/schema, required observations and artifact fields against supplied expected hashes; it does not operate phones, verify installed binaries or prove that a test occurred. The full device checklist remains unexecuted. No Android/iPhone app code, SDK, permission, entitlement or background behavior changed.
+
+[PR #20](https://github.com/austugal/lantern/pull/20) passed [Python CI 41314763843](https://github.com/austugal/lantern/actions/runs/41314763843): 118 tests across Python 3.10/3.12/3.13, including 27 new synthetic CLI cases. [Desktop packaging 41314763839](https://github.com/austugal/lantern/actions/runs/41314763839) passed all three platforms after the GitHub macOS 14 brownout was addressed by pinning macOS 15. [Main CI 41314937847](https://github.com/austugal/lantern/actions/runs/41314937847) repeated all 118 tests on three Python versions; [main desktop packaging 41314937712](https://github.com/austugal/lantern/actions/runs/41314937712) passed Linux/Windows/macOS 15 builds, executable checks and publication. Details are in [the development record](../../docs/DEVELOPMENT-2026-11-01.md). These are tooling checks, not new physical-device or Flutter execution. Existing mobile Android/iOS/emulator run 41068600810 remains green on the unchanged [30 October preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-b810cdf371a5); its 147 Flutter tests remain prior release evidence.
+
+
 ## 31 October 2026 — SDK evaluation only
 
 Reviewed main `275d9801dd5a6b9c833faa51a4ef12da758ee321`, both native adapters, channel contract, current Google SDK documentation and upstream package/source. The [evaluation](NEARBY-SWIFT-EVALUATION-2026-10-31.md) and [adapter contract](NEARBY-ADAPTER-CONTRACT.md) distinguish documented APIs, inspected source, proposed mapping and unexecuted physical gates. No SDK was installed or compiled; no transport, app source, dependency, entitlement or permission changed.

@@ -41,3 +41,7 @@ The retained remote branch, PR-head and release-tag refs listed above were reche
 ## Recheck — 31 October 2026
 
 Main inspected at `275d9801dd5a6b9c833faa51a4ef12da758ee321`. At **13:24:16 UTC**, the Contributors REST response returned only `austugal`, **61 contributions**. The fully loaded live homepage again displayed **Contributors (2)**, `austugal` and `claude`. The display has not refreshed to match the corrected-main/API view. The legacy-ref evidence and exact support request above remain applicable; no ref, tag, access setting or released history was changed and no support message was sent. ChatGPT assistance remains separately credited in CONTRIBUTORS.md.
+
+## Recheck — 1 November 2026
+
+At **14:00:51 UTC**, the Contributors REST response listed only `austugal`, **62 contributions**, on main `e9bb535ebe7a36d882e8392ff065ae76aa6b529b` before today’s tool merge. The fully loaded live homepage still showed **Contributors (2)**, austugal and claude. The display remains inconsistent with the corrected-main/API view. Legacy refs and old releases listed above were preserved; none were deleted or rewritten. The exact support request remains prepared; no support message was sent and no removal is claimed.

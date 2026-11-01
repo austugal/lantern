@@ -149,6 +149,7 @@ No independent security audit or immunity from hacking is claimed. For details, 
 | --- | --- |
 | Desktop | 91 Python tests; lint and strict type checks; integration checks; Windows, macOS and Linux builds and executable checks |
 | Mobile | Flutter analyzer and **147 automated tests** passed; Android testing APK, iOS simulator app and unsigned iOS device app compiled |
+| Physical-test preparation tool | 27 synthetic CLI cases for bounded record validation; these are not physical tests |
 | Mobile wire format | 10,019 standalone offline packet checks passed |
 
 See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification](mobile/docs/VERIFICATION.md) for evidence and limits. Real phone-to-phone radio, GPS, range and battery tests are still outstanding. A successful build does not prove those behaviours.

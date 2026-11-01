@@ -2,6 +2,8 @@
 
 Status: **not yet run**. Do not replace these checks with simulator success.
 
+Use the [offline baseline template and validator](../../docs/DEVICE-EVIDENCE.md) to prepare the first two-Android-phone communication/lifecycle record. A complete record is human-reported and covers ten checks only; it does not clear the remaining rows below or independently verify physical behavior.
+
 Record phone models, OS versions, app commit, tester, date and observed result for each test. Use two Android devices and separately two iPhones.
 
 | Test | Expected result | Result |
