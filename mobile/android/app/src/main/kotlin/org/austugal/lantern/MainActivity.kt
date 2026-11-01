@@ -37,6 +37,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private var pending: String? = null
     private var connected: String? = null
     private val names = mutableMapOf<String, String>()
+    private var meshPermissionResult: MethodChannel.Result? = null
     private var permissionResult: MethodChannel.Result? = null
     private var torchPermissionResult: MethodChannel.Result? = null
     private var torchPermissionPending = false
@@ -141,6 +142,13 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 905) {
+            val result = meshPermissionResult ?: return
+            meshPermissionResult = null
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED } && foreground) result.success(null)
+            else result.error("permission", "Allow Bluetooth / Nearby devices for the MeshCore radio. Older Android versions also require Location for BLE scanning.", null)
+            return
+        }
         if (requestCode == 903) {
             torchPermissionPending = false
             val result = torchPermissionResult ?: return
@@ -223,7 +231,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
             if (epoch == generation && update.status == PayloadTransferUpdate.Status.FAILURE) emit("error", id, mapOf("message" to "A message could not be transferred. Check its delivery status."))
         }
     }
-    private fun permissionBusy() = permissionResult != null || torchPermissionPending || notificationPermissionResult != null
+    private fun permissionBusy() = meshPermissionResult != null || permissionResult != null || torchPermissionPending || notificationPermissionResult != null
     private fun notificationsEnabled(): Boolean {
         val manager = getSystemService(NotificationManager::class.java)
         if (!manager.areNotificationsEnabled()) return false
@@ -233,6 +241,16 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private fun handleDevice(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
+                "meshPermissions" -> {
+                    if (!foreground) { result.error("state", "Keep Lantern open to scan radios", null); return }
+                    if (permissionBusy()) { result.error("busy", "Finish the current permission request first", null); return }
+                    val needed = if (Build.VERSION.SDK_INT >= 31) listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+                        else listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+                    val missing = needed.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }.toMutableList()
+                    if (Manifest.permission.ACCESS_FINE_LOCATION in missing && Manifest.permission.ACCESS_COARSE_LOCATION !in missing) missing.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    if (missing.isEmpty()) result.success(null)
+                    else { meshPermissionResult = result; requestPermissions(missing.toTypedArray(), 905) }
+                }
                 "setTorch" -> {
                     val enabled = call.argument<Boolean>("enabled") ?: false
                     if (!enabled) {

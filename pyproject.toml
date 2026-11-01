@@ -8,7 +8,7 @@ version = "0.3.0"
 description = "Consent-first offline nearby messaging and location sharing core."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = { text = "LicenseRef-Lantern-Proprietary; legacy MIT material excepted" }
 dependencies = ["cryptography>=42,<51"]
 
 [project.optional-dependencies]

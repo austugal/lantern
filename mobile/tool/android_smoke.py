@@ -217,6 +217,25 @@ class Smoke:
         self.find("Calculator & measures")
         self.find("Calculate")
         self.record("11-calculator")
+        adb("shell", "input", "keyevent", "KEYCODE_BACK")
+        for _ in range(4):
+            adb(
+                "shell",
+                "input",
+                "swipe",
+                str(width // 2),
+                str(height // 3),
+                str(width // 2),
+                str(height * 3 // 4),
+                "300",
+            )
+        self.scroll_to("MeshCore radio")
+        self.find("Off-grid channel text")
+        self.record("12-meshcore-radio")
+        adb("shell", "input", "keyevent", "KEYCODE_BACK")
+        self.scroll_to("Licences & ownership")
+        self.find("Lantern Comms™")
+        self.record("13-ownership-and-licences")
         if not adb("shell", "pidof", PACKAGE, check=False).strip():
             raise AssertionError("Lantern process exited")
         crashes = adb("logcat", "-d", "-b", "crash").decode(errors="replace")
