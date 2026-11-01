@@ -1,5 +1,13 @@
 # Changelog
 
+## MeshCore companion preview and ownership notices
+
+- Optional BLE companion mode for compatible external MeshCore radios: existing-channel selection, short channel text and explicit shared-inbox retrieval.
+- Bounded commands/history and session-generation guards; radio acceptance is distinct from recipient delivery. No automatic retry, forwarding or GPS sharing.
+- Explicit inbox consent explains that unsupported direct/data items are consumed without display.
+- Proprietary terms for new original work, preserved legacy MIT grants and third-party notices, Lantern™ branding, and in-app licence access. No registration was verified or filed by this workflow.
+- 165 Flutter tests, 118 Python tests, Android/iOS builds, 13 actual-APK navigation checks, two native fixtures and desktop packages passed. Physical MeshCore devices remain untested.
+
 ## Development tooling — physical baseline preparation
 
 - Added an offline JSON template and validator for ten human-reported two-Android-phone baseline checks.

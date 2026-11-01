@@ -98,4 +98,4 @@ An offline [record validator](DEVICE-EVIDENCE.md) prepares and checks a bounded 
 
 ### 1 November 2026: MeshCore companion and ownership changes
 
-New source adds an optional MeshCore BLE companion screen for short channel text and explicit inbox reads, plus proprietary terms for new original work and preserved legacy/third-party licences. [MeshCore setup and validation gates](../mobile/docs/MESHCORE.md) describe the bounded protocol subset. Automated CI and native-build results must be checked on the implementation PR; physical radios remain untested.
+Released through [PR #22](https://github.com/austugal/lantern/pull/22): optional MeshCore BLE companion channel text and explicit inbox reads, plus proprietary terms for new original work and preserved legacy/third-party licences. 165 Flutter tests, Android/iOS builds, 13 installed-APK checks, both native fixtures and all desktop gates passed. [Setup and hardware gates](../mobile/docs/MESHCORE.md) and [release evidence](DEVELOPMENT-MESHCORE-2026-11-01.md) distinguish software validation from physical-radio testing, which remains unexecuted.

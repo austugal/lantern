@@ -55,3 +55,10 @@ POSIX mode 0600 must not be interpreted as a portable Windows ACL guarantee.
 The timer is an experimental convenience. It cannot run through process exit or
 sleep and does not send stale coordinates. No delivery, rescue or human-response
 guarantee is made. Use only one running process per profile directory.
+
+
+## Optional MeshCore companion mode
+
+The mobile radio mode is separate from Lantern's nearby identity, consent and app-receipt protocol. It assumes the user selects their own BLE companion radio and checks any OS pairing prompt. A device name/UART service is not verified identity. Channel sender labels are unverified, and every holder of a channel key can read channel traffic; public and hashtag keys are publicly known or derivable. No independent cryptographic identity comparison or verified recipient receipt is added by this subset.
+
+The client does not configure keys, flash firmware, change radio parameters, forward nearby messages, share phone GPS, reconnect or resend automatically. Reading the firmware inbox consumes queued items; a confirmation discloses that unsupported direct/data items are removed without display. App conversation memory clears on disconnect, but radio/recipient copies and transmissions already submitted to the radio cannot be recalled. BLE pairing, firmware security, actual delivery, range and battery behaviour have not been physically validated. See [MeshCore setup and limits](../mobile/docs/MESHCORE.md).
