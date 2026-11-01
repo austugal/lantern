@@ -64,7 +64,7 @@ class BleMeshRadioLink implements MeshRadioLink {
     final epoch = _epoch + 1;
     await close();
     if (epoch != _epoch) {
-      throw StateError("Canceled.");
+      throw StateError('Canceled.');
     }
     final ready = Completer<void>();
     // Canceling this subscription disconnects the GATT connection.
