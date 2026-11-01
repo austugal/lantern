@@ -1,7 +1,6 @@
 // Copyright © 2026 Tiago Fitas. All rights reserved. See LICENSE.
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 

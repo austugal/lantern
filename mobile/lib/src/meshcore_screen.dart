@@ -178,11 +178,10 @@ class _MeshCoreScreenState extends State<MeshCoreScreen>
                       utf8.encode(_text.text).length <= 100
                   ? () async {
                       final submitted = _text.text;
-                      if (await c.send(submitted) &&
-                          mounted &&
-                          _text.text == submitted) {
-                        _text.clear();
-                      }
+                      // Once submitted it may transmit even if the reply is lost.
+                      // Clear immediately so another tap cannot duplicate it.
+                      _text.clear();
+                      await c.send(submitted);
                     }
                   : null,
               icon: const Icon(Icons.send_outlined),

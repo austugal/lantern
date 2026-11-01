@@ -27,10 +27,12 @@ class BleMeshRadioLink implements MeshRadioLink {
     if (!Platform.isAndroid && !Platform.isIOS) {
       throw UnsupportedError('Mobile BLE only.');
     }
+    var needsLocationService = false;
     if (Platform.isAndroid) {
-      await const MethodChannel(
+      final sdk = await const MethodChannel(
         'org.austugal.lantern/device',
-      ).invokeMethod<void>('meshPermissions');
+      ).invokeMethod<int>('meshPermissions');
+      needsLocationService = (sdk ?? 0) < 31;
     }
     if (epoch != _epoch) {
       return;
@@ -41,8 +43,14 @@ class BleMeshRadioLink implements MeshRadioLink {
           .firstWhere((s) => s == BleStatus.ready)
           .timeout(const Duration(seconds: 12));
     }
+    if (epoch != _epoch) {
+      return;
+    }
     yield* _ble
-        .scanForDevices(withServices: [_service])
+        .scanForDevices(
+          withServices: [_service],
+          requireLocationServicesEnabled: needsLocationService,
+        )
         .map(
           (d) => MeshRadio(
             d.id,

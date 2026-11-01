@@ -145,7 +145,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         if (requestCode == 905) {
             val result = meshPermissionResult ?: return
             meshPermissionResult = null
-            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED } && foreground) result.success(null)
+            if (grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED } && foreground) result.success(Build.VERSION.SDK_INT)
             else result.error("permission", "Allow Bluetooth / Nearby devices for the MeshCore radio. Older Android versions also require Location for BLE scanning.", null)
             return
         }
@@ -248,7 +248,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
                         else listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
                     val missing = needed.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }.toMutableList()
                     if (Manifest.permission.ACCESS_FINE_LOCATION in missing && Manifest.permission.ACCESS_COARSE_LOCATION !in missing) missing.add(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    if (missing.isEmpty()) result.success(null)
+                    if (missing.isEmpty()) result.success(Build.VERSION.SDK_INT)
                     else { meshPermissionResult = result; requestPermissions(missing.toTypedArray(), 905) }
                 }
                 "setTorch" -> {
@@ -419,6 +419,8 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         stopCompass()
         foreground = false
         turnTorchOff()
+        meshPermissionResult?.error("cancelled", "Radio permission request cancelled", null)
+        meshPermissionResult = null
         notificationPermissionResult?.error("cancelled", "Notification request cancelled", null)
         notificationPermissionResult = null
         shutdown()
