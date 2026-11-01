@@ -20,8 +20,8 @@ The current mobile preview connects **two phones of the same platform with both 
 
 | Your device | Download and use |
 | --- | --- |
-| Android phone | Download the Android [**testing APK**](https://github.com/austugal/lantern/releases/download/mobile-preview-b810cdf371a5/Lantern-Android-testing.apk), open it on your phone and allow installation from that source when prompted. This is a development-signed testing app, not a Play Store release. |
-| iPhone | The iPhone app has compiled successfully. [Mobile downloads](https://github.com/austugal/lantern/releases/tag/mobile-preview-b810cdf371a5) include a **Mac simulator app** and an **unsigned device app**. Installing on a real iPhone still requires Apple signing and provisioning; there is no TestFlight or App Store release yet. |
+| Android phone | Download the Android [**testing APK**](https://github.com/austugal/lantern/releases/download/mobile-preview-d9538c0445a2/Lantern-Android-testing.apk), open it on your phone and allow installation from that source when prompted. This is a development-signed testing app, not a Play Store release. |
+| iPhone | The iPhone app has compiled successfully. [Mobile downloads](https://github.com/austugal/lantern/releases/tag/mobile-preview-d9538c0445a2) include a **Mac simulator app** and an **unsigned device app**. Installing on a real iPhone still requires Apple signing and provisioning; there is no TestFlight or App Store release yet. |
 
 Android uses Google Nearby Connections and requires Google Play services. iPhone uses Apple Multipeer Connectivity. The adapters do not yet connect Android to iPhone. The [31 October SDK evaluation](mobile/docs/NEARBY-SWIFT-EVALUATION-2026-10-31.md) records the proposed migration and unresolved transport/dependency gates; it adds no new connectivity.
 
@@ -96,7 +96,7 @@ Lantern may provide an additional local communication option during an internet 
 
 ### Optional MeshCore radio mode
 
-Source now includes **Field tools → MeshCore radio**: Bluetooth discovery, existing-channel selection, short channel text and explicit radio inbox retrieval. It requires a separate compatible LoRa radio with MeshCore BLE companion firmware; radio/region/channel setup stays in MeshCore tools. **Accepted by radio** does not confirm recipient delivery. Inbox reading consumes queued items and displays channel text only; a confirmation explains that unsupported direct/data messages are consumed without display. No automatic GPS, retries or background connection is added. See [setup, limits and hardware validation gates](mobile/docs/MESHCORE.md). The existing download above remains the previously validated preview until the new build is released.
+The current preview includes **Field tools → MeshCore radio**: Bluetooth discovery, existing-channel selection, short channel text and explicit radio inbox retrieval. It requires a separate compatible LoRa radio with MeshCore BLE companion firmware; radio/region/channel setup stays in MeshCore tools. **Accepted by radio** does not confirm recipient delivery. Inbox reading consumes queued items and displays channel text only; a confirmation explains that unsupported direct/data messages are consumed without display. No automatic GPS, retries or background connection is added. See [setup, limits and hardware validation gates](mobile/docs/MESHCORE.md). The preview includes this mode; physical-radio validation remains outstanding.
 
 ## Desktop version — Windows, Mac and Linux
 
@@ -133,11 +133,11 @@ Lantern is an experimental preview. Do not use it as your only emergency communi
 
 **Secure communication is a core design priority.** Lantern is a working developer preview with downloadable builds and published automated test results. It is not an independently certified or audited security product.
 
-- **Encrypted communication:** desktop messages are signed and encrypted; mobile sessions use the native platform's encrypted transport.
+- **Encrypted communication:** desktop messages are signed and encrypted; nearby mobile sessions use the native platform's encrypted transport. Optional MeshCore radio mode uses its radio/channel security instead; public and hashtag channels are not private.
 - **Explicit consent:** people accept connections; location sharing and guardian roles require separate choices.
 - **Limited exposure:** location sharing expires, stale positions are removed, and mobile sessions end when the app backgrounds.
 - **Reviewable releases:** download from this repository's release pages. The mobile release includes `SHA256SUMS.txt` for file-integrity checking; checksums do not prove a file is harmless.
-- **Verified checks:** 91 desktop tests and 147 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
+- **Verified checks:** 118 Python tests and 165 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
 
 The Android APK uses development signing and desktop packages are unsigned. No “anti-hack”, malware-free or unhackable guarantee is made. Test on noncritical devices and workflows before operational use.
 
@@ -151,9 +151,9 @@ No independent security audit or immunity from hacking is claimed. For details, 
 
 | Area | Completed checks |
 | --- | --- |
-| Desktop | 91 Python tests; lint and strict type checks; integration checks; Windows, macOS and Linux builds and executable checks |
-| Mobile | Flutter analyzer and **147 automated tests** passed; Android testing APK, iOS simulator app and unsigned iOS device app compiled |
-| Physical-test preparation tool | 27 synthetic CLI cases for bounded record validation; these are not physical tests |
+| Desktop | 118 Python tests (91 core plus 27 evidence-tool cases); lint and strict typing; Windows, macOS and Linux builds and executable checks |
+| Mobile | Flutter analyzer and **165 automated tests** passed; Android testing APK, iOS simulator app and unsigned iOS device app compiled |
+| Physical-test preparation tool | 27 synthetic CLI cases, included in the 118 Python total; these are not physical tests |
 | Mobile wire format | 10,019 standalone offline packet checks passed |
 
 See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification](mobile/docs/VERIFICATION.md) for evidence and limits. Real phone-to-phone radio, GPS, range and battery tests are still outstanding. A successful build does not prove those behaviours.

@@ -51,3 +51,19 @@ Record phone models, OS versions, app commit, tester, date and observed result f
 | Delete saved pages / browser data | Deletion persists after restart; browser cache/cookies clear separately from saved text | Pending |
 
 Release blockers: unresolved failures here, iOS identity verification if stronger threat protection is required, cross-platform interoperability if product scope requires it, production signing and store/privacy declarations.
+
+## MeshCore companion mode — not yet run
+
+Use actual compatible BLE companion radios configured through MeshCore tools. Record phone/radio models, phone OS, exact firmware/app commits, configured region/channel slot and observations. Do not record channel secrets or BLE PINs in public evidence.
+
+| Check | Expected observation | Result |
+| --- | --- | --- |
+| Android scan/pair | Explicit scan finds the intended radio; permission denial/pairing rejection is handled | Not run |
+| Signed iPhone scan/pair | Explicit Bluetooth permission, usable frame capacity and notifications | Not run |
+| Channel selection | Advertised slot bounds and configured names agree with the radio | Not run |
+| UTF-8 text | Up to 100 bytes arrive intact at a second radio; longer messages are rejected locally | Not run |
+| Radio acceptance | Local OK never appears as confirmed recipient delivery | Not run |
+| Shared inbox | Confirmed reads consume queued items as explained; no automatic reads | Not run |
+| Interruption/reconnect | Rapid background/foreground and delayed cleanup do not revive or alter another session | Not run |
+| Privacy | No unsolicited GPS sharing, key/PIN display, persistence, configuration write or nearby forwarding | Not run |
+| Real delivery/range/battery | Record observed delivery/loss, terrain/repeaters and battery use without extrapolating guarantees | Not run |
