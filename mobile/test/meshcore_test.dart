@@ -355,7 +355,11 @@ void main() {
       final c = MeshController(link);
       await linkUp(c, link);
       await tester.pumpWidget(MaterialApp(home: MeshCoreScreen(controller: c)));
-      await tester.scrollUntilVisible(find.text('Receive radio inbox'), 200);
+      await tester.scrollUntilVisible(
+        find.text('Receive radio inbox'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.text('Receive radio inbox'));
       await tester.pumpAndSettle();
       expect(find.text('Read the shared radio inbox?'), findsOneWidget);
@@ -363,6 +367,61 @@ void main() {
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(link.writes.where((x) => x[0] == 0x0a), isEmpty);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+    },
+  );
+  testWidgets(
+    'connected large-text screen sends once, clears draft and stops on background',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final link = FakeRadio();
+      final c = MeshController(link);
+      await linkUp(c, link);
+      await tester.pumpWidget(
+        MaterialApp(
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: MeshCoreScreen(controller: c),
+        ),
+      );
+      await tester.scrollUntilVisible(
+        find.byType(TextField),
+        180,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.enterText(find.byType(TextField), 'One radio message');
+      tester.testTextInput.hide();
+      await tester.pump();
+      await tester.scrollUntilVisible(
+        find.text('Send to selected channel'),
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Send to selected channel'));
+      await tester.pumpAndSettle();
+      expect(link.writes.where((f) => f[0] == 3).length, 1);
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        isEmpty,
+      );
+      expect(c.messages.single.text, 'One radio message');
+      expect(tester.takeException(), isNull);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      expect(c.connected, isFalse);
+      expect(c.messages, isEmpty);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(c.connected, isFalse);
+      expect(link.opens, 1);
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
     },
