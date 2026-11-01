@@ -74,6 +74,10 @@ Merged through [PR #17](https://github.com/austugal/lantern/pull/17), this miles
 
 Completed a source-backed comparison of Nearby Swift against the current Android/iPhone adapters, with an [SDK evaluation](../mobile/docs/NEARBY-SWIFT-EVALUATION-2026-10-31.md) and [method/consent mapping and physical acceptance matrix](../mobile/docs/NEARBY-ADAPTER-CONTRACT.md). Upstream radio-medium documentation disagrees and transitive dependency locking remains a gate. This completes the evaluation slice of priority 2, not Android–iPhone implementation or hardware validation. The 30 October release remains unchanged. Physical same-platform baseline testing remains the first hardware priority.
 
+### 1 November 2026: physical baseline evidence tooling
+
+An offline [record validator](DEVICE-EVIDENCE.md) prepares and checks a bounded two-Android-phone communication/lifecycle baseline. It distinguishes incomplete, failed and malformed records, compares artifact fields with supplied expected values and labels success as human-reported, not independently verified. This is preparation for priority 1, not completed physical testing or a release approval. No mobile transport, permission or app behavior changes. The current mobile preview is preserved. Validation results are recorded in [the development record](DEVELOPMENT-2026-11-01.md).
+
 ## Longer-term ideas
 
 1. Consent receipts. A signed log, readable by you, of every grant given, used and revoked,
