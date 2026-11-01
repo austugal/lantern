@@ -414,11 +414,23 @@ void main() {
       expect(composer.text, isEmpty);
       expect(c.messages.single.text, 'One radio message');
       expect(tester.takeException(), isNull);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      for (final state in [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+      }
       await tester.pump();
       expect(c.connected, isFalse);
       expect(c.messages, isEmpty);
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      for (final state in [
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+      }
       await tester.pump();
       expect(c.connected, isFalse);
       expect(link.opens, 1);

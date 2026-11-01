@@ -17,6 +17,9 @@ dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.10"]
 [project.scripts]
 lantern = "lantern.cli:main"
 
+[tool.setuptools]
+license-files = ["LICENSE", "docs/LEGACY-MIT-LICENSE.txt", "THIRD-PARTY-NOTICES.md"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
