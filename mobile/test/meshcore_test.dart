@@ -398,6 +398,9 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       await tester.enterText(find.byType(TextField), 'One radio message');
+      final composer = tester
+          .widget<TextField>(find.byType(TextField))
+          .controller!;
       tester.testTextInput.hide();
       await tester.pump();
       await tester.scrollUntilVisible(
@@ -408,10 +411,7 @@ void main() {
       await tester.tap(find.text('Send to selected channel'));
       await tester.pumpAndSettle();
       expect(link.writes.where((f) => f[0] == 3).length, 1);
-      expect(
-        tester.widget<TextField>(find.byType(TextField)).controller!.text,
-        isEmpty,
-      );
+      expect(composer.text, isEmpty);
       expect(c.messages.single.text, 'One radio message');
       expect(tester.takeException(), isNull);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);

@@ -4,7 +4,7 @@ Status: prepared for review; not posted to an external forum. Choose a specific 
 
 ## Title
 
-Lantern: an open-source mobile-first nearby messaging preview for colleagues without internet
+Lantern: a mobile-first nearby messaging preview for colleagues without internet
 
 ## Post
 
