@@ -153,6 +153,8 @@ No independent security audit or immunity from hacking is claimed. For details, 
 
 See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification](mobile/docs/VERIFICATION.md) for evidence and limits. Real phone-to-phone radio, GPS, range and battery tests are still outstanding. A successful build does not prove those behaviours.
 
+Physical-test coordinators can use the [offline baseline record validator](docs/DEVICE-EVIDENCE.md) to prepare two-Android-phone observations. It checks record completeness and artifact fields; it does not perform or independently verify physical tests.
+
 ## Build from source
 
 **Mobile first:** use Flutter 3.35.7 and the [mobile build instructions](mobile/README.md). The Android and iOS native projects are in `mobile/`.
