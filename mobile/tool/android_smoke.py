@@ -152,7 +152,8 @@ class Smoke:
     def install_fresh(self, apk: Path) -> None:
         # A fresh AVD is part of this fixture's contract. Fail before changing
         # anything if Lantern is already installed; never erase a user's data.
-        if adb("shell", "pm", "path", PACKAGE).strip():
+        package_line = f"package:{PACKAGE}".encode()
+        if package_line in adb("shell", "pm", "list", "packages", PACKAGE).splitlines():
             raise AssertionError(
                 "APK smoke checks require a fresh emulator with Lantern uninstalled. "
                 "Existing application data will not be cleared."
@@ -163,7 +164,7 @@ class Smoke:
         # remove the new activity before the app process starts.
         installed = adb("install", str(apk.resolve()))
         (self.evidence / "install.txt").write_bytes(installed)
-        if not adb("shell", "pm", "path", PACKAGE).strip():
+        if package_line not in adb("shell", "pm", "list", "packages", PACKAGE).splitlines():
             raise AssertionError("Lantern is not registered after APK installation.")
 
     def run(self, apk: Path) -> None:

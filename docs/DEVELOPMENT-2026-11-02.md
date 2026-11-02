@@ -14,6 +14,8 @@ The onboarding and 13 navigation checks remain required. Install, launch and gen
 
 ## Validation
 
-Seven regression cases cover fresh installation, protection of an existing installation, failed package lookup, failed installation, an unregistered APK, activity launch errors and preservation of genuine app-startup failures. The repository root is added to pytest's import path so CI can test the in-repository helper without packaging it into Lantern.
+Eight regression cases cover fresh installation, protection of an existing installation, failed package lookup, failed installation, an unregistered APK, exact package-name matching, activity launch errors and preservation of genuine app-startup failures. The repository root is added to pytest's import path so CI can test the in-repository helper without packaging it into Lantern.
 
-Local checks passed: all 125 Python tests, Ruff lint/format, strict mypy, XML parser fixture and whitespace checks. Native/emulator execution and publication results are recorded separately in the mobile verification record after CI completes. These synthetic cases are not physical-device tests.
+Local checks passed: all 126 Python tests, Ruff lint/format, strict mypy, XML parser fixture and whitespace checks. Native/emulator execution and publication results are recorded separately in the mobile verification record after CI completes. These synthetic cases are not physical-device tests.
+
+Package checks use `pm list packages` and an exact package line. Android’s [`pm path` implementation](https://android.googlesource.com/platform/frameworks/base/+/daeda6e736322ae2a7119f2715dc06626e6ce479/services/core/java/com/android/server/pm/PackageManagerShellCommand.java) returns exit status 1 for an absent package, so it is unsuitable for a success-only absence check.
