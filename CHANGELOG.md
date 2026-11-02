@@ -1,5 +1,12 @@
 # Changelog
 
+## Development tooling — Android APK startup reliability
+
+- Removed the data-clear/launch race behind the 1 November CI failure email. The APK smoke check now requires an uninstalled app, installs it fresh and verifies the exact package before launch.
+- Existing app data is preserved; install, launch and application failures still fail the gate. All 13 navigation checks remain required.
+- Eight regression cases raise the Python total to 126; 165 Flutter tests, Android/iOS builds, installed-APK checks, both native fixtures and desktop builds passed in PR #24 and again on main; the repaired emulator gate passed on the first attempt in both runs.
+- Phone application code, radio behaviour, permissions and licence terms are unchanged. See [the development record](docs/DEVELOPMENT-2026-11-02.md).
+
 ## MeshCore companion preview and ownership notices
 
 - Optional BLE companion mode for compatible external MeshCore radios: existing-channel selection, short channel text and explicit shared-inbox retrieval.

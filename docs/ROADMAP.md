@@ -99,3 +99,7 @@ An offline [record validator](DEVICE-EVIDENCE.md) prepares and checks a bounded 
 ### 1 November 2026: MeshCore companion and ownership changes
 
 Released through [PR #22](https://github.com/austugal/lantern/pull/22): optional MeshCore BLE companion channel text and explicit inbox reads, plus proprietary terms for new original work and preserved legacy/third-party licences. 165 Flutter tests, Android/iOS builds, 13 installed-APK checks, both native fixtures and all desktop gates passed. [Setup and hardware gates](../mobile/docs/MESHCORE.md) and [release evidence](DEVELOPMENT-MESHCORE-2026-11-01.md) distinguish software validation from physical-radio testing, which remains unexecuted.
+
+### 2 November 2026: Android APK startup reliability
+
+[PR #24](https://github.com/austugal/lantern/pull/24) removes the test-helper data-clear/launch race behind the earlier failure email. A fresh install and exact package check replace data clearing; all 13 APK navigation gates and genuine-failure checks remain. Eight regression cases bring Python coverage to 126 tests, with the existing 165 Flutter tests and native/desktop checks passing. This is test infrastructure, with no phone application, permission or radio change. See [the development record](DEVELOPMENT-2026-11-02.md).
