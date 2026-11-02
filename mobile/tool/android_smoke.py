@@ -1,6 +1,7 @@
 """Install and exercise the actual APK on one emulator; no radio/hardware claims.
 
 Usage: python tool/android_smoke.py path/to/app.apk [evidence-directory]
+Requires a fresh emulator with Lantern uninstalled; existing app data is never cleared.
 Parser self-check only (no device): python tool/android_smoke.py --self-test
 """
 
@@ -148,10 +149,26 @@ class Smoke:
         self.steps.append(name)
         print(f"PASS: {name}", flush=True)
 
-    def run(self, apk: Path) -> None:
-        adb("install", "-r", str(apk.resolve()))  # Deliberately no -g permission grant.
-        adb("shell", "pm", "clear", PACKAGE)
+    def install_fresh(self, apk: Path) -> None:
+        # A fresh AVD is part of this fixture's contract. Fail before changing
+        # anything if Lantern is already installed; never erase a user's data.
+        package_line = f"package:{PACKAGE}".encode()
+        if package_line in adb("shell", "pm", "list", "packages", PACKAGE).splitlines():
+            raise AssertionError(
+                "APK smoke checks require a fresh emulator with Lantern uninstalled. "
+                "Existing application data will not be cleared."
+            )
         adb("logcat", "-c")
+        # Do not use -r or grant runtime permissions. pm clear immediately
+        # before am start can race Android's queued force-stop/clear work and
+        # remove the new activity before the app process starts.
+        installed = adb("install", str(apk.resolve()))
+        (self.evidence / "install.txt").write_bytes(installed)
+        if package_line not in adb("shell", "pm", "list", "packages", PACKAGE).splitlines():
+            raise AssertionError("Lantern is not registered after APK installation.")
+
+    def run(self, apk: Path) -> None:
+        self.install_fresh(apk)
         launch = adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/.MainActivity")
         (self.evidence / "launch.txt").write_bytes(launch)
         if b"Error:" in launch:
