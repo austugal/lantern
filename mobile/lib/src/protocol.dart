@@ -163,12 +163,21 @@ class Packet {
             if (body['replyTo'] is! String ||
                 !RegExp(r'^[a-f0-9]{32}$').hasMatch(body['replyTo']) ||
                 body['replyTo'] == id ||
-                !{'accepted', 'declined'}.contains(body['decision'])) {
+                !{
+                  'accepted',
+                  'declined',
+                  'completed',
+                  'unable',
+                }.contains(body['decision'])) {
               return null;
             }
-            final expectedText = body['decision'] == 'accepted'
-                ? 'Accepted'
-                : 'Declined';
+            final expectedText = switch (body['decision']) {
+              'accepted' => 'Accepted',
+              'declined' => 'Declined',
+              'completed' => 'Completed',
+              'unable' => 'Unable to complete',
+              _ => null,
+            };
             if (body['text'] != expectedText) {
               return null;
             }

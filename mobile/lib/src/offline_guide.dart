@@ -50,7 +50,7 @@ const guideTopics = <GuideTopic>[
     'Use a short message with the task, location, owner and requested reply. '
         'Avoid guest names, payment data or other sensitive details. '
         'Copy this template, edit it in Conversation, choose Request acknowledgement and send only after checking the recipient. '
-        'Delivered means the other app acknowledged the message. Accepted or Declined means your connected colleague tapped that response; acceptance does not prove the work is complete. '
+        'Delivered means the other app acknowledged the message. Accepted or Declined means your connected colleague tapped that response. After a delivered acceptance they may tap Completed or Unable to complete once. These statuses do not independently prove that work happened or received approval. '
         'Acknowledgement is unavailable for disappearing messages and ends with the current connection. '
         'This preview is not a group dispatch or background staff-paging system.',
     template:

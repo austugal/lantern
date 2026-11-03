@@ -103,3 +103,7 @@ Released through [PR #22](https://github.com/austugal/lantern/pull/22): optional
 ### 2 November 2026: Android APK startup reliability
 
 [PR #24](https://github.com/austugal/lantern/pull/24) removes the test-helper data-clear/launch race behind the earlier failure email. A fresh install and exact package check replace data clearing; all 13 APK navigation gates and genuine-failure checks remain. Eight regression cases bring Python coverage to 126 tests, with the existing 165 Flutter tests and native/desktop checks passing. This is test infrastructure, with no phone application, permission or radio change. See [the development record](DEVELOPMENT-2026-11-02.md).
+
+### 3 November 2026: bounded work-request completion status
+
+Implementation and validation are pending on the isolated development branch. The bounded design extends a current foreground request from Accept/Decline to one final Completed/Unable status after a delivered acceptance. Every linked status uses the existing receipt, explicit retry and resource limits; invalid or out-of-order transitions receive no false acknowledgement. Statuses remain human-reported taps, clear with the session and do not prove task completion or supervisor approval. No persistence, transport, permission, group, signing or background capability is added. See [the development record](DEVELOPMENT-WORK-STATUS-2026-11-03.md).

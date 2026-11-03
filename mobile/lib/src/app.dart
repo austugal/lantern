@@ -670,7 +670,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
             children: [
               _help(
                 'Conversation',
-                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. For an ordinary non-expiring work request, choose Request acknowledgement before sending. The recipient can accept or decline once. That response has its own delivery status; acceptance does not prove the work is complete. Lantern waits up to 10 seconds to submit text, then up to 30 seconds for an app receipt. You can explicitly retry ordinary text twice in this connection; it may already have arrived. For photos and voice notes, the app waits up to 30 seconds for a receipt after transfer submission. If delivery is unconfirmed, it may already have arrived; confirm with your colleague before sending another copy. Disappearing messages and attachments cannot be retried here. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
+                'Type a message and tap the arrow to send. Sent means the transport accepted it; Delivered means the other app acknowledged it, not that the person read it. For an ordinary non-expiring work request, choose Request acknowledgement before sending. The recipient can accept or decline once. After their acceptance is delivered, they can report Completed or Unable to complete once. Each response has its own delivery status and explicit retry; these button taps do not independently prove that work happened. Lantern waits up to 10 seconds to submit text, then up to 30 seconds for an app receipt. You can explicitly retry ordinary text twice in this connection; it may already have arrived. For photos and voice notes, the app waits up to 30 seconds for a receipt after transfer submission. If delivery is unconfirmed, it may already have arrived; confirm with your colleague before sending another copy. Disappearing messages and attachments cannot be retried here. Use Field tools to set message expiry. The broken-link button disconnects and clears this conversation.',
               ),
               IconButton(
                 tooltip: 'Disconnect and clear conversation',
@@ -775,6 +775,14 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                     note.mine
                                         ? 'Declined by colleague'
                                         : 'You declined',
+                                  WorkDecision.completed =>
+                                    note.mine
+                                        ? 'Completed by colleague'
+                                        : 'You marked completed',
+                                  WorkDecision.unable =>
+                                    note.mine
+                                        ? 'Unable to complete'
+                                        : 'You marked unable to complete',
                                   null =>
                                     note.mine
                                         ? 'Response requested · waiting'
@@ -834,6 +842,27 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                                       WorkDecision.declined,
                                     ),
                                     child: const Text('Decline request'),
+                                  ),
+                                ],
+                              ),
+                            if (c.canUpdateRequest(note))
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: [
+                                  FilledButton(
+                                    onPressed: () => _respondToRequest(
+                                      note,
+                                      WorkDecision.completed,
+                                    ),
+                                    child: const Text('Mark completed'),
+                                  ),
+                                  OutlinedButton(
+                                    onPressed: () => _respondToRequest(
+                                      note,
+                                      WorkDecision.unable,
+                                    ),
+                                    child: const Text('Unable to complete'),
                                   ),
                                 ],
                               ),
@@ -937,7 +966,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                 title: const Text('Request acknowledgement'),
                 subtitle: Text(
                   c.messageLifetimeSeconds == null
-                      ? 'The recipient can accept or decline once.'
+                      ? 'The recipient can accept or decline once, then report Completed or Unable after a delivered acceptance.'
                       : 'Turn off message expiry to request a response.',
                 ),
               ),
@@ -1002,17 +1031,39 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
   }
 
   Future<void> _respondToRequest(Note note, WorkDecision decision) async {
-    if (!c.canRespondToRequest(note)) {
+    final initial =
+        decision == WorkDecision.accepted || decision == WorkDecision.declined;
+    if (initial ? !c.canRespondToRequest(note) : !c.canUpdateRequest(note)) {
       return;
     }
-    final verb = decision == WorkDecision.accepted ? 'accept' : 'decline';
+    final peer = c.connected?.name ?? 'your connected colleague';
+    final (title, action, content) = switch (decision) {
+      WorkDecision.accepted => (
+        'Accept request?',
+        'Accept',
+        'This tells $peer that you chose to accept this request. It does not confirm that the work is complete.',
+      ),
+      WorkDecision.declined => (
+        'Decline request?',
+        'Decline',
+        'This tells $peer that you chose to decline this request.',
+      ),
+      WorkDecision.completed => (
+        'Mark request completed?',
+        'Mark completed',
+        'This reports your status to your connected colleague. It does not independently prove that the work happened or received supervisor approval.',
+      ),
+      WorkDecision.unable => (
+        'Mark unable to complete?',
+        'Unable to complete',
+        'This reports that you are unable to complete the request to your connected colleague.',
+      ),
+    };
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${verb[0].toUpperCase()}${verb.substring(1)} request?'),
-        content: Text(
-          'This tells ${c.connected?.name ?? 'your connected colleague'} that you chose to $verb this request. It does not confirm that the work is complete.',
-        ),
+        title: Text(title),
+        content: Text(content),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1020,9 +1071,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              decision == WorkDecision.accepted ? 'Accept' : 'Decline',
-            ),
+            child: Text(action),
           ),
         ],
       ),

@@ -101,6 +101,22 @@ void main() {
       ),
       isNotNull,
     );
+    for (final response in [
+      ('Declined', 'declined'),
+      ('Completed', 'completed'),
+      ('Unable to complete', 'unable'),
+    ]) {
+      expect(
+        Packet.decode(
+          Packet('text', newId(), {
+            'text': response.$1,
+            'replyTo': requestId,
+            'decision': response.$2,
+          }).encode(),
+        ),
+        isNotNull,
+      );
+    }
 
     final invalidBodies = <Map<String, dynamic>>[
       {'text': 'Request', 'responseRequested': false},
@@ -116,6 +132,13 @@ void main() {
       {'text': 'Accepted', 'decision': 'accepted'},
       {'text': 'Accepted', 'replyTo': 'bad', 'decision': 'accepted'},
       {'text': 'Accepted', 'replyTo': requestId, 'decision': 'maybe'},
+      {'text': 'Complete', 'replyTo': requestId, 'decision': 'completed'},
+      {'text': 'Completed', 'replyTo': requestId, 'decision': 'unable'},
+      {
+        'text': 'Unable to complete',
+        'replyTo': requestId,
+        'decision': 'completed',
+      },
       {
         'text': 'Accepted',
         'replyTo': requestId,
@@ -139,7 +162,7 @@ void main() {
     );
   });
 
-  _sessionTest('request sender sees only a valid first human decision', (
+  _sessionTest('request sender accepts one ordered final status', (
     tester,
     s,
   ) async {
@@ -188,7 +211,7 @@ void main() {
     expect(s.controller.notes, hasLength(2));
     expect(s.receipts, hasLength(receiptsBefore + 2));
 
-    // A later conflicting decision is invalid and gets no false receipt.
+    // Decline is no longer valid after the request has been accepted.
     s.receive(
       Packet('text', newId(), {
         'text': 'Declined',
@@ -199,6 +222,61 @@ void main() {
     expect(request.workDecision, WorkDecision.accepted);
     expect(s.controller.notes, hasLength(2));
     expect(s.receipts, hasLength(receiptsBefore + 2));
+
+    final completed = Packet('text', newId(), {
+      'text': 'Completed',
+      'replyTo': request.id,
+      'decision': 'completed',
+    });
+    s.receive(completed);
+    expect(request.workDecision, WorkDecision.completed);
+    expect(s.controller.notes, hasLength(3));
+    expect(s.receipts, hasLength(receiptsBefore + 3));
+
+    // A repeated final packet is re-acknowledged without another note.
+    s.receive(completed);
+    expect(s.controller.notes, hasLength(3));
+    expect(s.receipts, hasLength(receiptsBefore + 4));
+
+    // A later conflicting terminal decision is invalid and gets no receipt.
+    s.receive(
+      Packet('text', newId(), {
+        'text': 'Unable to complete',
+        'replyTo': request.id,
+        'decision': 'unable',
+      }),
+    );
+    expect(request.workDecision, WorkDecision.completed);
+    expect(s.controller.notes, hasLength(3));
+    expect(s.receipts, hasLength(receiptsBefore + 4));
+    await tester.pump();
+  });
+
+  _sessionTest('completion before acceptance is rejected without a receipt', (
+    tester,
+    s,
+  ) async {
+    expect(
+      await s.controller.send(
+        'Inspect the loading dock',
+        responseRequested: true,
+      ),
+      isTrue,
+    );
+    final request = s.controller.notes.single;
+    final receiptsBefore = s.receipts.length;
+
+    s.receive(
+      Packet('text', newId(), {
+        'text': 'Completed',
+        'replyTo': request.id,
+        'decision': 'completed',
+      }),
+    );
+
+    expect(request.workDecision, isNull);
+    expect(s.controller.notes, hasLength(1));
+    expect(s.receipts, hasLength(receiptsBefore));
     await tester.pump();
   });
 
@@ -233,6 +311,7 @@ void main() {
     expect(response.workDecision, WorkDecision.accepted);
     expect(response.expiresAt, isNull);
     expect(s.controller.canRespondToRequest(request), isFalse);
+    expect(s.controller.canUpdateRequest(request), isFalse);
 
     final responsePacket = s.texts.singleWhere(
       (packet) => packet.body['replyTo'] == request.id,
@@ -242,8 +321,77 @@ void main() {
       'replyTo': request.id,
       'decision': 'accepted',
     });
+    expect(
+      await s.controller.respondToRequest(request, WorkDecision.completed),
+      isFalse,
+    );
     s.acknowledge(response.id);
     expect(response.delivery, Delivery.delivered);
+    expect(s.controller.canUpdateRequest(request), isTrue);
+
+    expect(
+      await s.controller.respondToRequest(request, WorkDecision.completed),
+      isTrue,
+    );
+    expect(request.workDecision, WorkDecision.completed);
+    expect(s.controller.canUpdateRequest(request), isFalse);
+    final completion = s.controller.notes.last;
+    expect(completion.text, 'Completed');
+    expect(completion.replyTo, request.id);
+    expect(completion.workDecision, WorkDecision.completed);
+    expect(s.texts.singleWhere((packet) => packet.id == completion.id).body, {
+      'text': 'Completed',
+      'replyTo': request.id,
+      'decision': 'completed',
+    });
+    expect(
+      await s.controller.respondToRequest(request, WorkDecision.unable),
+      isFalse,
+    );
+    await tester.pump();
+  });
+
+  _sessionTest('accepted receiver can report unable exactly once', (
+    tester,
+    s,
+  ) async {
+    final requestId = newId();
+    s.receive(
+      Packet('text', requestId, {
+        'text': 'Please check room 214',
+        'responseRequested': true,
+      }),
+    );
+    final request = s.controller.notes.single;
+    expect(
+      await s.controller.respondToRequest(request, WorkDecision.accepted),
+      isTrue,
+    );
+    final acceptance = s.controller.notes.last;
+    s.acknowledge(acceptance.id);
+    expect(s.controller.canUpdateRequest(request), isTrue);
+
+    expect(
+      await s.controller.respondToRequest(request, WorkDecision.unable),
+      isTrue,
+    );
+    expect(request.workDecision, WorkDecision.unable);
+    final unable = s.controller.notes.last;
+    expect(unable.text, 'Unable to complete');
+    expect(s.texts.singleWhere((packet) => packet.id == unable.id).body, {
+      'text': 'Unable to complete',
+      'replyTo': requestId,
+      'decision': 'unable',
+    });
+
+    expect(
+      await s.controller.respondToRequest(request, WorkDecision.completed),
+      isFalse,
+    );
+    expect(
+      s.controller.notes.where((note) => note.replyTo == requestId),
+      hasLength(2),
+    );
     await tester.pump();
   });
 
@@ -324,6 +472,47 @@ void main() {
         (packet) =>
             packet.body['replyTo'] == incomingId &&
             packet.body['decision'] == 'declined',
+      ),
+      isTrue,
+    );
+    await tester.pump();
+  });
+
+  _sessionTest('final status retry preserves identity and metadata', (
+    tester,
+    s,
+  ) async {
+    final incomingId = newId();
+    s.receive(
+      Packet('text', incomingId, {
+        'text': 'Restock the lobby supplies',
+        'responseRequested': true,
+      }),
+    );
+    final incoming = s.controller.notes.single;
+    expect(
+      await s.controller.respondToRequest(incoming, WorkDecision.accepted),
+      isTrue,
+    );
+    final acceptance = s.controller.notes.last;
+    s.acknowledge(acceptance.id);
+
+    s.transport.failMethod = 'send';
+    expect(
+      await s.controller.respondToRequest(incoming, WorkDecision.completed),
+      isFalse,
+    );
+    final completion = s.controller.notes.last;
+    expect(completion.delivery, Delivery.failed);
+    expect(await s.controller.retry(completion), isFalse);
+    final packets = s.texts.where((packet) => packet.id == completion.id);
+    expect(packets, hasLength(2));
+    expect(
+      packets.every(
+        (packet) =>
+            packet.body['text'] == 'Completed' &&
+            packet.body['replyTo'] == incomingId &&
+            packet.body['decision'] == 'completed',
       ),
       isTrue,
     );

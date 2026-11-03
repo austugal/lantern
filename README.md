@@ -39,7 +39,7 @@ Ordinary text becomes **Delivery unconfirmed** if submission times out or no app
 
 Photos and voice notes wait up to 30 seconds for a receipt after transfer submission. **Delivery unconfirmed** means the app has no receipt; the attachment may already have arrived. There is no automatic resend or attachment retry. Confirm with your colleague before sending another copy.
 
-For an ordinary non-expiring work request, choose **Request acknowledgement**. The connected colleague can accept or decline once. Their linked response has its own delivery receipt and retry status. Acceptance records that the colleague tapped Accept; it does not prove completion, escalation or supervisor approval. Requests and responses remain in the current foreground connection and clear on disconnect.
+For an ordinary non-expiring work request, choose **Request acknowledgement**. The connected colleague can accept or decline once. After a delivered acceptance, they can report **Completed** or **Unable to complete** once. Each linked status has its own delivery receipt and explicit retry limit. These statuses record what the colleague tapped; they do not independently prove completion, escalation or supervisor approval. Requests and responses remain in the current foreground connection and clear on disconnect or background interruption.
 
 Android connects to Android; iPhone connects to iPhone. Each mobile session supports **one connected peer**. Switching apps or locking the phone stops the session, cancels check-in timers and clears its messages. This preview has no background messaging. When Lantern returns to the foreground after an interruption, a visible notice explains that nothing was queued. Restarting discovery requires a tap, and reconnecting still requires choosing and confirming the person again; location sharing, check-ins and messages do not restart.
 
@@ -47,7 +47,7 @@ Android connects to Android; iPhone connects to iPhone. Each mobile session supp
 
 | Feature | What the phone app does |
 | --- | --- |
-| Private text messages | Encrypted nearby connection, receipts, visible failures and optional one-time Accept/Decline request acknowledgement |
+| Private text messages | Encrypted nearby connection, receipts, visible failures and bounded Accept/Decline then Completed/Unable work-request status |
 | Emojis, photos and voice notes | Emoji text, camera/gallery photo attachments and short recorded voice messages |
 | Message notifications | Optional generic local alerts when messages arrive over an active session |
 | Torch and SOS flash | Steady light or repeating Morse SOS; immediate Stop, switches off on background |
@@ -81,14 +81,14 @@ These are proposed pilot uses of the existing one-to-one messaging feature, not 
 | Workplace | Practical example |
 | --- | --- |
 | Hotel housekeeping | Two nearby attendants exchange a linen or supply request in a service area with poor internet access. Put the floor or work-area name in the message. |
-| Hotel maintenance | A colleague sends “Maintenance request: service corridor, light not working; please acknowledge.” The recipient replies when they accept the task. |
+| Hotel maintenance | A colleague sends “Maintenance request: service corridor, light not working; please acknowledge.” The recipient can accept, then report completion or inability in the same foreground connection. |
 | Hotel reception and operations | Nearby colleagues exchange a short operational handover during an internet outage, provided their phones can still connect locally. |
 | Events and venues | A floor attendant asks a nearby coordinator for supplies or confirms that a meeting point is ready. |
 | Warehouses and retail | Colleagues exchange an aisle/location and a stock request without using guest or public Wi-Fi. |
 | Construction and field work | Nearby colleagues share a meeting point or routine progress update; optional coordinates are useful only where GPS has a usable fix. |
 | Community groups | People together in person exchange updates when internet access is unavailable. |
 
-**Example staff message:** “Housekeeping request — Floor 2 service cupboard — need towels — routine priority.” Use work-area labels rather than guest names or booking information, then choose **Request acknowledgement** if you need an explicit Accept/Decline response. The offline guide includes a template you can copy and edit.
+**Example staff message:** “Housekeeping request — Floor 2 service cupboard — need towels — routine priority.” Use work-area labels rather than guest names or booking information, then choose **Request acknowledgement** if you need an explicit Accept/Decline response and a bounded follow-up status. The offline guide includes a template you can copy and edit.
 
 Start with two same-platform phones and routine, noncritical tasks. Test the actual rooms, floors and service areas: walls and distance can break a connection. “Delivered” confirms app receipt, not that a colleague read or accepted the job; ask for a reply. Indoor GPS may be inaccurate, so room or area labels are often more useful.
 

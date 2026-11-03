@@ -36,16 +36,16 @@ At most eight text submissions can await receipts at once. If a native send neve
 
 ### Request acknowledgement
 
-For an ordinary text work request, choose **Request acknowledgement** before sending. The connected recipient can choose **Accept request** or **Decline request** once. Their linked response is a separate ordinary text, so it has its own app receipt and the same explicit retry limits. **Delivered** still means app receipt; **Accepted by colleague** means the peer tapped Accept. It does not mean the task is complete.
+For an ordinary text work request, choose **Request acknowledgement** before sending. The connected recipient can choose **Accept request** or **Decline request** once. After their acceptance response is delivered, they can choose **Mark completed** or **Unable to complete** once. Each linked status is a separate ordinary text, so it has its own app receipt and the same explicit retry limits. **Delivered** still means app receipt. Accepted, Completed and Unable record buttons the peer tapped; they do not independently prove that work happened or received supervisor approval.
 
-Acknowledgement is unavailable while message expiry is enabled and does not apply to attachments. It works only in the current one-peer foreground connection; disconnecting clears the request and response. There is no durable assignment queue, escalation, group dispatch or supervisor dashboard.
+Acknowledgement is unavailable while message expiry is enabled and does not apply to attachments. Completion cannot be sent before the accepted response itself has an app receipt, so a final status cannot overtake an uncertain acceptance. It works only in the current one-peer foreground connection; disconnecting or backgrounding clears the request and responses. There is no durable assignment queue, escalation, group dispatch or supervisor dashboard.
 
 ## Features
 
 | Control | What it does |
 | --- | --- |
 | Nearby discovery | Finds participating Lantern peers after you turn it on. Nothing connects automatically. |
-| Conversation | Sends text and emojis over the native encrypted connection; shows receipts and failures. Ordinary non-expiring text can request one Accept/Decline response. Text is limited to 1,000 characters. |
+| Conversation | Sends text and emojis over the native encrypted connection; shows receipts and failures. Ordinary non-expiring text can request Accept/Decline, then one Completed/Unable update after a delivered acceptance. Text is limited to 1,000 characters. |
 | Photos | Select a photo or use the camera, review it, then send. Images are resized and re-encoded before transfer. |
 | Voice messages | Record up to 30 seconds, review and send. Received audio plays only when tapped. These are recordings, not live calls. |
 | Local notifications | Optional generic alerts after a message arrives. They work without internet over an active nearby session; there is no background or remote push delivery. |
