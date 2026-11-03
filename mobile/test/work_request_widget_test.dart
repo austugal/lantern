@@ -72,7 +72,7 @@ void main() {
       }).encode(),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Completed by colleague'), findsOneWidget);
+    expect(find.text('Completed'), findsOneWidget);
     expect(request.workDecision, WorkDecision.completed);
     expect(tester.takeException(), isNull);
 
@@ -145,10 +145,7 @@ void main() {
     await tester.tap(find.text('Mark completed'));
     await tester.pumpAndSettle();
     expect(find.text('Mark request completed?'), findsOneWidget);
-    expect(
-      find.textContaining('not independent proof or supervisor approval'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('does not independently prove'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Mark completed').last);
     await tester.pumpAndSettle();
     expect(original.workDecision, WorkDecision.completed);
