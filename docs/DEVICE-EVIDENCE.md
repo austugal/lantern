@@ -14,14 +14,14 @@ The generated report starts incomplete. Fill in the exact app source commit and 
 
 Run the ten named checks on the actual phones. Record `pass`, `fail`, `blocked` or `not_run` and an observation for each. For bidirectional media, check both directions and app receipts, not just native submission. Record retry duplicates, permission recovery, range-loss failures and background shutdown. For foreground endurance, observe a 30-minute session and record duration and battery readings from each phone; this is a measured observation, not a battery-life claim. Do not mark blocked or unexecuted checks as passed.
 
-The current validated Android artifact is [mobile-preview-a59edf05c3bc](https://github.com/austugal/lantern/releases/tag/mobile-preview-a59edf05c3bc), published 2 November 2026. Its source is `a59edf05c3bccb712775a8a7abc8f5b98e166f85`; GitHub's APK digest is `a7379adc261d28bfcf8a4f01cb95901518cc3d26cfaa34ac1e0a5ec2b9e30922`, checked on 2 November. Check the downloaded APK's hash against this value and ensure both phones use the intended build. The validator compares report fields against supplied expected values; it cannot verify installed binaries.
+The current validated Android artifact is [mobile-preview-ae0b65b85f6f](https://github.com/austugal/lantern/releases/tag/mobile-preview-ae0b65b85f6f), published 3 November 2026 at 14:45:49 UTC. Its source is `ae0b65b85f6fc68a8c29b13ca2de1244284ef817`; GitHub's APK digest is `f5ad4e33d6cf93d9827db6001deca3ed0e44447389fc1ea4d33e056c5abb0b00`, checked on 3 November. Check the downloaded APK's hash against this value and ensure both phones use the intended build. The validator compares report fields against supplied expected values; it cannot verify installed binaries.
 
 ## Validate the record
 
 ```sh
 python tools/device_evidence.py validate android-baseline.json \
-  --expected-commit a59edf05c3bccb712775a8a7abc8f5b98e166f85 \
-  --expected-apk-sha256 a7379adc261d28bfcf8a4f01cb95901518cc3d26cfaa34ac1e0a5ec2b9e30922
+  --expected-commit ae0b65b85f6fc68a8c29b13ca2de1244284ef817 \
+  --expected-apk-sha256 f5ad4e33d6cf93d9827db6001deca3ed0e44447389fc1ea4d33e056c5abb0b00
 ```
 
 Use a single line in Windows PowerShell, without the shell continuation backslashes. For a different artifact, deliberately supply its independently checked expected values; do not overwrite expected values merely to silence a mismatch.
