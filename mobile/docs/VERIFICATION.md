@@ -1,5 +1,13 @@
 # Mobile verification record
 
+## 3 November 2026 — bounded work-request completion status (pending)
+
+Implementation and CI validation are pending on the isolated development branch. The intended scope permits a current foreground request to move from waiting to Accepted or Declined, then from a delivered acceptance to one terminal Completed or Unable status. Each linked response uses the existing bounded text receipt, explicit retry, stable-ID and resource-limit path. Unknown, conflicting, repeated, cross-session or out-of-order transitions must not update the request or receive a false app receipt.
+
+The statuses are human-reported button taps, not independent proof that work occurred or that a supervisor approved it. Disconnecting or backgrounding clears the in-memory request and responses. This slice changes no native transport, platform permission, persistent queue, group capability, production signing or background execution.
+
+Local Dart 3.9.2 formatting, 10,019 standalone packet checks, Ruff lint/format, strict mypy and all 126 Python tests passed. A separate read-only review found no blocker. Flutter tests, native builds, installed-APK checks and remote desktop gates remain pending; their results will be recorded only after they pass.
+
 ## 2 November 2026 — Android APK smoke startup repair
 
 [PR #24](https://github.com/austugal/lantern/pull/24) validated head `f15459352a7ababc375376d2a3131e875e3b1757` and merged as `a59edf05c3bccb712775a8a7abc8f5b98e166f85`, with identical tree `51b643ce5aa39c1862d2691a093678ec055d085d`. The APK helper now requires a fresh emulator without Lantern installed, installs without replacement or permission grants, and checks the exact registered package before launch. It no longer clears app data immediately before startup. Existing installations and genuine install/launch/app failures still stop the gate.

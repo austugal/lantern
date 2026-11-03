@@ -19,7 +19,7 @@ class Invitation {
 
 enum Delivery { sending, sent, delivered, failed }
 
-enum WorkDecision { accepted, declined }
+enum WorkDecision { accepted, declined, completed, unable }
 
 /// Recovery always requires a new foreground user action and fresh peer consent.
 enum ReconnectReason { backgrounded, nativeStopped, peerDisconnected }
@@ -715,11 +715,14 @@ class LanternController extends ChangeNotifier {
           Note? responseTarget;
           if (packet.body['replyTo'] is String) {
             final replyTo = packet.body['replyTo'] as String;
+            final decision = WorkDecision.values.byName(
+              packet.body['decision'] as String,
+            );
             for (final note in notes.reversed) {
               if (note.mine &&
                   note.id == replyTo &&
                   note.responseRequested &&
-                  note.workDecision == null) {
+                  _validWorkTransition(note.workDecision, decision)) {
                 responseTarget = note;
                 break;
               }
@@ -1137,6 +1140,36 @@ class LanternController extends ChangeNotifier {
       note.responseRequested &&
       note.workDecision == null;
 
+  bool canUpdateRequest(Note note) =>
+      !_disposed &&
+      active &&
+      foreground &&
+      connected != null &&
+      notes.contains(note) &&
+      !note.mine &&
+      note.responseRequested &&
+      note.workDecision == WorkDecision.accepted &&
+      notes.any(
+        (response) =>
+            response.mine &&
+            response.replyTo == note.id &&
+            response.workDecision == WorkDecision.accepted &&
+            response.delivery == Delivery.delivered,
+      );
+
+  bool _validWorkTransition(WorkDecision? current, WorkDecision next) =>
+      current == null
+      ? next == WorkDecision.accepted || next == WorkDecision.declined
+      : current == WorkDecision.accepted &&
+            (next == WorkDecision.completed || next == WorkDecision.unable);
+
+  String _workDecisionText(WorkDecision decision) => switch (decision) {
+    WorkDecision.accepted => 'Accepted',
+    WorkDecision.declined => 'Declined',
+    WorkDecision.completed => 'Completed',
+    WorkDecision.unable => 'Unable to complete',
+  };
+
   bool _textCapacityAvailable() {
     if (_textAttempts.length < maxPendingTextSends &&
         _nativeTextSends.length < maxPendingTextSends) {
@@ -1159,12 +1192,17 @@ class LanternController extends ChangeNotifier {
   }
 
   Future<bool> respondToRequest(Note note, WorkDecision decision) async {
-    if (!canRespondToRequest(note) || !_textCapacityAvailable()) {
+    final allowed =
+        _validWorkTransition(note.workDecision, decision) &&
+        (note.workDecision == null
+            ? canRespondToRequest(note)
+            : canUpdateRequest(note));
+    if (!allowed || !_textCapacityAvailable()) {
       return false;
     }
     final response = Note(
       newId(),
-      decision == WorkDecision.accepted ? 'Accepted' : 'Declined',
+      _workDecisionText(decision),
       true,
       DateTime.now(),
       Delivery.sending,

@@ -62,6 +62,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Accepted by colleague'), findsOneWidget);
     expect(request.workDecision, WorkDecision.accepted);
+
+    transport.emit(
+      'data',
+      data: Packet('text', newId(), {
+        'text': 'Completed',
+        'replyTo': request.id,
+        'decision': 'completed',
+      }).encode(),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Completed by colleague'), findsOneWidget);
+    expect(request.workDecision, WorkDecision.completed);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -69,7 +81,7 @@ void main() {
     await location.stream.close();
   });
 
-  testWidgets('recipient gets both choices and records one final response', (
+  testWidgets('recipient accepts then records one final status', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 900);
@@ -112,12 +124,43 @@ void main() {
     expect(find.text('You accepted'), findsOneWidget);
     expect(find.text('Accept request'), findsNothing);
     expect(find.text('Decline request'), findsNothing);
+    final acceptance = controller.notes.singleWhere(
+      (note) =>
+          note.mine &&
+          note.replyTo == original.id &&
+          note.workDecision == WorkDecision.accepted,
+    );
+    expect(find.text('Mark completed'), findsNothing);
+    expect(find.text('Unable to complete'), findsNothing);
+
+    transport.emit(
+      'data',
+      data: Packet('ack', newId(), {'id': acceptance.id}).encode(),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Mark completed'), findsOneWidget);
+    expect(find.text('Unable to complete'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Mark completed'));
+    await tester.tap(find.text('Mark completed'));
+    await tester.pumpAndSettle();
+    expect(find.text('Mark request completed?'), findsOneWidget);
+    expect(
+      find.textContaining('not independent proof or supervisor approval'),
+      findsOneWidget,
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Mark completed').last);
+    await tester.pumpAndSettle();
+    expect(original.workDecision, WorkDecision.completed);
+    expect(find.text('You marked completed'), findsOneWidget);
+    expect(find.text('Mark completed'), findsNothing);
+    expect(find.text('Unable to complete'), findsNothing);
     expect(
       controller.notes.where(
         (note) =>
             note.mine &&
             note.replyTo == original.id &&
-            note.workDecision == WorkDecision.accepted,
+            note.workDecision == WorkDecision.completed,
       ),
       hasLength(1),
     );

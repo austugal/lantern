@@ -45,3 +45,9 @@ Main inspected at `275d9801dd5a6b9c833faa51a4ef12da758ee321`. At **13:24:16 UTC*
 ## Recheck — 1 November 2026
 
 At **14:00:51 UTC**, the Contributors REST response listed only `austugal`, **62 contributions**, on main `e9bb535ebe7a36d882e8392ff065ae76aa6b529b` before today’s tool merge. The fully loaded live homepage still showed **Contributors (2)**, austugal and claude. The display remains inconsistent with the corrected-main/API view. Legacy refs and old releases listed above were preserved; none were deleted or rewritten. The exact support request remains prepared; no support message was sent and no removal is claimed.
+
+## Recheck — 3 November 2026
+
+At **13:47:02 UTC**, `GET https://api.github.com/repos/austugal/lantern/contributors?anon=1` listed only `austugal`, **81 contributions**, on main `33bf80c6ac1e151d418c33f12de6b32645fcdaef`. After the public repository homepage finished loading, its generated sidebar still displayed **Contributors (2)**, `austugal` and `claude`. The sidebar therefore remains inconsistent with the Contributors REST response and corrected default-branch attribution more than 24 hours after the 16 October correction.
+
+The legacy branches, immutable pull-request refs and old release tags documented above remain the likely attribution inputs or cache sources; this is an inference, not a GitHub-confirmed cause. None were deleted or rewritten. The exact Support request above remains ready to send, but no support message was sent and no removal is claimed. `CONTRIBUTORS.md` continues to credit ChatGPT (OpenAI) separately as requested; that credit is unrelated to GitHub's generated account list.
