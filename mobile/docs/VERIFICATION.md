@@ -1,12 +1,20 @@
 # Mobile verification record
 
-## 3 November 2026 — bounded work-request completion status (pending)
+## 3 November 2026 — bounded work-request completion status
 
-Implementation and CI validation are pending on the isolated development branch. The intended scope permits a current foreground request to move from waiting to Accepted or Declined, then from a delivered acceptance to one terminal Completed or Unable status. Each linked response uses the existing bounded text receipt, explicit retry, stable-ID and resource-limit path. Unknown, conflicting, repeated, cross-session or out-of-order transitions must not update the request or receive a false app receipt.
+The released scope permits a current foreground request to move from waiting to Accepted or Declined, then from a delivered acceptance to one terminal Completed or Unable status. Each linked response uses the existing bounded text receipt, explicit retry, stable-ID and resource-limit path. Unknown, conflicting, repeated, cross-session or out-of-order transitions do not update the request or receive a false app receipt.
 
 The statuses are human-reported button taps, not independent proof that work occurred or that a supervisor approved it. Disconnecting or backgrounding clears the in-memory request and responses. This slice changes no native transport, platform permission, persistent queue, group capability, production signing or background execution.
 
-Local Dart 3.9.2 formatting, 10,019 standalone packet checks, Ruff lint/format, strict mypy and all 126 Python tests passed. A separate read-only review found no blocker. Flutter tests, native builds, installed-APK checks and remote desktop gates remain pending; their results will be recorded only after they pass.
+Local Dart 3.9.2 formatting, 10,019 standalone packet checks, Ruff lint/format, strict mypy and all 126 Python tests passed. A separate read-only review found no blocker.
+
+[PR #26](https://github.com/austugal/lantern/pull/26) validated head `2e8f10f9296728c4df3c6fdd6e84e4fad58cceb0` and merged as `ae0b65b85f6fc68a8c29b13ca2de1244284ef817`, with identical tree `f3432b3205bc061599767e6a9babecea7c1fa55a`. [PR mobile run 41648787264](https://github.com/austugal/lantern/actions/runs/41648787264) passed formatting, analysis, **168 Flutter tests**, Android APK, iOS simulator and unsigned-device builds, **13 installed-APK scenarios** and **two native fixtures**. [PR Python CI 41648787420](https://github.com/austugal/lantern/actions/runs/41648787420) passed on Python 3.10/3.12/3.13.
+
+[Main mobile run 41652190175](https://github.com/austugal/lantern/actions/runs/41652190175) passed every gate and publication on attempt 3. Attempt 1 hit `No space left on device` in the GitHub-hosted runner's own diagnostic log. Attempt 2 passed Android compilation but SDK Manager received an `unknown archive` while installing the emulator system image, before Lantern launched. The targeted emulator retry used unchanged source and passed all 13 APK checks and both native fixtures. [Main Python CI 41652190243](https://github.com/austugal/lantern/actions/runs/41652190243) and [desktop builds/publication 41652190315](https://github.com/austugal/lantern/actions/runs/41652190315) also passed.
+
+[Mobile preview `mobile-preview-ae0b65b85f6f`](https://github.com/austugal/lantern/releases/tag/mobile-preview-ae0b65b85f6f) was published 3 November 2026 at 14:45:49 UTC. The Android testing APK digest is `f5ad4e33d6cf93d9827db6001deca3ed0e44447389fc1ea4d33e056c5abb0b00`; iOS simulator and unsigned-device archives are attached. The matching [desktop preview](https://github.com/austugal/lantern/releases/tag/desktop-preview-ae0b65b85f6f) contains Windows, Linux and macOS packages.
+
+No physical phone, radio delivery, mixed Android-iPhone operation, background execution, production signing, independent security audit or independently verified work completion was established.
 
 ## 2 November 2026 — Android APK smoke startup repair
 
