@@ -111,3 +111,7 @@ Released through [PR #26](https://github.com/austugal/lantern/pull/26): a curren
 ### 3 November 2026: Android foreground-session design gate
 
 The [Android foreground-session contract](../mobile/docs/ANDROID-FOREGROUND-SESSION-CONTRACT-2026-11-03.md) defines the smallest safe implementation slice before native work begins: explicit opt-in after one-peer verification, a private persistent notification and two Stop controls, `connectedDevice` service ownership, a 30-minute maximum, volatile buffering capped at 32 payloads and 256 KiB, and no application receipt before Dart validation. Location, media, check-ins, compass and torch still stop on background; iPhone remains foreground-only. This completes the design gate only. No service, permission, transport, runtime behaviour or background-delivery claim was added, and physical-device testing remains pending.
+
+### 4 November 2026: downloaded APK integrity for physical-test records
+
+The [offline baseline validator](DEVICE-EVIDENCE.md) can now hash a supplied downloaded APK before accepting a record. Chunked reads, a 512 MiB limit and mismatch rejection bind the local artifact to the independently supplied expected digest. This advances preparation for the physical reliability priority; it does not establish installation, signing, security or physical test results. Mobile transports and platform lifecycle behaviour are unchanged.

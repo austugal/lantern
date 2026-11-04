@@ -1,22 +1,27 @@
 #!/usr/bin/env python3
 """Prepare and check bounded, human-reported two-Android-phone baseline records.
 
-This tool reads local JSON only. It cannot establish that a physical test occurred,
-verify a device or installed binary, or approve a release.
+This tool reads local JSON and optionally hashes a downloaded APK. It cannot
+establish that a physical test occurred, verify an installed binary, or approve a release.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
+import os
 import re
+import stat
 import sys
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 MAX_REPORT_BYTES = 65_536
+MAX_APK_BYTES = 512 * 1024 * 1024
+APK_CHUNK_BYTES = 1024 * 1024
 MAX_TEXT_LENGTH = 2_000
 SCENARIO = "android_android_foreground_baseline"
 CHECK_IDS = (
@@ -205,6 +210,63 @@ def load_report(path: Path) -> object:
         raise ValueError("report must be bounded, valid UTF-8 JSON") from exc
 
 
+def _file_identity(info: os.stat_result) -> tuple[int, int, int, int, int]:
+    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+
+def verify_apk_file(path: Path, expected_sha256: str) -> str:
+    """Hash a bounded regular file without parsing or executing its contents.
+
+    Matching a caller-supplied hash verifies only these downloaded bytes, not
+    provenance, signing, APK validity, installation or physical test results.
+    Symlinks and nonregular files are rejected before opening. Metadata checks
+    detect ordinary replacement or modification, not adversarial filesystem races.
+    """
+    expected = _expected_hash(expected_sha256, 64, "expected APK SHA-256")
+    before = path.lstat()
+    if not stat.S_ISREG(before.st_mode):
+        raise ValueError("APK must be a regular file, not a symlink or special file")
+    if not 0 < before.st_size <= MAX_APK_BYTES:
+        raise ValueError(f"APK must contain between 1 and {MAX_APK_BYTES} bytes")
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+    flags |= getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags)
+    try:
+        opened = os.fstat(descriptor)
+        # Windows can report different identity/timestamp fields through a file
+        # descriptor and a path. Compare each API only with its own baseline;
+        # the byte count and expected digest remain the content checks.
+        if not stat.S_ISREG(opened.st_mode):
+            raise ValueError("APK must be a regular file")
+        if not 0 < opened.st_size <= MAX_APK_BYTES:
+            raise ValueError(f"APK must contain between 1 and {MAX_APK_BYTES} bytes")
+        digest = hashlib.sha256()
+        total = 0
+        while True:
+            chunk = os.read(descriptor, min(APK_CHUNK_BYTES, MAX_APK_BYTES - total + 1))
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > MAX_APK_BYTES:
+                raise ValueError(f"APK exceeds {MAX_APK_BYTES} bytes")
+            digest.update(chunk)
+        after = os.fstat(descriptor)
+        current = path.lstat()
+        if (
+            total != opened.st_size
+            or _file_identity(after) != _file_identity(opened)
+            or not stat.S_ISREG(current.st_mode)
+            or _file_identity(current) != _file_identity(before)
+        ):
+            raise ValueError("APK changed during hashing")
+    finally:
+        os.close(descriptor)
+    actual = digest.hexdigest()
+    if actual != expected:
+        raise ValueError("downloaded APK SHA-256 does not match the expected artifact")
+    return actual
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -213,6 +275,9 @@ def main(argv: list[str] | None = None) -> int:
     validate.add_argument("file", type=Path)
     validate.add_argument("--expected-commit", required=True)
     validate.add_argument("--expected-apk-sha256", required=True)
+    validate.add_argument(
+        "--apk-file", type=Path, help="also hash a local regular APK file (maximum 512 MiB)"
+    )
     args = parser.parse_args(argv)
     if args.command == "template":
         print(json.dumps(make_template(), indent=2, allow_nan=False))
@@ -221,11 +286,17 @@ def main(argv: list[str] | None = None) -> int:
         reasons = validate_report(
             load_report(args.file), args.expected_commit, args.expected_apk_sha256
         )
+        apk_digest = (
+            verify_apk_file(args.apk_file, args.expected_apk_sha256) if args.apk_file else None
+        )
     except (OSError, ValueError, RecursionError) as exc:
         print(f"Invalid record: {exc}", file=sys.stderr)
         print(DISCLAIMER, file=sys.stderr)
         return 2
     print(DISCLAIMER)
+    if apk_digest is not None:
+        print(f"Downloaded-file SHA-256 verified against the supplied expected hash: {apk_digest}")
+        print("This does not verify signing, provenance, installation or physical test results.")
     if reasons:
         print("Baseline record incomplete or contains unsuccessful checks:")
         for reason in reasons:
