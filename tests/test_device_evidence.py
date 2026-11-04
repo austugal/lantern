@@ -353,3 +353,37 @@ def test_apk_modified_during_hashing_is_rejected(
     monkeypatch.setattr(module.os, "read", mutate_after_read)
     with pytest.raises(ValueError, match="changed during hashing"):
         module.verify_apk_file(artifact, hashlib.sha256(data).hexdigest())
+
+
+def test_apk_accepts_stable_path_and_descriptor_metadata_from_different_apis(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import hashlib
+    import importlib.util
+    from types import SimpleNamespace
+
+    spec = importlib.util.spec_from_file_location("device_evidence_windows_stat_test", TOOL)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    artifact = tmp_path / "testing.apk"
+    data = b"Synthetic Windows metadata regression fixture"
+    artifact.write_bytes(data)
+    original_fstat = module.os.fstat
+
+    def descriptor_metadata(descriptor: int) -> SimpleNamespace:
+        actual = original_fstat(descriptor)
+        # Windows path and descriptor APIs can expose different identities and
+        # timestamp precision. Each API remains internally stable for this file.
+        return SimpleNamespace(
+            st_mode=actual.st_mode,
+            st_dev=actual.st_dev + 1,
+            st_ino=actual.st_ino + 1,
+            st_size=actual.st_size,
+            st_mtime_ns=actual.st_mtime_ns // 1000000000 * 1000000000,
+            st_ctime_ns=actual.st_ctime_ns // 1000000000 * 1000000000,
+        )
+
+    monkeypatch.setattr(module.os, "fstat", descriptor_metadata)
+    digest = hashlib.sha256(data).hexdigest()
+    assert module.verify_apk_file(artifact, digest) == digest

@@ -233,8 +233,13 @@ def verify_apk_file(path: Path, expected_sha256: str) -> str:
     descriptor = os.open(path, flags)
     try:
         opened = os.fstat(descriptor)
-        if not stat.S_ISREG(opened.st_mode) or _file_identity(opened) != _file_identity(before):
-            raise ValueError("APK changed before hashing")
+        # Windows can report different identity/timestamp fields through a file
+        # descriptor and a path. Compare each API only with its own baseline;
+        # the byte count and expected digest remain the content checks.
+        if not stat.S_ISREG(opened.st_mode):
+            raise ValueError("APK must be a regular file")
+        if not 0 < opened.st_size <= MAX_APK_BYTES:
+            raise ValueError(f"APK must contain between 1 and {MAX_APK_BYTES} bytes")
         digest = hashlib.sha256()
         total = 0
         while True:
@@ -248,8 +253,8 @@ def verify_apk_file(path: Path, expected_sha256: str) -> str:
         after = os.fstat(descriptor)
         current = path.lstat()
         if (
-            total != before.st_size
-            or _file_identity(after) != _file_identity(before)
+            total != opened.st_size
+            or _file_identity(after) != _file_identity(opened)
             or not stat.S_ISREG(current.st_mode)
             or _file_identity(current) != _file_identity(before)
         ):

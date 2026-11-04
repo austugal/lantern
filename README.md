@@ -137,7 +137,7 @@ Lantern is an experimental preview. Do not use it as your only emergency communi
 - **Explicit consent:** people accept connections; location sharing and guardian roles require separate choices.
 - **Limited exposure:** location sharing expires, stale positions are removed, and mobile sessions end when the app backgrounds.
 - **Reviewable releases:** download from this repository's release pages. The mobile release includes `SHA256SUMS.txt` for file-integrity checking; checksums do not prove a file is harmless.
-- **Verified checks:** 135 Python tests and 168 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
+- **Verified checks:** 136 Python tests and 168 Flutter tests passed, and Android, iOS and desktop builds completed. These checks cannot guarantee that every device or real-world scenario is safe.
 
 The Android APK uses development signing and desktop packages are unsigned. No “anti-hack”, malware-free or unhackable guarantee is made. Test on noncritical devices and workflows before operational use.
 
@@ -151,9 +151,9 @@ No independent security audit or immunity from hacking is claimed. For details, 
 
 | Area | Completed checks |
 | --- | --- |
-| Desktop | 135 Python tests (91 core, 36 evidence-tool and eight APK-startup cases); lint and strict typing; Windows, macOS and Linux builds and executable checks |
+| Desktop | 136 Python tests (91 core, 37 evidence-tool and eight APK-startup cases); lint and strict typing; Windows, macOS and Linux builds and executable checks |
 | Mobile | Flutter analyzer and **168 automated tests** passed; Android testing APK, iOS simulator app and unsigned iOS device app compiled |
-| Physical-test preparation tool | 36 synthetic evidence-tool cases, included in the 135 Python total; these are not physical tests |
+| Physical-test preparation tool | 37 synthetic evidence-tool cases, included in the 136 Python total; these are not physical tests |
 | Mobile wire format | 10,019 standalone offline packet checks passed |
 
 See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification](mobile/docs/VERIFICATION.md) for evidence and limits. Real phone-to-phone radio, GPS, range and battery tests are still outstanding. A successful build does not prove those behaviours.
