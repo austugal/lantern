@@ -14,14 +14,15 @@ The generated report starts incomplete. Fill in the exact app source commit and 
 
 Run the ten named checks on the actual phones. Record `pass`, `fail`, `blocked` or `not_run` and an observation for each. For bidirectional media, check both directions and app receipts, not just native submission. Record retry duplicates, permission recovery, range-loss failures and background shutdown. For foreground endurance, observe a 30-minute session and record duration and battery readings from each phone; this is a measured observation, not a battery-life claim. Do not mark blocked or unexecuted checks as passed.
 
-The current validated Android artifact is [mobile-preview-ae0b65b85f6f](https://github.com/austugal/lantern/releases/tag/mobile-preview-ae0b65b85f6f), published 3 November 2026 at 14:45:49 UTC. Its source is `ae0b65b85f6fc68a8c29b13ca2de1244284ef817`; GitHub's APK digest is `f5ad4e33d6cf93d9827db6001deca3ed0e44447389fc1ea4d33e056c5abb0b00`, checked on 3 November. Check the downloaded APK's hash against this value and ensure both phones use the intended build. The validator compares report fields against supplied expected values; it cannot verify installed binaries.
+The current validated Android artifact is [mobile-preview-ae0b65b85f6f](https://github.com/austugal/lantern/releases/tag/mobile-preview-ae0b65b85f6f), published 3 November 2026 at 14:45:49 UTC. Its source is `ae0b65b85f6fc68a8c29b13ca2de1244284ef817`; GitHub's APK digest is `f5ad4e33d6cf93d9827db6001deca3ed0e44447389fc1ea4d33e056c5abb0b00`, checked on 3 November. Check the downloaded APK's hash against this value and ensure both phones use the intended build. The validator compares report fields against supplied expected values. With `--apk-file`, it also hashes the downloaded local file; it cannot verify installed binaries.
 
 ## Validate the record
 
 ```sh
 python tools/device_evidence.py validate android-baseline.json \
   --expected-commit ae0b65b85f6fc68a8c29b13ca2de1244284ef817 \
-  --expected-apk-sha256 f5ad4e33d6cf93d9827db6001deca3ed0e44447389fc1ea4d33e056c5abb0b00
+  --expected-apk-sha256 f5ad4e33d6cf93d9827db6001deca3ed0e44447389fc1ea4d33e056c5abb0b00 \
+  --apk-file Lantern-Android-testing.apk
 ```
 
 Use a single line in Windows PowerShell, without the shell continuation backslashes. For a different artifact, deliberately supply its independently checked expected values; do not overwrite expected values merely to silence a mismatch.
@@ -35,3 +36,7 @@ Use a single line in Windows PowerShell, without the shell continuation backslas
 The tool accepts at most 64 KiB, bounds text fields, rejects unexpected schemas/duplicate check IDs and treats observations as inert text. It makes no network request, executes no recorded command and uploads nothing. Report files are local plaintext; keep them outside committed test fixtures unless reviewed and intentionally published. Only fabricated test fixtures belong in unit tests. A manually fabricated report can still satisfy the schema, so a human must review the evidence.
 
 A complete report establishes neither Android–iPhone support nor radio coverage, background delivery, signing, safety assurance or completion of the wider device checklist. Mixed-phone testing still requires the [SDK candidate gates](../mobile/docs/NEARBY-ADAPTER-CONTRACT.md) and a signed physical iPhone. Keep the working release available while collecting evidence.
+
+## Downloaded APK integrity
+
+`--apk-file` is optional. When supplied, the tool streams a regular, non-empty local file of at most 512 MiB and compares its SHA-256 with `--expected-apk-sha256`. Missing, unreadable, oversized or mismatched files fail with exit 2. It neither opens the APK as an archive nor executes it. Without this option, only report fields are compared. A matching downloaded file does not prove installation, APK structure, publisher identity, security or a physical test. Obtain the expected digest independently from the intended release; do not copy it from an untrusted report. A matching file does not turn an incomplete report into a passing one.
