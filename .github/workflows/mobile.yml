@@ -48,6 +48,11 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Check bounded Android session inbox
+        run: |
+          classes="$(mktemp -d)"
+          javac --release 17 -Xlint:all -Werror -d "$classes" android/app/src/main/java/org/austugal/lantern/SessionInbox.java tool/SessionInboxCheck.java
+          java -cp "$classes" org.austugal.lantern.SessionInboxCheck
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:

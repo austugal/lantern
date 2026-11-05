@@ -1,5 +1,9 @@
 # Mobile verification record
 
+## 5 November 2026 — Android session inbox component
+
+The [standalone JVM check](../tool/SessionInboxCheck.java) exercises the [inbox](../android/app/src/main/java/org/austugal/lantern/SessionInbox.java) with synthetic bytes. It covers FIFO order, ownership of accepted bytes, both capacity limits, mismatched endpoints and session generations, and terminal closure. The Android build workflow compiles and runs this check before building the APK. The fixture passed locally with Java 17 source/target settings on OpenJDK 21. All 136 Python tests passed. These synthetic tests do not use a phone, a radio, the UI or a persistent queue. The inbox does not send receipts or authenticate peers; a future session owner must supply the already verified endpoint and terminate the connection on failure. No service or background behaviour was enabled.
+
 ## 3 November 2026 — Android foreground-session design gate
 
 The [implementation contract](ANDROID-FOREGROUND-SESSION-CONTRACT-2026-11-03.md) records the Android platform requirements and Lantern product limits that must be satisfied before foreground-session code is added. It follows the primary Android foreground-service, notification and stopping guidance and Google's Nearby Connections permission documentation, alongside a current-code lifecycle audit.

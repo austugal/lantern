@@ -1,6 +1,6 @@
 # Android foreground nearby-session contract — 3 November 2026
 
-Status: **design gate only**. Lantern does not implement or claim Android background communication yet. This document changes no transport, permission, service, notification or runtime behaviour.
+Status on 5 November: **inbox component implemented; service not implemented**. Lantern does not implement or claim Android background communication yet. The standalone inbox is not connected to Nearby, Flutter or a service. The released app still closes its session when backgrounded.
 
 ## Why implementation must wait
 
@@ -51,7 +51,7 @@ The following are stricter Lantern choices for the first candidate.
 
 | Gate | Required evidence | Current status |
 | --- | --- | --- |
-| Static/native | Manifest service/permissions/type, non-exported service, `START_NOT_STICKY`, notification privacy and bounded counters reviewed | Not implemented |
+| Static/native | Manifest service/permissions/type, non-exported service, `START_NOT_STICKY`, notification privacy and bounded counters reviewed | Inbox limits tested in isolation; service, notification and lifecycle integration pending |
 | Flutter/controller | Opt-out preserves today's teardown; Android opt-in splits sensitive-state teardown from transport continuity; iOS remains foreground-only | Not implemented |
 | Android emulator | Explicit start only, permission denial, private notification, both Stop controls, 30-minute expiry via controlled clock, ordered drain, no early receipt, overflow disconnect, process/task removal and stale-generation rejection | Not run |
 | Existing regressions | Flutter suite, Android APK, iOS simulator/unsigned-device build, installed-APK navigation/native fixtures and desktop tests remain green | Required after implementation |

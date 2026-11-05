@@ -115,3 +115,7 @@ The [Android foreground-session contract](../mobile/docs/ANDROID-FOREGROUND-SESS
 ### 4 November 2026: downloaded APK integrity for physical-test records
 
 The [offline baseline validator](DEVICE-EVIDENCE.md) can now hash a supplied downloaded APK before accepting a record. Chunked reads, a 512 MiB limit and mismatch rejection bind the local artifact to the independently supplied expected digest. This advances preparation for the physical reliability priority; it does not establish installation, signing, security or physical test results. Mobile transports and platform lifecycle behaviour are unchanged.
+
+### 5 November 2026: Android session inbox
+
+Implemented the [foreground-session contract's](../mobile/docs/ANDROID-FOREGROUND-SESSION-CONTRACT-2026-11-03.md) volatile inbox as a standalone Android component. It accepts bytes for one endpoint and one session generation, with limits of 32 payloads and 256 KiB total. A mismatch or overflow closes the inbox and drops its queued data. The operation does not issue a receipt. Service ownership, explicit opt-in, notification and Stop controls, lifecycle integration and two-phone validation are still pending. Neither mobile transport changed.

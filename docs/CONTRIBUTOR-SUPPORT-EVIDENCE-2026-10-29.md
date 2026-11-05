@@ -55,3 +55,11 @@ The legacy branches, immutable pull-request refs and old release tags documented
 ## Recheck — 4 November 2026
 
 At the start of this milestone, main was `db808fcebb75a0143ff42029a69b245348d364b1`; all main author identities were austugal. The Contributors REST response again listed only `austugal`, now 84 contributions. The connected Browser tool returned `Unknown tool browser.js`, so a fresh rendered sidebar observation could not be obtained. The last verified sidebar observation on 3 November still showed austugal and claude. Removal is not claimed. The exact Support request and legacy-ref evidence above remain prepared and unsent; released history is preserved.
+
+## Recheck — 5 November 2026
+
+- Main inspected: `ae9848085b46bb811deb093af1ef4b6e3ce03f46`. Its 85 commits list only `austugal` as author.
+- At **13:20:28 UTC**, the [Contributors REST endpoint](https://api.github.com/repos/austugal/lantern/contributors?anon=1) returned HTTP 200 and one result: `austugal`, **85 contributions**.
+- The [public repository homepage](https://github.com/austugal/lantern) initially showed a contributor placeholder. Once loaded in a signed-out browser, its sidebar showed **Contributors (2)** with links for **@austugal** and **@claude**.
+
+The sidebar still differs from the API and corrected main, 20 days after the 16 October correction. The cause remains unconfirmed. The exact Support request and retained-ref evidence above remain ready; nothing was sent and no history was rewritten.
