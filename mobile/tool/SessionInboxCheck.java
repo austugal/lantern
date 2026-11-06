@@ -1,6 +1,7 @@
 package org.austugal.lantern;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Standalone JVM checks. No Android service, radio, or peer is started. */
 public final class SessionInboxCheck {
@@ -13,7 +14,7 @@ public final class SessionInboxCheck {
     }
 
     private static SessionInbox inbox() {
-        return new SessionInbox(PEER, GENERATION);
+        return new SessionInbox(PEER, GENERATION, () -> 0L);
     }
 
     private static boolean offer(SessionInbox inbox, byte[] bytes) {
@@ -87,7 +88,62 @@ public final class SessionInboxCheck {
         assertClosed(inbox, "malformed payload");
     }
 
+    private static void fixedDeadline() {
+        long start = 9_876_543L; // Already well past 30 minutes since boot.
+        long deadline = start + 30 * 60_000L;
+        AtomicLong clock = new AtomicLong(start);
+        SessionInbox writer = new SessionInbox(PEER, GENERATION, clock::get);
+        SessionInbox reader = new SessionInbox(PEER, GENERATION, clock::get);
+        SessionInbox observer = new SessionInbox(PEER, GENERATION, clock::get);
+
+        clock.set(deadline - 1);
+        require(offer(writer, new byte[]{1}), "offer rejected before deadline");
+        require(offer(reader, new byte[]{2}), "first offer rejected before deadline");
+        require(offer(reader, new byte[]{3}), "second offer rejected before deadline");
+        require(Arrays.equals(poll(reader), new byte[]{2}), "poll rejected before deadline");
+        require(!observer.isClosed(), "status expired before deadline");
+
+        // Each operation must detect expiry without relying on another operation or a timer.
+        clock.set(deadline);
+        require(!offer(writer, new byte[]{4}), "late offer extended lifetime");
+        require(poll(reader) == null, "late poll released a queued packet");
+        require(observer.isClosed(), "status remained open at deadline");
+        assertClosed(writer, "expired on offer");
+        assertClosed(reader, "expired on poll");
+        assertClosed(observer, "expired on status");
+    }
+
+    private static void resumeAfterDeadline() {
+        AtomicLong clock = new AtomicLong(1_000L);
+        SessionInbox old = new SessionInbox(PEER, GENERATION, clock::get);
+        require(offer(old, new byte[]{1}), "seed before long idle period");
+        clock.addAndGet(24 * 60 * 60_000L); // First access after the elapsed clock jumps.
+        require(poll(old) == null, "old payload released on resume");
+
+        SessionInbox fresh = new SessionInbox(PEER, GENERATION + 1, clock::get);
+        require(fresh.poll(PEER, GENERATION + 1) == null, "new inbox inherited old payload");
+        require(fresh.offer(PEER, GENERATION + 1, new byte[]{2}), "new inbox inherited expiry");
+        require(Arrays.equals(fresh.poll(PEER, GENERATION + 1), new byte[]{2}),
+                "new inbox could not drain its own packet");
+        clock.set(1_000L);
+        assertClosed(old, "expired inbox after clock reset");
+    }
+
+    private static void invalidClockCannotExtendLifetime() {
+        // Adding the lifetime to this timestamp would overflow before the session starts.
+        AtomicLong clock = new AtomicLong(Long.MAX_VALUE - 2);
+        SessionInbox inbox = new SessionInbox(PEER, GENERATION, clock::get);
+        clock.incrementAndGet();
+        require(offer(inbox, new byte[]{1}), "near-maximum start caused premature expiry");
+        clock.decrementAndGet(); // Earlier than the last access, though still at the start time.
+        require(poll(inbox) == null, "clock rollback released a pending packet");
+        assertClosed(inbox, "backwards clock");
+    }
+
     public static void main(String[] args) {
+        invalidClockCannotExtendLifetime();
+        fixedDeadline();
+        resumeAfterDeadline();
         fifoAndCopies();
         countBound();
         byteBound();
