@@ -20,8 +20,8 @@ The current mobile preview connects **two phones of the same platform with both 
 
 | Your device | Download and use |
 | --- | --- |
-| Android phone | Download the Android [**testing APK**](https://github.com/austugal/lantern/releases/download/mobile-preview-ae0b65b85f6f/Lantern-Android-testing.apk), open it on your phone and allow installation from that source when prompted. This is a development-signed testing app, not a Play Store release. |
-| iPhone | The iPhone app has compiled successfully. [Mobile downloads](https://github.com/austugal/lantern/releases/tag/mobile-preview-ae0b65b85f6f) include a **Mac simulator app** and an **unsigned device app**. Installing on a real iPhone still requires Apple signing and provisioning; there is no TestFlight or App Store release yet. |
+| Android phone | Download the Android [**testing APK**](https://github.com/austugal/lantern/releases/download/mobile-preview-68b3a3233a49/Lantern-Android-testing.apk), open it on your phone and allow installation from that source when prompted. This is a development-signed testing app, not a Play Store release. |
+| iPhone | The iPhone app has compiled successfully. [Mobile downloads](https://github.com/austugal/lantern/releases/tag/mobile-preview-68b3a3233a49) include a **Mac simulator app** and an **unsigned device app**. Installing on a real iPhone still requires Apple signing and provisioning; there is no TestFlight or App Store release yet. |
 
 Android uses Google Nearby Connections and requires Google Play services. iPhone uses Apple Multipeer Connectivity. The adapters do not yet connect Android to iPhone. The [31 October SDK evaluation](mobile/docs/NEARBY-SWIFT-EVALUATION-2026-10-31.md) records the proposed migration and unresolved transport/dependency gates; it adds no new connectivity.
 

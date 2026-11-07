@@ -1,5 +1,13 @@
 # Mobile verification record
 
+## 7 November 2026 — validated inbox and expiry handoff
+
+PR #30 passed all main mobile gates and publication in [run 42229209369](https://github.com/austugal/lantern/actions/runs/42229209369). The [pinned mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-68b3a3233a49) contains the inbox capacity component; it does not include PR #31 expiry. The downloaded APK matches GitHub’s SHA-256, recorded with the source commit in [the physical baseline instructions](../../docs/DEVICE-EVIDENCE.md). The baseline validator verified the file but correctly returned incomplete (exit 1) for an empty physical-test record. No physical observations were filled in.
+
+[PR #31](https://github.com/austugal/lantern/pull/31) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/42229717738), including the JVM expiry fixture, Flutter checks, Android APK, installed-emulator checks, iOS simulator and unsigned-device build. [Python CI](https://github.com/austugal/lantern/actions/runs/42229717714) passed all three versions. It merged as `7ff14fe4777d0bcca20ccd764d9985e88bcf2fdc`, with the exact validated tree `21f19917f7ccd25438acc8f37cc886c8eb1824cb`. Its [main mobile build/publication](https://github.com/austugal/lantern/actions/runs/42377399023) is separate; do not infer release publication from the PR tests.
+
+The existing [desktop preview](https://github.com/austugal/lantern/releases/tag/desktop-preview-68b3a3233a49) passed Windows, macOS and Linux builds. Physical phones, mixed-platform communication, service-owned expiry, visible Stop controls and actual background communication remain pending. No transport, permission or live lifecycle code changed in these inbox components.
+
 ## 6 November 2026 — Android inbox expiry on access
 
 [PR #30](https://github.com/austugal/lantern/pull/30) merged as `68b3a3233a49ef04d42a0ae27e46fd448fa103ff` with the same Git tree as its validated head. Its [PR mobile CI](https://github.com/austugal/lantern/actions/runs/42035157663) passed Flutter checks, the JVM inbox fixture, Android APK and installed emulator checks, and both iOS builds; [Python CI](https://github.com/austugal/lantern/actions/runs/42035157793) passed. [Main mobile CI and publication](https://github.com/austugal/lantern/actions/runs/42229209369) are tracked separately.
