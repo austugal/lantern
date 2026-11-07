@@ -123,3 +123,7 @@ Implemented the [foreground-session contract's](../mobile/docs/ANDROID-FOREGROUN
 ### 6 November 2026: Android inbox lifetime
 
 The inbox now checks a fixed 30-minute lifetime before accepting or returning bytes, and when its owner checks whether it is closed. Traffic does not renew it. The Android clock counts time asleep. Expiry clears queued packets at the next access; an idle inbox does not wake the phone or stop a service. A service owner must still enforce expiry while idle, disconnect the peer and remove the notification. See the [verification record](../mobile/docs/VERIFICATION.md). The current phone app remains foreground-only.
+
+### 7 November 2026: validated expiry and physical-baseline handoff
+
+PR #31 completed the inbox expiry component after Android, iOS, Flutter and Python validation. Download links and the physical-baseline instructions now pin the fully published 6 November inbox-capacity build and its checked APK digest. That baseline predates expiry; it remains deliberately stable for hardware testing. This is a software-validation milestone, not a physical baseline pass. Service ownership and idle timeout enforcement remain required before background sessions. See [verification](../mobile/docs/VERIFICATION.md).

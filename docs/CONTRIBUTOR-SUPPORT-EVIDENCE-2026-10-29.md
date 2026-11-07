@@ -71,3 +71,11 @@ The sidebar still differs from the API and corrected main, 20 days after the 16 
 - At approximately **13:54 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed 86 commits and **Contributors (2)** with separate links for `@austugal` and `@claude`. This browser was signed in. The unauthenticated homepage HTML returned HTTP 200 but contained only the loading placeholder. The last independently observed signed-out rendered sidebar was 5 November and showed the same two accounts.
 
 The visible discrepancy persists 21 days after the 16 October correction. The exact Support request and retained refs above remain applicable. Its cause is unconfirmed; no request was sent or history rewritten.
+
+## Recheck — 7 November 2026
+
+- At **13:31:57 UTC**, an unauthenticated [Contributors REST request](https://api.github.com/repos/austugal/lantern/contributors?anon=1) returned HTTP 200 with one entry: `austugal`, **86 contributions**. Main before today's merge was `68b3a3233a49ef04d42a0ae27e46fd448fa103ff`; `git shortlog -sn` listed 86 commits, all authored by austugal.
+- [PR #31](https://github.com/austugal/lantern/pull/31) subsequently merged at **13:32:03 UTC** as `7ff14fe4777d0bcca20ccd764d9985e88bcf2fdc`, authored by austugal and committed by GitHub. The API count above predates that merge.
+- At approximately **13:32 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) displayed 87 commits and **Contributors (2)** with separate `@austugal` and `@claude` links. This observation used the signed-in owner view; it is not a new signed-out observation.
+
+The visible discrepancy persists 22 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent; no released history or access settings were changed.
