@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "scenario": "android_android_foreground_baseline",
+  "source_commit": "68b3a3233a49ef04d42a0ae27e46fd448fa103ff",
+  "apk_sha256": "d147cb6952f3cfbc031a6812965de2eb4b085d25b56b67d64ce088419c252417",
+  "tester": "Austugal",
+  "date": "",
+  "two_distinct_physical_devices": true,
+  "environment": "",
+  "devices": [
+    {
+      "label": "A",
+      "model": "Samsung S Ultra (reported; exact model unconfirmed)",
+      "os": "",
+      "google_play_services": ""
+    },
+    {
+      "label": "B",
+      "model": "Samsung Note A9 (reported; exact model unconfirmed)",
+      "os": "",
+      "google_play_services": ""
+    }
+  ],
+  "checks": [
+    {
+      "id": "first_launch_consent",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "connection_verification",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "text_both_directions",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "text_retry",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "photo_both_directions",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "voice_both_directions",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "permission_recovery",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "range_loss",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "background_shutdown",
+      "status": "not_run",
+      "observations": ""
+    },
+    {
+      "id": "foreground_endurance",
+      "status": "not_run",
+      "observations": ""
+    }
+  ]
+}

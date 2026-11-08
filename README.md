@@ -2,9 +2,9 @@
 
 [Project contributors](CONTRIBUTORS.md)
 
-![A robot writes Lantern — Stay connected. Even offline.](assets/lantern-robot.gif)
+![Lantern Comms by Austugal — nearby communication and practical field tools. Developer preview.](assets/lantern-comms-hero.png)
 
-[View the still banner](assets/lantern-banner.png)
+*Concept illustration; not an app screenshot.*
 
 **Keep your team connected. Even offline.**
 
@@ -15,6 +15,12 @@ Lantern is a **mobile-first nearby messaging tool** for Android and iPhone, with
 The current mobile preview connects **two phones of the same platform with both apps open**. It is a starting point for workplace trials, not yet a hotel-wide team network.
 
 **[Download Lantern](https://github.com/austugal/lantern/releases)** · [Mobile setup](mobile/README.md) · [Desktop setup](docs/DESKTOP.md)
+
+## How Lantern fits together
+
+![Lantern capability map: nearby messages and receipts, work requests, field tools and offline reference. Foreground only, one same-platform peer; physical validation pending.](assets/lantern-capability-map.svg)
+
+This “second brain” view organises the available tools; it is not an AI assistant or a permanent message archive. [Start the two-Android-phone validation](docs/ANDROID-BASELINE-WALKTHROUGH.md).
 
 ## Mobile app — Android and iPhone
 
@@ -156,7 +162,9 @@ No independent security audit or immunity from hacking is claimed. For details, 
 | Physical-test preparation tool | 37 synthetic evidence-tool cases, included in the 136 Python total; these are not physical tests |
 | Mobile wire format | 10,019 standalone offline packet checks passed |
 
-See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification](mobile/docs/VERIFICATION.md) for evidence and limits. Real phone-to-phone radio, GPS, range and battery tests are still outstanding. A successful build does not prove those behaviours.
+**Initial two-phone test reported successful; further testing required.** Austugal reports that the first trial worked between phones described as **Samsung S Ultra** and **Samsung Note A9** (exact models unconfirmed). This is an overall user report, not ten individually verified passes. See the [initial report and remaining physical checks](docs/ANDROID-BASELINE-WALKTHROUGH.md#initial-phone-test-report).
+
+See [desktop QA results](docs/DESKTOP-QA-2026-10-16.md) and [mobile verification](mobile/docs/VERIFICATION.md) for evidence and limits. The structured phone-to-phone baseline, GPS, measured range and battery validation remain incomplete. A successful build does not prove those behaviours.
 
 Physical-test coordinators can use the [offline baseline record validator](docs/DEVICE-EVIDENCE.md) to prepare two-Android-phone observations. It checks record completeness and artifact fields, and can hash a downloaded APK with `--apk-file`. A matching file does not prove installation or physical tests.
 
@@ -180,7 +188,7 @@ Mobile uses Flutter 3.35.7; see [mobile build instructions](mobile/README.md). G
 
 ## Copyright and licence
 
-Copyright © 2026 Pedro Tiago Saldanha Fitas (Tiago Fitas / austugal). All rights reserved for new original additions and changes under the [proprietary licence](LICENSE). Developer preview downloads may be used for personal, non-commercial evaluation. Earlier MIT grants remain valid; see the [preserved notice](docs/LEGACY-MIT-LICENSE.txt). [Third-party licences](THIRD-PARTY-NOTICES.md), including Flutter scaffold attribution, remain in force. Lantern™ and Lantern Comms™ identify the owner’s claimed brands; no verified registration details are recorded here.
+Copyright © 2026 Austugal. All rights reserved for new original additions and changes under the [proprietary licence](LICENSE). Developer preview downloads may be used for personal, non-commercial evaluation. Earlier MIT grants remain valid; see the [preserved notice](docs/LEGACY-MIT-LICENSE.txt). [Third-party licences](THIRD-PARTY-NOTICES.md), including Flutter scaffold attribution, remain in force. Lantern™ and Lantern Comms™ identify the owner’s claimed brands; no verified registration details are recorded here.
 
 [Roadmap](docs/ROADMAP.md) · [Community introduction](docs/COMMUNITY-INTRODUCTION.md)
 
