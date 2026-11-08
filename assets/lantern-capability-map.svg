@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img" aria-labelledby="title desc">
+<title id="title">Lantern Comms capability map</title><desc id="desc">A second-brain-style organisation of current tools, not an AI assistant. Nearby communication connects one same-platform peer in the foreground. Physical validation is pending.</desc>
+<rect width="1280" height="760" rx="24" fill="#0c1219"/>
+<g font-family="Arial, sans-serif">
+<text x="50" y="64" font-size="30" fill="#f2f4f7" font-weight="bold">LANTERN COMMS / CAPABILITY MAP</text>
+<text x="50" y="102" font-size="18" fill="#a8b7c8">A practical companion for people working nearby · Developer preview</text>
+<path d="M430 240 H490 Q520 240 520 365 M850 240 H790 Q760 240 760 365" fill="none" stroke="#32717b" stroke-width="2"/>
+<path d="M430 510 H490 Q520 510 520 365 M850 510 H790 Q760 510 760 365" fill="none" stroke="#32717b" stroke-width="2"/>
+<rect x="480" y="295" width="320" height="140" rx="24" fill="#182630" stroke="#efa938" stroke-width="2"/>
+<text x="640" y="337" text-anchor="middle" fill="#efad45" font-size="25" font-weight="bold">LANTERN</text>
+<text x="640" y="371" text-anchor="middle" fill="#f2f4f7" font-size="18">Choose a tool. Act explicitly.</text>
+<text x="640" y="401" text-anchor="middle" fill="#afbdcb" font-size="16">Consent before connection or sharing</text>
+<rect x="50" y="150" width="380" height="185" rx="16" fill="#14202b" stroke="#2a3c4d"/>
+<text x="74" y="190" fill="#65d3da" font-size="20" font-weight="bold">01  COMMUNICATE</text>
+<text x="74" y="232" fill="#dee5ed" font-size="18">Nearby text, photos and voice</text>
+<text x="74" y="262" fill="#dee5ed" font-size="18">App delivery receipts</text>
+<text x="74" y="292" fill="#dee5ed" font-size="18">One connected peer</text>
+<rect x="850" y="150" width="380" height="185" rx="16" fill="#14202b" stroke="#2a3c4d"/>
+<text x="874" y="190" fill="#65d3da" font-size="20" font-weight="bold">02  COORDINATE</text>
+<text x="874" y="232" fill="#dee5ed" font-size="18">Request acknowledgement</text>
+<text x="874" y="262" fill="#dee5ed" font-size="18">Accept / Decline</text>
+<text x="874" y="292" fill="#dee5ed" font-size="18">Completed / Unable to complete</text>
+<rect x="50" y="420" width="380" height="185" rx="16" fill="#14202b" stroke="#2a3c4d"/>
+<text x="74" y="460" fill="#65d3da" font-size="20" font-weight="bold">03  FIELD TOOLS</text>
+<text x="74" y="502" fill="#dee5ed" font-size="18">Compass and calculations</text>
+<text x="74" y="532" fill="#dee5ed" font-size="18">GPS waypoints and breadcrumbs</text>
+<text x="74" y="562" fill="#dee5ed" font-size="18">Torch and visual SOS</text>
+<rect x="850" y="420" width="380" height="185" rx="16" fill="#14202b" stroke="#2a3c4d"/>
+<text x="874" y="460" fill="#65d3da" font-size="20" font-weight="bold">04  OFFLINE REFERENCE</text>
+<text x="874" y="502" fill="#dee5ed" font-size="18">Built-in searchable guide</text>
+<text x="874" y="532" fill="#dee5ed" font-size="18">Saved web-page text</text>
+<text x="874" y="562" fill="#dee5ed" font-size="18">Small maps saved beforehand</text>
+<path d="M50 652 H1230" stroke="#2a3c4d"/>
+<text x="50" y="686" fill="#efad45" font-size="18">Foreground only · Same-platform peers · Physical validation pending</text>
+<text x="50" y="720" fill="#a8b7c8" font-size="16">No AI assistant or permanent chat archive. Optional MeshCore needs external radio hardware.</text>
+<text x="1230" y="720" text-anchor="end" fill="#e4eaf0" font-size="16" font-weight="bold">AUSTUGAL</text>
+</g></svg>
