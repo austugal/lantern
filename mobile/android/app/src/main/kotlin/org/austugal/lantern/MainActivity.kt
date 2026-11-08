@@ -224,8 +224,8 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private fun payloads(epoch: Int) = object : PayloadCallback() {
         override fun onPayloadReceived(id: String, payload: Payload) {
             if (!running || epoch != generation || connected != id) return
-            val bytes = payload.asBytes() ?: return
-            if (bytes.size <= 8192) emit("data", id, mapOf("data" to bytes.toString(Charsets.UTF_8)))
+            val text = NearbyPacketText.decode(payload.asBytes()) ?: return
+            emit("data", id, mapOf("data" to text))
         }
         override fun onPayloadTransferUpdate(id: String, update: PayloadTransferUpdate) {
             if (epoch == generation && update.status == PayloadTransferUpdate.Status.FAILURE) emit("error", id, mapOf("message" to "A message could not be transferred. Check its delivery status."))

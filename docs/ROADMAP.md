@@ -127,3 +127,7 @@ The inbox now checks a fixed 30-minute lifetime before accepting or returning by
 ### 7 November 2026: validated expiry and physical-baseline handoff
 
 PR #31 completed the inbox expiry component after Android, iOS, Flutter and Python validation. Download links and the physical-baseline instructions now pin the fully published 6 November inbox-capacity build and its checked APK digest. That baseline predates expiry; it remains deliberately stable for hardware testing. This is a software-validation milestone, not a physical baseline pass. Service ownership and idle timeout enforcement remain required before background sessions. See [verification](../mobile/docs/VERIFICATION.md).
+
+### 8 November 2026: strict Android packet decoding
+
+Android now rejects malformed UTF-8 before forwarding a bounded nearby byte packet to Flutter, matching the existing iPhone rejection policy. Valid Unicode, including intentionally encoded replacement characters, remains intact. The existing 8 KiB boundary and verified-peer/generation checks remain. This advances input-validation consistency; it does not unify the native transports or prove mixed-phone communication.
