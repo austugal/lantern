@@ -1,6 +1,18 @@
 # First two-Android-phone validation
 
-Use this walkthrough with [DEVICE-EVIDENCE](DEVICE-EVIDENCE.md) and the wider [physical acceptance checklist](../mobile/docs/DEVICE_TESTS.md). The working record is [evidence/android-baseline.json](evidence/android-baseline.json). It uses the existing validator schema; do not invent a second result format. On 8 November 2026, the tester confirmed two phones are available. Their configuration and all physical observations remain unreported. The date field stays empty until tests actually occur.
+Use this walkthrough with [DEVICE-EVIDENCE](DEVICE-EVIDENCE.md) and the wider [physical acceptance checklist](../mobile/docs/DEVICE_TESTS.md). The working record is [evidence/android-baseline.json](evidence/android-baseline.json). It uses the existing validator schema; do not invent a second result format. The tester reports that the initial two-phone test worked and that further testing is required. This is a user-reported successful initial trial, not a completed ten-check baseline.
+
+## Initial phone-test report
+
+- Reporter: **Austugal**.
+- Report received: **8 November 2026**; actual test date and duration not supplied.
+- Overall observation: “first test show all works. but more testing require.”
+- Phone A: **Samsung S Ultra**, as reported; exact model unconfirmed.
+- Phone B: **Samsung Note A9**, as reported; exact model unconfirmed. This label is preserved rather than inferred to mean a different Samsung model.
+
+No failure was reported in this initial trial. Individual feature results, Android and Google Play services versions, radio/internet conditions, installed APK identity, timing and battery measurements have not been supplied. The downloaded APK verification below does not establish which build was installed during this trial.
+
+The existing JSON record now includes the reported device labels. Its test date remains empty because the actual date is unknown. All ten detailed checks retain `not_run`, meaning not documented as executed under this checklist; this does not negate the reported initial trial. None can yet be assigned an individual verified pass, failure or blocked result. Follow the sequence below to collect those observations. No reproducible defect has been established from the overall report.
 
 ## Exact build
 

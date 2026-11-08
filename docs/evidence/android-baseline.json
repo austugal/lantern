@@ -10,13 +10,13 @@
   "devices": [
     {
       "label": "A",
-      "model": "",
+      "model": "Samsung S Ultra (reported; exact model unconfirmed)",
       "os": "",
       "google_play_services": ""
     },
     {
       "label": "B",
-      "model": "",
+      "model": "Samsung Note A9 (reported; exact model unconfirmed)",
       "os": "",
       "google_play_services": ""
     }
