@@ -7,7 +7,7 @@ Use this walkthrough with [DEVICE-EVIDENCE](DEVICE-EVIDENCE.md) and the wider [p
 - Reporter: **Austugal**.
 - Report received: **8 November 2026**; actual test date and duration not supplied.
 - Overall observation: “first test show all works. but more testing require.”
-- Phone A: **Samsung S Ultra**, as reported; exact model unconfirmed.
+- Phone A: **Samsung S23 Ultra**, confirmed by the tester.
 - Phone B: **Samsung Note A9**, as reported; exact model unconfirmed. This label is preserved rather than inferred to mean a different Samsung model.
 
 No failure was reported in this initial trial. Individual feature results, Android and Google Play services versions, radio/internet conditions, installed APK identity, timing and battery measurements have not been supplied. The downloaded APK verification below does not establish which build was installed during this trial.
