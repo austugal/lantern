@@ -131,3 +131,7 @@ PR #31 completed the inbox expiry component after Android, iOS, Flutter and Pyth
 ### 8 November 2026: strict Android packet decoding
 
 Android now rejects malformed UTF-8 before forwarding a bounded nearby byte packet to Flutter, matching the existing iPhone rejection policy. Valid Unicode, including intentionally encoded replacement characters, remains intact. The existing 8 KiB boundary and verified-peer/generation checks remain. This advances input-validation consistency; it does not unify the native transports or prove mixed-phone communication.
+
+### 9 November 2026: Android stale-callback isolation
+
+Old connection-initiation and connection-result callbacks now have no endpoint actions or state changes after session generation changes. Current-session pending-peer, single-peer and running-state checks remain. This advances reconnection reliability without automatic reconnect, background delivery or a transport migration. Physical callback ordering and reuse require device testing.

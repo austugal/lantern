@@ -1,5 +1,15 @@
 # Mobile verification record
 
+## 9 November 2026 — Android stale connection callbacks
+
+The receive/input change in [PR #34](https://github.com/austugal/lantern/pull/34) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/42484744962) (Android APK/emulator, Flutter, JVM and both iOS builds) and [Python CI](https://github.com/austugal/lantern/actions/runs/42484745008), then merged as `59df59a4c1319a61ddff800ddbd38e368f153b74`.
+
+The next change separates obsolete callbacks from current-session rejection. Previously an old callback could call the shared Nearby client's rejectConnection or disconnectFromEndpoint using an endpoint ID after a new session began. A tested gate now returns IGNORE before any endpoint action or state mutation when the epoch differs. Current running, pending-peer and one-peer rules remain, with no automatic acceptance or reconnect.
+
+Primary Google documentation checked on 9 November: [connection lifecycle callbacks](https://developers.google.com/android/reference/com/google/android/gms/nearby/connection/ConnectionLifecycleCallback) and [connection management](https://developers.google.com/nearby/connections/android/manage-connections). These describe initiation/result callbacks and mutual acceptance; they do not establish that the problematic ordering occurred on physical phones. The regression fixture supplies synthetic delayed callbacks and a reused endpoint ID. Native build and installed-emulator checks are separate CI gates. iOS, desktop, permission prompts, transport SDK versions and the pinned physical-test APK are unchanged.
+
+
+
 ## 8 November 2026 — strict Android packet decoding
 
 The Android receive callback now uses a strict decoder instead of silently replacing malformed UTF-8. The standalone JVM fixture passed 33 checks locally (OpenJDK 21, Java 17 source/target); all 136 Python tests passed. The fixture covers valid multilingual text, exact 8 KiB limits, intentionally encoded U+FFFD, overlong/surrogate/out-of-range encodings and truncated sequences. Invalid input produces no data event, so it cannot reach Dart admission or trigger an app receipt through that event. Existing peer/session guards precede decoding. iOS already rejects undecodable UTF-8. No claim of complete protocol or security auditing follows from these tests.

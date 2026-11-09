@@ -197,14 +197,22 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     }
     private fun lifecycle(epoch: Int) = object : ConnectionLifecycleCallback() {
         override fun onConnectionInitiated(id: String, info: ConnectionInfo) {
-            if (!running || epoch != generation || connected != null || (pending != null && pending != id)) { client.rejectConnection(id); return }
+            when (ConnectionCallbackGate.initiated(epoch, generation, running, id, pending, connected)) {
+                ConnectionCallbackGate.Action.IGNORE -> return
+                ConnectionCallbackGate.Action.REJECT -> { client.rejectConnection(id); return }
+                ConnectionCallbackGate.Action.PROCEED -> Unit
+            }
             pending = id
             expireInvitation(id, epoch)
             names[id] = info.endpointName.take(64)
             emit("invitation", id, mapOf("name" to names[id]!!, "code" to info.authenticationDigits))
         }
         override fun onConnectionResult(id: String, resolution: ConnectionResolution) {
-            if (epoch != generation || !running || pending != id) { client.disconnectFromEndpoint(id); return }
+            when (ConnectionCallbackGate.result(epoch, generation, running, id, pending, connected)) {
+                ConnectionCallbackGate.Action.IGNORE -> return
+                ConnectionCallbackGate.Action.REJECT -> { client.disconnectFromEndpoint(id); return }
+                ConnectionCallbackGate.Action.PROCEED -> Unit
+            }
             pending = null
             if (resolution.status.isSuccess) {
                 connected = id
