@@ -80,6 +80,8 @@ Photo and voice messages use the same nearby connection, with or without interne
 
 Messages, coordinates, trails and waypoints are not saved as permanent history. Mobile trails and waypoints remain in memory until cleared or the app closes; desktop locking clears session data and timers. A recipient can still copy or screenshot information.
 
+Android packet validation now rejects malformed UTF-8 before protocol parsing. This source change does not add Android–iPhone connectivity; the pinned testing APK remains the documented physical-test baseline. See [verification](mobile/docs/VERIFICATION.md).
+
 ## How hotels and other industries could use it
 
 These are proposed pilot uses of the existing one-to-one messaging feature, not claims of deployed customers, automatic dispatch or built-in department channels.

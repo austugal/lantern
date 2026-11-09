@@ -53,6 +53,11 @@ jobs:
           classes="$(mktemp -d)"
           javac --release 17 -Xlint:all -Werror -d "$classes" android/app/src/main/java/org/austugal/lantern/SessionInbox.java tool/SessionInboxCheck.java
           java -cp "$classes" org.austugal.lantern.SessionInboxCheck
+      - name: Check strict nearby packet decoding
+        run: |
+          classes="$(mktemp -d)"
+          javac --release 17 -Xlint:all -Werror -d "$classes" android/app/src/main/java/org/austugal/lantern/NearbyPacketText.java tool/NearbyPacketTextCheck.java
+          java -cp "$classes" org.austugal.lantern.NearbyPacketTextCheck
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:

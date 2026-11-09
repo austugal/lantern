@@ -1,5 +1,13 @@
 # Mobile verification record
 
+## 8 November 2026 — strict Android packet decoding
+
+The Android receive callback now uses a strict decoder instead of silently replacing malformed UTF-8. The standalone JVM fixture passed 33 checks locally (OpenJDK 21, Java 17 source/target); all 136 Python tests passed. The fixture covers valid multilingual text, exact 8 KiB limits, intentionally encoded U+FFFD, overlong/surrogate/out-of-range encodings and truncated sequences. Invalid input produces no data event, so it cannot reach Dart admission or trigger an app receipt through that event. Existing peer/session guards precede decoding. iOS already rejects undecodable UTF-8. No claim of complete protocol or security auditing follows from these tests.
+
+Primary references checked on 8 November: [Java CharsetDecoder](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/CharsetDecoder.html) documents reporting malformed input; [Google Nearby byte payloads](https://developers.google.com/nearby/connections/android/exchange-data) documents complete BYTES delivery in onPayloadReceived. The adapter and transport SDK are unchanged.
+
+The expiry source from PR #31 passed [main mobile CI and publication](https://github.com/austugal/lantern/actions/runs/42377399023), with [mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-7ff14fe4777d) and [desktop preview](https://github.com/austugal/lantern/releases/tag/desktop-preview-7ff14fe4777d) published. The physical baseline remains pinned to the 6 November APK, deliberately unchanged alongside active PR #33. Physical devices and background delivery remain unverified.
+
 ## 7 November 2026 — validated inbox and expiry handoff
 
 PR #30 passed all main mobile gates and publication in [run 42229209369](https://github.com/austugal/lantern/actions/runs/42229209369). The [pinned mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-68b3a3233a49) contains the inbox capacity component; it does not include PR #31 expiry. The downloaded APK matches GitHub’s SHA-256, recorded with the source commit in [the physical baseline instructions](../../docs/DEVICE-EVIDENCE.md). The baseline validator verified the file but correctly returned incomplete (exit 1) for an empty physical-test record. No physical observations were filled in.
