@@ -1,5 +1,10 @@
 # Mobile verification record
 
+## 10 November 2026 — dependency-download failure and recovery
+
+[Main run 42632639391 attempt 1](https://github.com/austugal/lantern/actions/runs/42632639391/attempts/1) passed APK compilation and installed smoke checks, then failed the separate WebView fixture rebuild when Maven Central returned HTTP 403 for Kotlin 2.0.21 dependencies. iOS was cancelled and no release was published. A retry of unsuccessful jobs on unchanged main completed successfully on 10 November: Android emulator and both iOS builds passed, and [the mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-59df59a4c131) was published. Successful Flutter and Android compilation results from attempt 1 were reused. See [the recovery record](../../docs/DEVELOPMENT-2026-11-10.md) for outcome and limits. The [PR #35 mobile run](https://github.com/austugal/lantern/actions/runs/42633056610) passed all mobile gates with the same dependency configuration; this is separate PR evidence, not a replacement for the failed main gate.
+
+
 ## 8 November 2026 — strict Android packet decoding
 
 The Android receive callback now uses a strict decoder instead of silently replacing malformed UTF-8. The standalone JVM fixture passed 33 checks locally (OpenJDK 21, Java 17 source/target); all 136 Python tests passed. The fixture covers valid multilingual text, exact 8 KiB limits, intentionally encoded U+FFFD, overlong/surrogate/out-of-range encodings and truncated sequences. Invalid input produces no data event, so it cannot reach Dart admission or trigger an app receipt through that event. Existing peer/session guards precede decoding. iOS already rejects undecodable UTF-8. No claim of complete protocol or security auditing follows from these tests.
