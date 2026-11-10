@@ -131,3 +131,7 @@ PR #31 completed the inbox expiry component after Android, iOS, Flutter and Pyth
 ### 8 November 2026: strict Android packet decoding
 
 Android now rejects malformed UTF-8 before forwarding a bounded nearby byte packet to Flutter, matching the existing iPhone rejection policy. Valid Unicode, including intentionally encoded replacement characters, remains intact. The existing 8 KiB boundary and verified-peer/generation checks remain. This advances input-validation consistency; it does not unify the native transports or prove mixed-phone communication.
+
+### 10 November 2026: restore the main mobile release gate
+
+The failed main WebView fixture build was traced to Maven Central HTTP 403 responses while resolving unchanged Kotlin dependencies. The unchanged-source retry passed emulator and iOS validation and published the mobile preview without weakening validation or changing transport dependencies. PR #35 remains a separate validated candidate. See [the failure and recovery record](DEVELOPMENT-2026-11-10.md); physical validation remains separate.
