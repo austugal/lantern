@@ -1,5 +1,14 @@
 # Mobile verification record
 
+## 11 November 2026 — callback-isolation integration
+
+[PR #35 mobile CI](https://github.com/austugal/lantern/actions/runs/42633056610) passed Android APK/emulator, Flutter, JVM and both iOS builds; [Python CI](https://github.com/austugal/lantern/actions/runs/42633056441) passed. Integration retained both the callback documentation and successful 10 November recovery record. Application/test/workflow contents are unchanged from the validated PR head. Local rechecks passed 19 callback checks, 33 decoder checks, the inbox fixture and 136 Python tests. [Integration details](../../docs/DEVELOPMENT-2026-11-11.md) distinguish these checks from main release publication and physical testing.
+
+
+## 10 November 2026 — dependency-download failure and recovery
+
+[Main run 42632639391 attempt 1](https://github.com/austugal/lantern/actions/runs/42632639391/attempts/1) passed APK compilation and installed smoke checks, then failed the separate WebView fixture rebuild when Maven Central returned HTTP 403 for Kotlin 2.0.21 dependencies. iOS was cancelled and no release was published. A retry of unsuccessful jobs on unchanged main completed successfully on 10 November: Android emulator and both iOS builds passed, and [the mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-59df59a4c131) was published. Successful Flutter and Android compilation results from attempt 1 were reused. See [the recovery record](../../docs/DEVELOPMENT-2026-11-10.md) for outcome and limits. The [PR #35 mobile run](https://github.com/austugal/lantern/actions/runs/42633056610) passed all mobile gates with the same dependency configuration; this is separate PR evidence, not a replacement for the failed main gate.
+
 ## 9 November 2026 — Android stale connection callbacks
 
 The receive/input change in [PR #34](https://github.com/austugal/lantern/pull/34) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/42484744962) (Android APK/emulator, Flutter, JVM and both iOS builds) and [Python CI](https://github.com/austugal/lantern/actions/runs/42484745008), then merged as `59df59a4c1319a61ddff800ddbd38e368f153b74`.

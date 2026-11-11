@@ -135,3 +135,11 @@ Android now rejects malformed UTF-8 before forwarding a bounded nearby byte pack
 ### 9 November 2026: Android stale-callback isolation
 
 Old connection-initiation and connection-result callbacks now have no endpoint actions or state changes after session generation changes. Current-session pending-peer, single-peer and running-state checks remain. This advances reconnection reliability without automatic reconnect, background delivery or a transport migration. Physical callback ordering and reuse require device testing.
+
+### 10 November 2026: restore the main mobile release gate
+
+The failed main WebView fixture build was traced to Maven Central HTTP 403 responses while resolving unchanged Kotlin dependencies. The unchanged-source retry passed emulator and iOS validation and published the mobile preview without weakening validation or changing transport dependencies. PR #35 remains a separate validated candidate. See [the failure and recovery record](DEVELOPMENT-2026-11-10.md); physical validation remains separate.
+
+### 11 November 2026: complete callback-isolation validation
+
+PR #35's Android callback fix passed Android/iOS, Flutter, native fixtures and Python validation. Documentation conflicts with the release recovery were resolved without changing the validated application code. Main publication remains a separate gate. See [the integration record](DEVELOPMENT-2026-11-11.md).
