@@ -58,6 +58,11 @@ jobs:
           classes="$(mktemp -d)"
           javac --release 17 -Xlint:all -Werror -d "$classes" android/app/src/main/java/org/austugal/lantern/NearbyPacketText.java tool/NearbyPacketTextCheck.java
           java -cp "$classes" org.austugal.lantern.NearbyPacketTextCheck
+      - name: Check connection callback isolation
+        run: |
+          classes="$(mktemp -d)"
+          javac --release 17 -Xlint:all -Werror -d "$classes" android/app/src/main/java/org/austugal/lantern/ConnectionCallbackGate.java tool/ConnectionCallbackGateCheck.java
+          java -cp "$classes" org.austugal.lantern.ConnectionCallbackGateCheck
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:
