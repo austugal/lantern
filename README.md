@@ -80,7 +80,7 @@ Photo and voice messages use the same nearby connection, with or without interne
 
 Messages, coordinates, trails and waypoints are not saved as permanent history. Mobile trails and waypoints remain in memory until cleared or the app closes; desktop locking clears session data and timers. A recipient can still copy or screenshot information.
 
-Android packet validation now rejects malformed UTF-8 before protocol parsing. Android also ignores connection-initiation and result callbacks from a previous discovery session so they cannot reject or disconnect a newer session. This source change does not add Android–iPhone connectivity; the pinned testing APK remains the documented physical-test baseline. See [verification](mobile/docs/VERIFICATION.md).
+Android packet validation now rejects malformed UTF-8 before protocol parsing. Android also ignores connection-initiation and result callbacks from a previous discovery session so they cannot reject or disconnect a newer session. Pending Android request failures now also check the invitation token, so a delayed failure cannot clear a later retry in the same discovery session. These source changes do not add Android–iPhone connectivity; the pinned testing APK remains the documented physical-test baseline. See [verification](mobile/docs/VERIFICATION.md).
 
 ## How hotels and other industries could use it
 

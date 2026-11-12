@@ -114,9 +114,13 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
                 pending = id
                 expireInvitation(id, generation)
                 val epoch = generation
+                val invitationEpoch = invitationGeneration
                 client.requestConnection(displayName, id, lifecycle(epoch))
                     .addOnSuccessListener { result.success(null) }
-                    .addOnFailureListener { if (epoch == generation) pending = null; fail(result, it) }
+                    .addOnFailureListener {
+                        if (ConnectionCallbackGate.ownsInvitation(epoch, generation, invitationEpoch, invitationGeneration, running, id, pending)) pending = null
+                        fail(result, it)
+                    }
             }
             "accept" -> {
                 if (!running || pending != id) { result.error("state", "This invitation has expired", null); return }
@@ -397,7 +401,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private fun expireInvitation(id: String, epoch: Int) {
         val invitationEpoch = ++invitationGeneration
         window.decorView.postDelayed({
-            if (running && epoch == generation && invitationEpoch == invitationGeneration && pending == id) {
+            if (ConnectionCallbackGate.ownsInvitation(epoch, generation, invitationEpoch, invitationGeneration, running, id, pending)) {
                 pending = null
                 client.rejectConnection(id)
                 client.disconnectFromEndpoint(id)

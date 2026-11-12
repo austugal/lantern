@@ -1,5 +1,13 @@
 # Mobile verification record
 
+## 12 November 2026 — pending invitation ownership
+
+Main `0b73e672202f56eb065d9ee49f70c629cd115f4c` passed [mobile CI](https://github.com/austugal/lantern/actions/runs/43033832374), including Android/emulator and both iOS builds, and published [the mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-0b73e672202f) on 11 November at 14:15 UTC. [Desktop CI](https://github.com/austugal/lantern/actions/runs/43033832568) and [Python CI](https://github.com/austugal/lantern/actions/runs/43033832578) passed. No failed release remains from the earlier Maven download error.
+
+The next fix prevents an old request failure from clearing a newer pending invitation in the same discovery generation. Its cleanup and timeout guard require matching session generation, invitation token, endpoint and running state. The original method call still receives its failure. The JVM fixture passed **33 checks** (19 existing, 14 added) on OpenJDK 21 with Java 17 source/target and warnings treated as errors; **136 Python tests passed**. Native compilation, Flutter and installed-emulator checks must pass in the PR before merge. These are synthetic callback tests, not physical radio observations.
+
+[Google connection management](https://developers.google.com/nearby/connections/android/manage-connections) was rechecked on 12 November for asynchronous request failure and mutual acceptance semantics. No transport, SDK version, consent policy, resource limit or background capability changes. The pinned 6 November physical-test APK and reported initial Samsung trial remain unchanged; the complete physical checklist remains pending. See [the development record](../../docs/DEVELOPMENT-2026-11-12.md).
+
 ## 11 November 2026 — callback-isolation integration
 
 [PR #35 mobile CI](https://github.com/austugal/lantern/actions/runs/42633056610) passed Android APK/emulator, Flutter, JVM and both iOS builds; [Python CI](https://github.com/austugal/lantern/actions/runs/42633056441) passed. Integration retained both the callback documentation and successful 10 November recovery record. Application/test/workflow contents are unchanged from the validated PR head. Local rechecks passed 19 callback checks, 33 decoder checks, the inbox fixture and 136 Python tests. [Integration details](../../docs/DEVELOPMENT-2026-11-11.md) distinguish these checks from main release publication and physical testing.
