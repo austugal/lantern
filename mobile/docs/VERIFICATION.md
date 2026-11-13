@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 13 November 2026 — iOS compiler/dependency repair
+
+[PR #37 attempt 1](https://github.com/austugal/lantern/actions/runs/43227545151/attempts/1) passed Flutter, Android APK, installed-emulator and JVM checks; [Python CI](https://github.com/austugal/lantern/actions/runs/43227545225) passed all three versions. The simulator build failed with `Cannot find type 'RawSpan' in scope` in SwiftProtobuf; the unsigned-device build did not run. The failed job did not retain Podfile.lock, so the exact resolved pod version cannot be directly recovered from its log.
+
+Upstream SwiftProtobuf 1.40.0, released after the successful main build, dropped Swift 6.1 support and removed the compiler guards around these APIs. The runner image defaults to Xcode 16.4. Pinning 1.39.0 retains those guards without upgrading the toolchain or changing transport code. CI now logs toolchain versions and retains resolved dependency locks even on failure. Local YAML validation and 136 Python tests passed; native recovery still requires a new successful CI run. [Detailed evidence](../../docs/DEVELOPMENT-2026-11-13.md).
+
 ## 12 November 2026 — pending invitation ownership
 
 Main `0b73e672202f56eb065d9ee49f70c629cd115f4c` passed [mobile CI](https://github.com/austugal/lantern/actions/runs/43033832374), including Android/emulator and both iOS builds, and published [the mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-0b73e672202f) on 11 November at 14:15 UTC. [Desktop CI](https://github.com/austugal/lantern/actions/runs/43033832568) and [Python CI](https://github.com/austugal/lantern/actions/runs/43033832578) passed. No failed release remains from the earlier Maven download error.
