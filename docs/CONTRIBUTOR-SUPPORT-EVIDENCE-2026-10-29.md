@@ -122,3 +122,11 @@ The visible discrepancy persists 27 days after the 16 October correction. Its ca
 - At approximately **13:15 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed 93 commits and **Contributors (2)** with separate `@austugal` and `@claude` links. This was the signed-in owner view; no new signed-out rendered observation is claimed.
 
 The visible discrepancy persists 28 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent. No released history, branch, access setting or open PR was changed by this check.
+
+## Recheck — 14 November 2026
+
+- At **13:11:34 UTC**, an unauthenticated [Contributors REST request](https://api.github.com/repos/austugal/lantern/contributors?anon=1) returned HTTP 200 with exactly one entry: `austugal`, **93 contributions**. The main branch response at **13:11:41 UTC** identified `0b73e672202f56eb065d9ee49f70c629cd115f4c`; local `git shortlog -sn` confirms all 93 commits are authored by austugal.
+- At approximately **13:12 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed **94 commits**, following the intervening PR #37 merge, and **Contributors (2)** with separate `@austugal` and `@claude` links. The fetched `origin/main` then identified `97b11baacd4d7611a3ef707a18b029a053286695`; local `git shortlog -sn` confirms all 94 commits are authored by austugal. The API count above was observed before that merge and is not claimed as a post-merge count.
+- The rendered observation was the signed-in owner view; no new signed-out rendered observation is claimed.
+
+The visible discrepancy persists 29 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent. This check changed no released history, branch, access setting or open PR.
