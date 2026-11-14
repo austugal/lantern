@@ -6,6 +6,14 @@ final class ConnectionCallbackGate {
 
     private ConnectionCallbackGate() {}
 
+    /** A completion or timeout may clear only the exact pending invitation it captured. */
+    static boolean ownsInvitation(int epoch, int current, int invitationEpoch,
+                                  int currentInvitation, boolean running,
+                                  String id, String pending) {
+        return running && epoch == current && invitationEpoch == currentInvitation
+                && id != null && id.equals(pending);
+    }
+
     static Action initiated(int epoch, int current, boolean running,
                             String id, String pending, String connected) {
         if (epoch != current) return Action.IGNORE;

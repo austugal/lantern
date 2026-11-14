@@ -12,7 +12,7 @@ Lantern Comms, or **Lantern** for short, brings nearby messaging, location tools
 
 Lantern is a **mobile-first nearby messaging tool** for Android and iPhone, with a separate desktop companion preview. The aim is simple: help colleagues exchange requests and updates when internet access is unavailable. After installation, phones communicate through their nearby radios; they still need Wi-Fi/Bluetooth enabled, suitable permissions and a working local connection. They do not need an internet-connected Wi-Fi access point for nearby messaging.
 
-The current mobile preview connects **two phones of the same platform with both apps open**. Download links below stay pinned while newer builds pass release validation. It is a starting point for workplace trials, not yet a hotel-wide team network.
+The current mobile preview connects **two phones of the same platform with both apps open**. Download links below stay pinned while newer builds pass release validation. The current iOS build repair pins SwiftProtobuf to a compiler-compatible version; its validation status is tracked in the [verification record](mobile/docs/VERIFICATION.md). It is a starting point for workplace trials, not yet a hotel-wide team network.
 
 **[Download Lantern](https://github.com/austugal/lantern/releases)** · [Mobile setup](mobile/README.md) · [Desktop setup](docs/DESKTOP.md)
 
@@ -80,7 +80,7 @@ Photo and voice messages use the same nearby connection, with or without interne
 
 Messages, coordinates, trails and waypoints are not saved as permanent history. Mobile trails and waypoints remain in memory until cleared or the app closes; desktop locking clears session data and timers. A recipient can still copy or screenshot information.
 
-Android packet validation now rejects malformed UTF-8 before protocol parsing. Android also ignores connection-initiation and result callbacks from a previous discovery session so they cannot reject or disconnect a newer session. This source change does not add Android–iPhone connectivity; the pinned testing APK remains the documented physical-test baseline. See [verification](mobile/docs/VERIFICATION.md).
+Android packet validation now rejects malformed UTF-8 before protocol parsing. Android also ignores connection-initiation and result callbacks from a previous discovery session so they cannot reject or disconnect a newer session. Pending Android request failures now also check the invitation token, so a delayed failure cannot clear a later retry in the same discovery session. These source changes do not add Android–iPhone connectivity; the pinned testing APK remains the documented physical-test baseline. See [verification](mobile/docs/VERIFICATION.md).
 
 ## How hotels and other industries could use it
 

@@ -30,6 +30,10 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 
+  # SwiftProtobuf 1.40 requires Swift 6.2; CI currently uses Xcode 16.4.
+  # Keep the BLE plugin's transitive runtime compatible until a tested toolchain upgrade.
+  pod 'SwiftProtobuf', '1.39.0'
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths

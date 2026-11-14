@@ -143,3 +143,13 @@ The failed main WebView fixture build was traced to Maven Central HTTP 403 respo
 ### 11 November 2026: complete callback-isolation validation
 
 PR #35's Android callback fix passed Android/iOS, Flutter, native fixtures and Python validation. Documentation conflicts with the release recovery were resolved without changing the validated application code. Main publication remains a separate gate. See [the integration record](DEVELOPMENT-2026-11-11.md).
+
+### 12 November 2026: Android pending-invitation ownership
+
+A delayed outbound request failure now clears only the exact invitation that issued it, including its invitation token, session generation and endpoint. This closes a same-session retry race left outside the previous discovery-generation guard. The existing 30-second invitation timeout uses the same ownership predicate. Local regression checks passed; native PR builds remain a separate gate. See [development evidence](DEVELOPMENT-2026-11-12.md). No automatic reconnect or background operation is added.
+
+Follow-up: distinguish late same-peer connection-result/disconnect callbacks across cancelled attempts within one discovery session. Request-failure ownership does not solve every SDK lifecycle ordering.
+
+### 13 November 2026: iOS dependency compatibility repair
+
+PR #37 passed Android/emulator, Flutter and Python but failed iOS with unknown `RawSpan` in SwiftProtobuf. Pin the transitive runtime to 1.39.0 for the existing compiler and preserve resolved dependency/toolchain evidence in CI. This release-readiness repair takes priority over new lifecycle work. Both iOS builds remain required before merge; no release gate is bypassed. See [repair evidence](DEVELOPMENT-2026-11-13.md).

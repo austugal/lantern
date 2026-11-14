@@ -65,9 +65,69 @@ public final class ConnectionCallbackGateCheck {
                 == ConnectionCallbackGate.Action.REJECT, "stopped current result accepted");
     }
 
+    private static final class InvitationEffects {
+        int generation = 3;
+        int invitationGeneration = 8;
+        boolean running = true;
+        String pending = "peer";
+        int cleared;
+
+        void failedRequest(int epoch, int invitationEpoch, String id) {
+            if (ConnectionCallbackGate.ownsInvitation(epoch, generation,
+                    invitationEpoch, invitationGeneration, running, id, pending)) {
+                pending = null;
+                cleared++;
+            }
+        }
+    }
+
+    private static void failedRequestsOnlyClearTheirOwnInvitation() {
+        InvitationEffects retry = new InvitationEffects();
+        // Cancel and retry the same peer without restarting discovery.
+        int firstInvitation = retry.invitationGeneration;
+        retry.pending = null;
+        retry.invitationGeneration++;
+        retry.pending = "peer";
+        retry.failedRequest(3, firstInvitation, "peer");
+        require("peer".equals(retry.pending), "old failure cleared same-peer retry");
+        require(retry.cleared == 0, "old failure performed pending cleanup");
+        retry.failedRequest(3, retry.invitationGeneration, "peer");
+        require(retry.pending == null, "current retry failure did not clear pending peer");
+        require(retry.cleared == 1, "current retry failure did not perform exactly one cleanup");
+
+        InvitationEffects differentPeer = new InvitationEffects();
+        differentPeer.failedRequest(3, 8, "other-peer");
+        require("peer".equals(differentPeer.pending), "different-peer failure cleared pending peer");
+        require(differentPeer.cleared == 0, "different-peer failure performed cleanup");
+
+        InvitationEffects restarted = new InvitationEffects();
+        restarted.failedRequest(1, 8, "peer");
+        require("peer".equals(restarted.pending), "previous discovery failure cleared new session");
+        require(restarted.cleared == 0, "previous discovery failure performed cleanup");
+
+        InvitationEffects stopped = new InvitationEffects();
+        stopped.running = false;
+        stopped.failedRequest(3, 8, "peer");
+        require("peer".equals(stopped.pending), "stopped session failure changed pending peer");
+        require(stopped.cleared == 0, "stopped session failure performed cleanup");
+
+        InvitationEffects noPending = new InvitationEffects();
+        noPending.pending = null;
+        noPending.failedRequest(3, 8, "peer");
+        require(noPending.cleared == 0, "failure without pending invitation performed cleanup");
+        noPending.failedRequest(3, 8, null);
+        require(noPending.cleared == 0, "null endpoint matched null pending invitation");
+
+        InvitationEffects nullEndpoint = new InvitationEffects();
+        nullEndpoint.failedRequest(3, 8, null);
+        require("peer".equals(nullEndpoint.pending), "null endpoint failure cleared pending peer");
+        require(nullEndpoint.cleared == 0, "null endpoint failure performed cleanup");
+    }
+
     public static void main(String[] args) {
         oldCallbacksCannotTouchNewSession();
         currentSessionRulesRemain();
+        failedRequestsOnlyClearTheirOwnInvitation();
         System.out.println("ConnectionCallbackGate JVM checks passed: " + checks);
     }
 }
