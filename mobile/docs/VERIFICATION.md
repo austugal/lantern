@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 14 November 2026 — iOS recovery and invitation fix validated
+
+[PR #37 mobile run](https://github.com/austugal/lantern/actions/runs/43432182508) passed Flutter checks, Android APK, installed-emulator checks, JVM fixtures, iOS simulator and unsigned-device builds. [Python run](https://github.com/austugal/lantern/actions/runs/43432182431) passed Python 3.10, 3.12 and 3.13. The successful iOS log records Xcode 16.4, Swift 6.1.2, simulator completion at 13:21 UTC and device completion at 13:25 UTC on 13 November. This confirms the pin repairs compilation on that toolchain.
+
+Merged on 14 November as `97b11baacd4d7611a3ef707a18b029a053286695`, with a tree identical to the validated PR head `00e5bd9cd7ce95feaa330ec95f4f9d3f5b8cc59b`. Main packaging/publication is separate. The [working mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-0b73e672202f) remains available; download instructions retain the stable physical-test baseline. No new physical radio, background or mixed-platform result is claimed. [Integration record](../../docs/DEVELOPMENT-2026-11-14.md).
+
 ## 13 November 2026 — iOS compiler/dependency repair
 
 [PR #37 attempt 1](https://github.com/austugal/lantern/actions/runs/43227545151/attempts/1) passed Flutter, Android APK, installed-emulator and JVM checks; [Python CI](https://github.com/austugal/lantern/actions/runs/43227545225) passed all three versions. The simulator build failed with `Cannot find type 'RawSpan' in scope` in SwiftProtobuf; the unsigned-device build did not run. The failed job did not retain Podfile.lock, so the exact resolved pod version cannot be directly recovered from its log.

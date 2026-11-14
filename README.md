@@ -12,7 +12,7 @@ Lantern Comms, or **Lantern** for short, brings nearby messaging, location tools
 
 Lantern is a **mobile-first nearby messaging tool** for Android and iPhone, with a separate desktop companion preview. The aim is simple: help colleagues exchange requests and updates when internet access is unavailable. After installation, phones communicate through their nearby radios; they still need Wi-Fi/Bluetooth enabled, suitable permissions and a working local connection. They do not need an internet-connected Wi-Fi access point for nearby messaging.
 
-The current mobile preview connects **two phones of the same platform with both apps open**. Download links below stay pinned while newer builds pass release validation. The current iOS build repair pins SwiftProtobuf to a compiler-compatible version; its validation status is tracked in the [verification record](mobile/docs/VERIFICATION.md). It is a starting point for workplace trials, not yet a hotel-wide team network.
+The current mobile preview connects **two phones of the same platform with both apps open**. Download links below stay pinned while newer builds pass release validation. The iOS compiler-compatibility repair and Android invitation retry fix passed native PR validation; main release publication is tracked separately in the [verification record](mobile/docs/VERIFICATION.md). It is a starting point for workplace trials, not yet a hotel-wide team network.
 
 **[Download Lantern](https://github.com/austugal/lantern/releases)** · [Mobile setup](mobile/README.md) · [Desktop setup](docs/DESKTOP.md)
 
