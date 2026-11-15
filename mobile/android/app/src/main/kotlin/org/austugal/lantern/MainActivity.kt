@@ -227,7 +227,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
             }
         }
         override fun onDisconnected(id: String) {
-            if (epoch != generation) return
+            if (!ConnectionCallbackGate.ownsDisconnect(epoch, generation, running, id, pending, connected)) return
             if (connected == id) connected = null
             if (pending == id) pending = null
             emit("disconnected", id)
