@@ -1,5 +1,14 @@
 # Mobile verification record
 
+## 15 November 2026 — release publication and disconnect ownership
+
+[Main mobile run](https://github.com/austugal/lantern/actions/runs/43598540201) passed all native/Flutter/emulator gates and published [mobile-preview-97b11baacd4d](https://github.com/austugal/lantern/releases/tag/mobile-preview-97b11baacd4d) on 14 November at 13:27 UTC. [Desktop run](https://github.com/austugal/lantern/actions/runs/43598540222) also passed and published its matching preview. This confirms main release recovery; it does not complete physical validation.
+
+The next bounded change suppresses Android disconnect callbacks unless the current running session owns their pending or connected endpoint. Flutter's existing endpoint guard remains. Synthetic callback checks exercise cleanup and emission; actual SDK ordering and same-peer attempt disambiguation remain outside this result. See [development details](../../docs/DEVELOPMENT-2026-11-15.md). Native PR validation is separate from prior main evidence.
+
+Local verification: **53 JVM callback checks** (33 retained and 20 new) passed with Java 17 source/target on OpenJDK 21 and warnings treated as errors. **136 Python tests passed**. Native Android/iOS builds remain PR gates; these local checks do not establish physical callback ordering.
+
+
 ## 14 November 2026 — iOS recovery and invitation fix validated
 
 [PR #37 mobile run](https://github.com/austugal/lantern/actions/runs/43432182508) passed Flutter checks, Android APK, installed-emulator checks, JVM fixtures, iOS simulator and unsigned-device builds. [Python run](https://github.com/austugal/lantern/actions/runs/43432182431) passed Python 3.10, 3.12 and 3.13. The successful iOS log records Xcode 16.4, Swift 6.1.2, simulator completion at 13:21 UTC and device completion at 13:25 UTC on 13 November. This confirms the pin repairs compilation on that toolchain.

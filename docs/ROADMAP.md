@@ -157,3 +157,7 @@ PR #37 passed Android/emulator, Flutter and Python but failed iOS with unknown `
 ### 14 November 2026: complete invitation and iOS recovery validation
 
 [PR #37](https://github.com/austugal/lantern/pull/37) passed Android APK/emulator, Flutter, JVM, both iOS builds and Python CI and merged as `97b11baacd4d7611a3ef707a18b029a053286695`. This completes the pending-invitation ownership and iOS compatibility repair milestone. Main release publication remains a separate gate; the prior working preview stays available. Same-peer lifecycle callback ordering and physical validation remain open. See [integration evidence](DEVELOPMENT-2026-11-14.md).
+
+### 15 November 2026: native disconnect ownership
+
+Android now forwards a disconnect only for its current pending or connected endpoint while the discovery session is running. Unrelated endpoints, duplicate callbacks after cleanup and stopped-session callbacks are ignored before native mutation or Flutter emission. This aligns native admission with Flutter's existing peer check. It does not resolve ambiguity between two attempts reusing the same endpoint in one session; that follow-up remains open. See [development evidence](DEVELOPMENT-2026-11-15.md).

@@ -14,6 +14,13 @@ final class ConnectionCallbackGate {
                 && id != null && id.equals(pending);
     }
 
+    /** Only the currently owned peer may produce a disconnect event. */
+    static boolean ownsDisconnect(int epoch, int current, boolean running,
+                                  String id, String pending, String connected) {
+        return running && epoch == current && id != null
+                && (id.equals(pending) || id.equals(connected));
+    }
+
     static Action initiated(int epoch, int current, boolean running,
                             String id, String pending, String connected) {
         if (epoch != current) return Action.IGNORE;

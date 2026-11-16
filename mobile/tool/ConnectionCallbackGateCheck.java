@@ -124,10 +124,75 @@ public final class ConnectionCallbackGateCheck {
         require(nullEndpoint.cleared == 0, "null endpoint failure performed cleanup");
     }
 
+    private static final class DisconnectEffects {
+        int generation = 3;
+        boolean running = true;
+        String pending;
+        String connected;
+        int emitted;
+
+        void disconnect(int epoch, String id) {
+            if (!ConnectionCallbackGate.ownsDisconnect(epoch, generation, running,
+                    id, pending, connected)) return;
+            if (id.equals(pending)) pending = null;
+            if (id.equals(connected)) connected = null;
+            emitted++;
+        }
+    }
+
+    private static void disconnectsOnlyAffectOwnedEndpoints() {
+        DisconnectEffects invitation = new DisconnectEffects();
+        invitation.pending = "new-peer";
+        invitation.disconnect(3, "old-peer");
+        require("new-peer".equals(invitation.pending), "unrelated disconnect cleared invitation");
+        require(invitation.emitted == 0, "unrelated disconnect emitted while invitation pending");
+        invitation.disconnect(3, "new-peer");
+        require(invitation.pending == null, "owned pending disconnect did not clear invitation");
+        require(invitation.emitted == 1, "owned pending disconnect did not emit exactly once");
+        invitation.disconnect(3, "new-peer");
+        require(invitation.emitted == 1, "duplicate pending disconnect emitted again");
+
+        DisconnectEffects connection = new DisconnectEffects();
+        connection.connected = "current-peer";
+        connection.disconnect(3, "other-peer");
+        require("current-peer".equals(connection.connected), "unrelated disconnect cleared connection");
+        require(connection.emitted == 0, "unrelated disconnect emitted while connected");
+        connection.disconnect(3, "current-peer");
+        require(connection.connected == null, "owned disconnect did not clear connection");
+        require(connection.emitted == 1, "owned connection disconnect did not emit exactly once");
+        connection.disconnect(3, "current-peer");
+        require(connection.emitted == 1, "duplicate connection disconnect emitted again");
+
+        for (boolean pending : new boolean[]{true, false}) {
+            DisconnectEffects old = new DisconnectEffects();
+            old.pending = pending ? "peer" : null;
+            old.connected = pending ? null : "peer";
+            old.disconnect(1, "peer");
+            require("peer".equals(pending ? old.pending : old.connected),
+                    "old-generation disconnect changed owned endpoint");
+            require(old.emitted == 0, "old-generation disconnect emitted");
+            old.running = false;
+            old.disconnect(3, "peer");
+            require("peer".equals(pending ? old.pending : old.connected),
+                    "stopped-session disconnect changed owned endpoint");
+            require(old.emitted == 0, "stopped-session disconnect emitted");
+        }
+
+        DisconnectEffects idle = new DisconnectEffects();
+        idle.disconnect(3, "peer");
+        idle.disconnect(3, null);
+        require(idle.emitted == 0, "unowned or null disconnect emitted from idle state");
+        idle.pending = "peer";
+        idle.disconnect(3, null);
+        require("peer".equals(idle.pending) && idle.emitted == 0,
+                "null disconnect changed an active invitation");
+    }
+
     public static void main(String[] args) {
         oldCallbacksCannotTouchNewSession();
         currentSessionRulesRemain();
         failedRequestsOnlyClearTheirOwnInvitation();
+        disconnectsOnlyAffectOwnedEndpoints();
         System.out.println("ConnectionCallbackGate JVM checks passed: " + checks);
     }
 }
