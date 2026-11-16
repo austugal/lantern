@@ -137,3 +137,11 @@ The visible discrepancy persists 29 days after the 16 October correction. Its ca
 - At approximately **13:52 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed **95 commits** and **Contributors (2)** with separate `@austugal` and `@claude` links. This was a fresh **signed-out public view**, evidenced by the page's Sign in and Sign up links and sign-in requirements for notification/fork controls. No authentication action or session change was performed by this check.
 
 The visible discrepancy persists 30 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent. This check changed no released history, branch, access setting or open PR.
+
+## Recheck — 16 November 2026
+
+- At **13:22:33 UTC**, an unauthenticated [Contributors REST request](https://api.github.com/repos/austugal/lantern/contributors?anon=1) returned HTTP 200 with exactly one entry: `austugal`, **95 contributions**.
+- The [main branch API response](https://api.github.com/repos/austugal/lantern/branches/main) at **13:22:38 UTC** identified `621b32a185d964dca31c6ac2371e4e29c17087e7`, following PR #39. Local `git shortlog -sn` confirms all **96 commits** at that head are authored by austugal. The earlier contributor response's count of 95 is recorded as returned, not presented as a complete count for this newer head.
+- At approximately **13:23 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed **96 commits** and **Contributors (2)** with separate `@austugal` and `@claude` links. This was a fresh **signed-out public view**, evidenced by Sign in and Sign up links and sign-in requirements for notification/fork controls. No authentication action or session change was performed by this check.
+
+The visible discrepancy persists 31 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent. This check changed no released history, branch, access setting or open PR.

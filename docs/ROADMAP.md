@@ -161,3 +161,7 @@ PR #37 passed Android/emulator, Flutter and Python but failed iOS with unknown `
 ### 15 November 2026: native disconnect ownership
 
 Android now forwards a disconnect only for its current pending or connected endpoint while the discovery session is running. Unrelated endpoints, duplicate callbacks after cleanup and stopped-session callbacks are ignored before native mutation or Flutter emission. This aligns native admission with Flutter's existing peer check. It does not resolve ambiguity between two attempts reusing the same endpoint in one session; that follow-up remains open. See [development evidence](DEVELOPMENT-2026-11-15.md).
+
+### 16 November 2026: complete disconnect-ownership validation
+
+[PR #39](https://github.com/austugal/lantern/pull/39) passed Android APK/emulator, both iOS builds, Flutter, JVM and Python checks and merged as `621b32a185d964dca31c6ac2371e4e29c17087e7`. Current-peer disconnects still clear state; unrelated, duplicate-after-cleanup and stopped-session callbacks are filtered natively. Same-peer attempt ambiguity remains a separate open item. Main publication is a separate gate. See [integration evidence](DEVELOPMENT-2026-11-16.md).
