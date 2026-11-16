@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 16 November 2026 — disconnect ownership validated and merged
+
+[PR #39 mobile CI](https://github.com/austugal/lantern/actions/runs/43721377990) passed Android APK and installed-emulator checks, both iOS builds, Flutter checks and JVM fixtures including the 53 callback checks. [Python CI](https://github.com/austugal/lantern/actions/runs/43721377963) passed. It merged as `621b32a185d964dca31c6ac2371e4e29c17087e7` with a tree identical to validated head `7921e1a781d7c935e21564ceeb2472d6b49fd929`.
+
+This completes the native endpoint-ownership slice. It does not disambiguate successive attempts using the same endpoint and discovery generation. Main release publication must complete separately; the [working preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-97b11baacd4d) and pinned physical-test baseline are preserved. No physical observations were added. See [integration record](../../docs/DEVELOPMENT-2026-11-16.md).
+
 ## 15 November 2026 — release publication and disconnect ownership
 
 [Main mobile run](https://github.com/austugal/lantern/actions/runs/43598540201) passed all native/Flutter/emulator gates and published [mobile-preview-97b11baacd4d](https://github.com/austugal/lantern/releases/tag/mobile-preview-97b11baacd4d) on 14 November at 13:27 UTC. [Desktop run](https://github.com/austugal/lantern/actions/runs/43598540222) also passed and published its matching preview. This confirms main release recovery; it does not complete physical validation.
