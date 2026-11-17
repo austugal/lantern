@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 17 November 2026 — published disconnect fix and recovery design
+
+[Main mobile run](https://github.com/austugal/lantern/actions/runs/43875157163), [desktop run](https://github.com/austugal/lantern/actions/runs/43875156953) and [Python run](https://github.com/austugal/lantern/actions/runs/43875157053) passed. Matching mobile/desktop previews for `621b32a185d9` published on 16 November at 13:42 and 13:34 UTC respectively. The physical baseline remains deliberately pinned to 6 November.
+
+The [attempt-isolation contract](ANDROID-ATTEMPT-ISOLATION-2026-11-17.md) records source/API review, lifecycle decisions and required tests. No runtime code changed or new native/physical tests ran for this documentation-only milestone. The contract makes implementation and physical SDK-ordering gates explicit; the current app still has same-peer retry ambiguity. See [development evidence](../../docs/DEVELOPMENT-2026-11-17.md).
+
 ## 16 November 2026 — disconnect ownership validated and merged
 
 [PR #39 mobile CI](https://github.com/austugal/lantern/actions/runs/43721377990) passed Android APK and installed-emulator checks, both iOS builds, Flutter checks and JVM fixtures including the 53 callback checks. [Python CI](https://github.com/austugal/lantern/actions/runs/43721377963) passed. It merged as `621b32a185d964dca31c6ac2371e4e29c17087e7` with a tree identical to validated head `7921e1a781d7c935e21564ceeb2472d6b49fd929`.
