@@ -145,3 +145,10 @@ The visible discrepancy persists 30 days after the 16 October correction. Its ca
 - At approximately **13:23 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed **96 commits** and **Contributors (2)** with separate `@austugal` and `@claude` links. This was a fresh **signed-out public view**, evidenced by Sign in and Sign up links and sign-in requirements for notification/fork controls. No authentication action or session change was performed by this check.
 
 The visible discrepancy persists 31 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent. This check changed no released history, branch, access setting or open PR.
+
+## Recheck — 17 November 2026
+
+- At **13:58:34 UTC**, an unauthenticated [Contributors REST request](https://api.github.com/repos/austugal/lantern/contributors?anon=1) returned HTTP 200 with exactly one entry: `austugal`, **97 contributions**. The main branch response at **13:58:39 UTC** identified `ac8dd5b43619607259abdca2d2d695385eff50eb`; local `git shortlog -sn` confirms all 97 commits are authored by austugal.
+- At approximately **13:59 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed **97 commits** and **Contributors (2)** with separate `@austugal` and `@claude` links. This was a fresh **signed-out public view**, evidenced by Sign in and Sign up links and sign-in requirements for notification/fork controls. No authentication action or session change was performed by this check.
+
+The visible discrepancy persists 32 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent. This check changed no released history, branch, access setting or open PR.

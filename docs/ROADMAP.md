@@ -165,3 +165,7 @@ Android now forwards a disconnect only for its current pending or connected endp
 ### 16 November 2026: complete disconnect-ownership validation
 
 [PR #39](https://github.com/austugal/lantern/pull/39) passed Android APK/emulator, both iOS builds, Flutter, JVM and Python checks and merged as `621b32a185d964dca31c6ac2371e4e29c17087e7`. Current-peer disconnects still clear state; unrelated, duplicate-after-cleanup and stopped-session callbacks are filtered natively. Same-peer attempt ambiguity remains a separate open item. Main publication is a separate gate. See [integration evidence](DEVELOPMENT-2026-11-16.md).
+
+### 17 November 2026: same-peer attempt-isolation design gate
+
+Completed the [Android attempt-isolation contract](../mobile/docs/ANDROID-ATTEMPT-ISOLATION-2026-11-17.md): one admitted attempt per discovery generation, explicit restart after owned termination, bounded rejected-endpoint handling, native-to-Flutter generation fencing and a concrete regression/physical acceptance matrix. Primary SDK documentation and independent source review explain why a mutable invitation token alone cannot identify delayed lifecycle events. This is a design milestone only; runtime implementation and same-peer validation remain open.
