@@ -169,3 +169,8 @@ Android now forwards a disconnect only for its current pending or connected endp
 ### 17 November 2026: same-peer attempt-isolation design gate
 
 Completed the [Android attempt-isolation contract](../mobile/docs/ANDROID-ATTEMPT-ISOLATION-2026-11-17.md): one admitted attempt per discovery generation, explicit restart after owned termination, bounded rejected-endpoint handling, native-to-Flutter generation fencing and a concrete regression/physical acceptance matrix. Primary SDK documentation and independent source review explain why a mutable invitation token alone cannot identify delayed lifecycle events. This is a design milestone only; runtime implementation and same-peer validation remain open.
+
+
+### 18 November 2026: preserve established Android connection on duplicate result
+
+Implemented the contract’s bounded duplicate-result rule: a current, running connection ignores another success or failure result for its connected endpoint before any endpoint-wide disconnect, mutation or event. Current pending results still progress and unrelated results retain their rejection path. This does not implement discovery retirement, event-generation fencing or same-peer retry disambiguation. See [development evidence](DEVELOPMENT-2026-11-18.md); Android/iOS PR validation remains a separate gate from local regression checks.

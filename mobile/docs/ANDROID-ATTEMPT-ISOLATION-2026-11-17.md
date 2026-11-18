@@ -1,6 +1,6 @@
 # Android attempt isolation contract — 17 November 2026
 
-Status: reviewed design gate, not implemented or hardware-validated. This defines the next lifecycle implementation slice. The app still permits retries within discovery; the known same-peer ambiguity remains present.
+Status: reviewed design gate. The 18 November source change implements only the duplicate-result rule for an established connection; see [verification](VERIFICATION.md). The coordinated retirement/fencing design below is not implemented or hardware-validated. The app still permits retries within discovery; the known same-peer ambiguity remains present.
 
 ## Evidence and failure model
 
