@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 19 November 2026 — duplicate-result fix validated and merged
+
+[PR #42](https://github.com/austugal/lantern/pull/42) passed [mobile CI attempt 2](https://github.com/austugal/lantern/actions/runs/44311137106/attempts/2), including both iOS builds after a hosted macOS capacity cancellation. Android APK/emulator, 168 Flutter tests, 87 JVM callback checks and [Python CI](https://github.com/austugal/lantern/actions/runs/44311137167) passed. It merged as `8be0e3ec3bea4fb3b670ac2c4b9e05aa3e0a52ab`. Main release publication remains a separate gate; the prior working release and pinned physical baseline are preserved.
+
+The failed first attempt had no assigned iOS runner or executed steps. GitHub annotations identify runner acquisition and macOS capacity; retrying the cancelled job on unchanged source recovered validation. No source workaround or weaker gate was needed. See [recovery evidence](../../docs/DEVELOPMENT-2026-11-19.md).
+
 ## 18 November 2026 — duplicate connection-result guard
 
 The source now ignores repeat success or failure results for an already connected Android endpoint in the current running discovery session. This prevents the existing rejection branch from disconnecting its owner; normal pending-result handling and unrelated-peer rejection remain. It implements only the duplicate-result rule of the attempt-isolation contract.

@@ -174,3 +174,8 @@ Completed the [Android attempt-isolation contract](../mobile/docs/ANDROID-ATTEMP
 ### 18 November 2026: preserve established Android connection on duplicate result
 
 Implemented the contract’s bounded duplicate-result rule: a current, running connection ignores another success or failure result for its connected endpoint before any endpoint-wide disconnect, mutation or event. Current pending results still progress and unrelated results retain their rejection path. This does not implement discovery retirement, event-generation fencing or same-peer retry disambiguation. See [development evidence](DEVELOPMENT-2026-11-18.md); Android/iOS PR validation remains a separate gate from local regression checks.
+
+
+### 19 November 2026: complete duplicate-result validation
+
+[PR #42](https://github.com/austugal/lantern/pull/42) passed [mobile CI attempt 2](https://github.com/austugal/lantern/actions/runs/44311137106/attempts/2), including both iOS builds after a hosted macOS capacity cancellation. Android APK/emulator, 168 Flutter tests, 87 JVM callback checks and [Python CI](https://github.com/austugal/lantern/actions/runs/44311137167) passed. It merged as `8be0e3ec3bea4fb3b670ac2c4b9e05aa3e0a52ab`. Main release publication remains a separate gate; the prior working release and pinned physical baseline are preserved. The broader same-peer retirement/fencing contract remains open. See [recovery evidence](DEVELOPMENT-2026-11-19.md).
