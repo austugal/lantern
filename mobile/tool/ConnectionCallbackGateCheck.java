@@ -188,11 +188,109 @@ public final class ConnectionCallbackGateCheck {
                 "null disconnect changed an active invitation");
     }
 
+    /** Models the effects after the gate in MainActivity.onConnectionResult. */
+    private static final class ResultEffects {
+        boolean running = true;
+        String pending = "peer";
+        String connected;
+        String disconnectedEndpoint;
+        int disconnectCalls;
+        int connectedEvents;
+        int disconnectedEvents;
+        int errorEvents;
+
+        void result(String id, boolean success) {
+            switch (ConnectionCallbackGate.result(3, 3, running, id, pending, connected)) {
+                case IGNORE: return;
+                case REJECT:
+                    disconnectCalls++;
+                    disconnectedEndpoint = id;
+                    return;
+                case PROCEED: break;
+                default: throw new AssertionError("Unknown action");
+            }
+            pending = null;
+            if (success) {
+                connected = id;
+                connectedEvents++;
+            } else {
+                disconnectedEvents++;
+                errorEvents++;
+            }
+        }
+    }
+
+    private static void duplicateResultsPreserveEstablishedConnection() {
+        for (boolean duplicateSuccess : new boolean[]{true, false}) {
+            ResultEffects connection = new ResultEffects();
+            connection.result("peer", true);
+            require(connection.pending == null, "successful result retained pending invitation");
+            require("peer".equals(connection.connected), "successful result did not connect peer");
+            require(connection.connectedEvents == 1, "successful result did not emit once");
+            connection.result("peer", duplicateSuccess);
+            connection.result("peer", duplicateSuccess);
+            require(connection.disconnectCalls == 0,
+                    "duplicate result attempted endpoint-wide disconnection");
+            require(connection.pending == null, "duplicate result changed pending invitation");
+            require("peer".equals(connection.connected), "duplicate result changed connected peer");
+            require(connection.connectedEvents == 1, "duplicate result emitted another connection");
+            require(connection.disconnectedEvents == 0 && connection.errorEvents == 0,
+                    "duplicate result emitted disconnection or error");
+        }
+
+        ResultEffects failure = new ResultEffects();
+        failure.result("peer", false);
+        require(failure.pending == null, "failed pending result retained invitation");
+        require(failure.connected == null, "failed pending result connected peer");
+        require(failure.disconnectCalls == 0, "failed pending result attempted endpoint disconnection");
+        require(failure.connectedEvents == 0, "failed pending result emitted connection");
+        require(failure.disconnectedEvents == 1 && failure.errorEvents == 1,
+                "failed pending result did not emit disconnection and error exactly once");
+
+        ResultEffects unrelated = new ResultEffects();
+        unrelated.result("peer", true);
+        unrelated.result("other-peer", true);
+        require(unrelated.disconnectCalls == 1 && "other-peer".equals(unrelated.disconnectedEndpoint),
+                "unrelated result did not reject only its own endpoint");
+        require(unrelated.pending == null && "peer".equals(unrelated.connected),
+                "unrelated result changed owned connection state");
+        require(unrelated.connectedEvents == 1, "unrelated result emitted connection");
+        require(unrelated.disconnectedEvents == 0 && unrelated.errorEvents == 0,
+                "unrelated result emitted owner disconnection or error");
+
+        ResultEffects inconsistent = new ResultEffects();
+        inconsistent.connected = "peer";
+        inconsistent.pending = "other-peer";
+        inconsistent.result("peer", false);
+        require("peer".equals(inconsistent.connected) && "other-peer".equals(inconsistent.pending),
+                "duplicate result changed owner or unrelated pending state");
+        require(inconsistent.disconnectCalls == 0, "duplicate result disconnected inconsistent owner");
+        require(inconsistent.connectedEvents == 0 && inconsistent.disconnectedEvents == 0
+                && inconsistent.errorEvents == 0, "duplicate result emitted from inconsistent state");
+
+        require(ConnectionCallbackGate.result(3, 3, true, null, null, "peer")
+                == ConnectionCallbackGate.Action.REJECT, "null endpoint matched connected peer");
+        require(ConnectionCallbackGate.result(3, 3, true, null, null, null)
+                == ConnectionCallbackGate.Action.REJECT, "null endpoint matched idle state");
+        require(ConnectionCallbackGate.result(3, 3, true, null, "peer", null)
+                == ConnectionCallbackGate.Action.REJECT, "null endpoint matched pending peer");
+
+        ResultEffects stopped = new ResultEffects();
+        stopped.result("peer", true);
+        stopped.running = false;
+        stopped.result("peer", true);
+        require(stopped.disconnectCalls == 1, "stopped current result was accepted or ignored");
+        require(stopped.connectedEvents == 1, "stopped current result emitted connection");
+        require(stopped.disconnectedEvents == 0 && stopped.errorEvents == 0,
+                "stopped current result emitted disconnection or error");
+    }
+
     public static void main(String[] args) {
         oldCallbacksCannotTouchNewSession();
         currentSessionRulesRemain();
         failedRequestsOnlyClearTheirOwnInvitation();
         disconnectsOnlyAffectOwnedEndpoints();
+        duplicateResultsPreserveEstablishedConnection();
         System.out.println("ConnectionCallbackGate JVM checks passed: " + checks);
     }
 }

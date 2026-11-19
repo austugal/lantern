@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 18 November 2026 — duplicate connection-result guard
+
+The source now ignores repeat success or failure results for an already connected Android endpoint in the current running discovery session. This prevents the existing rejection branch from disconnecting its owner; normal pending-result handling and unrelated-peer rejection remain. It implements only the duplicate-result rule of the attempt-isolation contract.
+
+**87 JVM callback checks** passed locally, including 34 new assertions; the new regression fails against the old helper. **136 Python tests passed**. These are synthetic policy checks and desktop tests, not physical radio tests. Native Android/emulator, Flutter and iOS PR checks remain separate validation gates. The last published mobile/desktop preview is `621b32a185d9`; the physical-test baseline remains pinned to 6 November. See [development evidence](../../docs/DEVELOPMENT-2026-11-18.md).
+
 ## 17 November 2026 — published disconnect fix and recovery design
 
 [Main mobile run](https://github.com/austugal/lantern/actions/runs/43875157163), [desktop run](https://github.com/austugal/lantern/actions/runs/43875156953) and [Python run](https://github.com/austugal/lantern/actions/runs/43875157053) passed. Matching mobile/desktop previews for `621b32a185d9` published on 16 November at 13:42 and 13:34 UTC respectively. The physical baseline remains deliberately pinned to 6 November.

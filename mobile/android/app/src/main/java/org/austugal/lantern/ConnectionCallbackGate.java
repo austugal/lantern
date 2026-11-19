@@ -33,6 +33,8 @@ final class ConnectionCallbackGate {
     static Action result(int epoch, int current, boolean running,
                          String id, String pending, String connected) {
         if (epoch != current) return Action.IGNORE;
+        // A repeated result must not disconnect the established owner or emit again.
+        if (running && id != null && id.equals(connected)) return Action.IGNORE;
         if (!running || pending == null || !pending.equals(id)) return Action.REJECT;
         return Action.PROCEED;
     }
