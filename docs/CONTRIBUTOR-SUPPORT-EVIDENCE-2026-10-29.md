@@ -159,3 +159,10 @@ The visible discrepancy persists 32 days after the 16 October correction. Its ca
 - At approximately **13:09 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed **98 commits** and **Contributors (2)** with separate `@austugal` and `@claude` links. This was a fresh **signed-out public view**, evidenced by Sign in and Sign up links and sign-in requirements for notification/fork controls. No authentication action or session change was performed by this check. Browser timing is approximate; the API times above are the exact response Date headers.
 
 The visible discrepancy persists 33 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent. This check changed no released history, branch, access setting or open PR.
+
+## Recheck — 19 November 2026
+
+- At **13:12:57 UTC**, an unauthenticated [Contributors REST request](https://api.github.com/repos/austugal/lantern/contributors?anon=1) returned HTTP 200 with exactly one entry: `austugal`, **98 contributions**. The main branch response at **13:13:02 UTC** identified `a5a05d992289c47a3392031c65ea8be188a4f21b`; local `git shortlog -sn` confirms all 98 commits are authored by austugal.
+- At approximately **13:13 UTC**, the fully loaded [repository homepage](https://github.com/austugal/lantern) showed **98 commits** and **Contributors (2)** with separate `@austugal` and `@claude` links. This was a fresh **signed-out public view**, evidenced by Sign in and Sign up links and sign-in requirements for notification/fork controls. No authentication action or session change was performed by this check. Browser timing is approximate; the API times above are the exact response Date headers.
+
+The visible discrepancy persists 34 days after the 16 October correction. Its cause remains unconfirmed. The exact Support request and retained-ref evidence above remain prepared and unsent. This check changed no released history, branch, access setting or open PR.
