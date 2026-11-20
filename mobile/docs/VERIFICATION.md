@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 20 November 2026 — release publication and established-peer initiation
+
+The 19 November [mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-8be0e3ec3bea) and [desktop preview](https://github.com/austugal/lantern/releases/tag/desktop-preview-8be0e3ec3bea) passed main release gates and are published. The prior pinned physical-test baseline is preserved.
+
+The next source change ignores initiation callbacks for an already connected Android owner before endpoint rejection or consent effects. It adds no automatic acceptance and does not solve duplicate pending initiation or same-peer attempt ambiguity. 110 JVM callback checks (23 added) and 136 Python tests passed; new Android/iOS PR builds remain separate gates. See [development evidence](../../docs/DEVELOPMENT-2026-11-20.md).
+
 ## 19 November 2026 — duplicate-result fix validated and merged
 
 [PR #42](https://github.com/austugal/lantern/pull/42) passed [mobile CI attempt 2](https://github.com/austugal/lantern/actions/runs/44311137106/attempts/2), including both iOS builds after a hosted macOS capacity cancellation. Android APK/emulator, 168 Flutter tests, 87 JVM callback checks and [Python CI](https://github.com/austugal/lantern/actions/runs/44311137167) passed. It merged as `8be0e3ec3bea4fb3b670ac2c4b9e05aa3e0a52ab`. Main release publication remains a separate gate; the prior working release and pinned physical baseline are preserved.
