@@ -285,12 +285,85 @@ public final class ConnectionCallbackGateCheck {
                 "stopped current result emitted disconnection or error");
     }
 
+    /** Models admission effects in MainActivity.onConnectionInitiated, without the SDK. */
+    private static final class InitiationEffects {
+        boolean running = true;
+        String pending;
+        String connected = "peer";
+        String name = "Original name";
+        String lastInvitationCode = "1234";
+        String rejectedEndpoint;
+        int rejectCalls;
+        int timerRenewals;
+        int invitationEvents;
+
+        void initiate(int epoch, String id) {
+            switch (ConnectionCallbackGate.initiated(epoch, 3, running, id, pending, connected)) {
+                case IGNORE: return;
+                case REJECT:
+                    rejectCalls++;
+                    rejectedEndpoint = id;
+                    return;
+                case PROCEED: break;
+                default: throw new AssertionError("Unknown action");
+            }
+            pending = id;
+            timerRenewals++;
+            name = "Replacement name";
+            lastInvitationCode = "9999";
+            invitationEvents++;
+        }
+    }
+
+    private static void repeatedInitiationPreservesEstablishedConnection() {
+        for (String pending : new String[]{null, "other-peer"}) {
+            InitiationEffects established = new InitiationEffects();
+            established.pending = pending;
+            established.initiate(3, "peer");
+            established.initiate(3, "peer");
+            require(established.rejectCalls == 0, "repeated initiation rejected established owner");
+            require(established.pending == pending, "repeated initiation changed pending state");
+            require("peer".equals(established.connected), "repeated initiation changed connected owner");
+            require("Original name".equals(established.name), "repeated initiation replaced peer name");
+            require("1234".equals(established.lastInvitationCode), "repeated initiation replaced consent code");
+            require(established.timerRenewals == 0, "repeated initiation renewed invitation timer");
+            require(established.invitationEvents == 0, "repeated initiation emitted invitation");
+        }
+
+        InitiationEffects unrelated = new InitiationEffects();
+        unrelated.initiate(3, "other-peer");
+        require(unrelated.rejectCalls == 1 && "other-peer".equals(unrelated.rejectedEndpoint),
+                "unrelated initiation did not reject only its own endpoint");
+        require(unrelated.pending == null && "peer".equals(unrelated.connected),
+                "unrelated initiation changed established state");
+        require(unrelated.timerRenewals == 0 && unrelated.invitationEvents == 0,
+                "unrelated initiation started consent flow");
+
+        InitiationEffects requested = new InitiationEffects();
+        requested.connected = null;
+        requested.pending = "peer";
+        requested.initiate(3, "peer");
+        require(requested.rejectCalls == 0 && "peer".equals(requested.pending),
+                "current requested initiation rejected");
+        require(requested.timerRenewals == 1 && requested.invitationEvents == 1,
+                "current requested initiation did not start consent flow");
+        require("9999".equals(requested.lastInvitationCode), "current invitation omitted consent code");
+
+        require(ConnectionCallbackGate.initiated(3, 3, false, "peer", null, "peer")
+                == ConnectionCallbackGate.Action.REJECT, "stopped connected owner incorrectly ignored");
+        require(ConnectionCallbackGate.initiated(1, 3, true, "peer", null, "peer")
+                == ConnectionCallbackGate.Action.IGNORE, "old established-owner initiation not ignored");
+        require(ConnectionCallbackGate.initiated(3, 3, true, null, null, "peer")
+                == ConnectionCallbackGate.Action.REJECT, "null initiation matched connected owner");
+    }
+
     public static void main(String[] args) {
         oldCallbacksCannotTouchNewSession();
         currentSessionRulesRemain();
         failedRequestsOnlyClearTheirOwnInvitation();
         disconnectsOnlyAffectOwnedEndpoints();
         duplicateResultsPreserveEstablishedConnection();
+        repeatedInitiationPreservesEstablishedConnection();
         System.out.println("ConnectionCallbackGate JVM checks passed: " + checks);
     }
 }

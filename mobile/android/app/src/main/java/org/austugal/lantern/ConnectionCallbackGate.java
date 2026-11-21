@@ -24,6 +24,8 @@ final class ConnectionCallbackGate {
     static Action initiated(int epoch, int current, boolean running,
                             String id, String pending, String connected) {
         if (epoch != current) return Action.IGNORE;
+        // Do not reject or reopen consent for the already established owner.
+        if (running && id != null && id.equals(connected)) return Action.IGNORE;
         if (!running || connected != null || (pending != null && !pending.equals(id))) {
             return Action.REJECT;
         }
