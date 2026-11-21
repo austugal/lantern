@@ -184,3 +184,8 @@ Implemented the contract’s bounded duplicate-result rule: a current, running c
 ### 20 November 2026: preserve established owner on repeated initiation
 
 Source now ignores initiation callbacks for the current running connected Android endpoint, before endpoint rejection, pending/name mutation, timer renewal or consent emission. Pending initiation and different-registration collisions still require the coordinated attempt-isolation implementation. The 19 November mobile and desktop previews passed release validation and remain available. See [development evidence](DEVELOPMENT-2026-11-20.md) for tests and separate PR build gates.
+
+
+### 21 November 2026: complete established-peer initiation validation
+
+[PR #44](https://github.com/austugal/lantern/pull/44) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/44743330055), including Android APK/emulator, both iOS builds, 168 Flutter tests and 110 JVM callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/44743329849). It merged on 21 November as `008645ebcb65aa29dd86349045450234b2a033d7`, with tree `01673487e41531f51baa71b0d9b5f058af046d22` identical to validated head `0d7f5a03cf444901265ca0333ecf8bb029a205e8`. Main release publication and physical validation remain separate. Full same-peer attempt isolation remains open. See [integration evidence](DEVELOPMENT-2026-11-21.md).
