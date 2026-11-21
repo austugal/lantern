@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 21 November 2026 — established-peer initiation validated and merged
+
+[PR #44](https://github.com/austugal/lantern/pull/44) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/44743330055), including Android APK/emulator, both iOS builds, 168 Flutter tests and 110 JVM callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/44743329849). It merged on 21 November as `008645ebcb65aa29dd86349045450234b2a033d7`, with tree `01673487e41531f51baa71b0d9b5f058af046d22` identical to validated head `0d7f5a03cf444901265ca0333ecf8bb029a205e8`.
+
+Current-peer callbacks no longer invoke rejection or consent effects after connection. This does not complete the broader attempt-isolation contract. Main release publication is a separate gate; prior working releases and the pinned physical baseline remain preserved. See [integration evidence](../../docs/DEVELOPMENT-2026-11-21.md).
+
 ## 20 November 2026 — release publication and established-peer initiation
 
 The 19 November [mobile preview](https://github.com/austugal/lantern/releases/tag/mobile-preview-8be0e3ec3bea) and [desktop preview](https://github.com/austugal/lantern/releases/tag/desktop-preview-8be0e3ec3bea) passed main release gates and are published. The prior pinned physical-test baseline is preserved.
