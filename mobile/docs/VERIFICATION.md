@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 22 November 2026 — published initiation guard and transfer-error ownership
+
+[Main mobile](https://github.com/austugal/lantern/actions/runs/44911277672), [desktop](https://github.com/austugal/lantern/actions/runs/44911277691) and [Python](https://github.com/austugal/lantern/actions/runs/44911277682) gates passed for `008645ebcb65`; matching previews published on 21 November. The pinned physical baseline is unchanged.
+
+The next source change checks current connected-peer ownership before Android payload-transfer failure notices, preventing unrelated or cleared-peer errors from reaching Flutter. Data admission uses the same predicate with equivalent behavior. Current-peer failures remain visible. 124 local synthetic callback checks and 136 Python tests passed; these are separate from native PR builds and physical validation. See [development evidence](../../docs/DEVELOPMENT-2026-11-22.md).
+
 ## 21 November 2026 — established-peer initiation validated and merged
 
 [PR #44](https://github.com/austugal/lantern/pull/44) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/44743330055), including Android APK/emulator, both iOS builds, 168 Flutter tests and 110 JVM callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/44743329849). It merged on 21 November as `008645ebcb65aa29dd86349045450234b2a033d7`, with tree `01673487e41531f51baa71b0d9b5f058af046d22` identical to validated head `0d7f5a03cf444901265ca0333ecf8bb029a205e8`.

@@ -235,12 +235,13 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     }
     private fun payloads(epoch: Int) = object : PayloadCallback() {
         override fun onPayloadReceived(id: String, payload: Payload) {
-            if (!running || epoch != generation || connected != id) return
+            if (!ConnectionCallbackGate.ownsPayload(epoch, generation, running, id, connected)) return
             val text = NearbyPacketText.decode(payload.asBytes()) ?: return
             emit("data", id, mapOf("data" to text))
         }
         override fun onPayloadTransferUpdate(id: String, update: PayloadTransferUpdate) {
-            if (epoch == generation && update.status == PayloadTransferUpdate.Status.FAILURE) emit("error", id, mapOf("message" to "A message could not be transferred. Check its delivery status."))
+            if (!ConnectionCallbackGate.ownsPayload(epoch, generation, running, id, connected)) return
+            if (update.status == PayloadTransferUpdate.Status.FAILURE) emit("error", id, mapOf("message" to "A message could not be transferred. Check its delivery status."))
         }
     }
     private fun permissionBusy() = meshPermissionResult != null || permissionResult != null || torchPermissionPending || notificationPermissionResult != null

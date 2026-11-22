@@ -6,6 +6,12 @@ final class ConnectionCallbackGate {
 
     private ConnectionCallbackGate() {}
 
+    /** Data and transfer notices belong only to the current connected peer. */
+    static boolean ownsPayload(int epoch, int current, boolean running,
+                               String id, String connected) {
+        return running && epoch == current && id != null && id.equals(connected);
+    }
+
     /** A completion or timeout may clear only the exact pending invitation it captured. */
     static boolean ownsInvitation(int epoch, int current, int invitationEpoch,
                                   int currentInvitation, boolean running,
