@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 23 November 2026 — transfer-error ownership validated and merged
+
+[PR #46](https://github.com/austugal/lantern/pull/46) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/45026204865), including Android APK/emulator, both iOS builds, 168 Flutter tests and 124 JVM callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/45026204867). It merged on 23 November as `60efb9a279a0984b85281d52f57a990c7fa34c36`, with tree `a5b8adf2434bbf4e169fa12cec7c4793c6d8bfdb` identical to validated head `b805b01d35a6d5e6a1745dd6b9f206dc97f83ae6`.
+
+Current-peer transfer failures remain visible; unrelated and cleared-peer failures are filtered before Flutter emission. Main publication is separate from the successful PR builds; the previous release and physical baseline remain preserved. See [integration evidence](../../docs/DEVELOPMENT-2026-11-23.md).
+
 ## 22 November 2026 — published initiation guard and transfer-error ownership
 
 [Main mobile](https://github.com/austugal/lantern/actions/runs/44911277672), [desktop](https://github.com/austugal/lantern/actions/runs/44911277691) and [Python](https://github.com/austugal/lantern/actions/runs/44911277682) gates passed for `008645ebcb65`; matching previews published on 21 November. The pinned physical baseline is unchanged.
