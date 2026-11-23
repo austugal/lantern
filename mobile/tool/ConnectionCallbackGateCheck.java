@@ -357,6 +357,64 @@ public final class ConnectionCallbackGateCheck {
                 == ConnectionCallbackGate.Action.REJECT, "null initiation matched connected owner");
     }
 
+    /** Models only transfer-failure emission, not SDK delivery or receipt behavior. */
+    private static final class PayloadEffects {
+        boolean running = true;
+        String connected = "peer";
+        String lastErrorEndpoint;
+        int errors;
+
+        void update(int epoch, String id, boolean failed) {
+            if (failed && ConnectionCallbackGate.ownsPayload(epoch, 3, running, id, connected)) {
+                errors++;
+                lastErrorEndpoint = id;
+            }
+        }
+    }
+
+    private static void payloadFailuresOnlyReportForActiveOwner() {
+        PayloadEffects active = new PayloadEffects();
+        active.update(3, "peer", false);
+        require(active.errors == 0, "nonfailure update emitted transfer error");
+        active.update(3, "peer", true);
+        require(active.errors == 1 && "peer".equals(active.lastErrorEndpoint),
+                "active peer failure did not emit its error exactly once");
+        require("peer".equals(active.connected), "transfer failure changed connection ownership");
+
+        active.connected = null;
+        active.update(3, "peer", true);
+        require(active.errors == 1, "late transfer failure emitted after disconnect");
+        require(active.connected == null, "late transfer failure restored disconnected peer");
+
+        PayloadEffects replaced = new PayloadEffects();
+        replaced.connected = "new-peer";
+        replaced.update(3, "peer", true);
+        require(replaced.errors == 0, "previous peer transfer failure leaked into new connection");
+        require("new-peer".equals(replaced.connected), "previous peer failure changed current owner");
+        replaced.update(3, "new-peer", true);
+        require(replaced.errors == 1 && "new-peer".equals(replaced.lastErrorEndpoint),
+                "current replacement peer failure suppressed");
+
+        PayloadEffects stopped = new PayloadEffects();
+        stopped.running = false;
+        stopped.update(3, "peer", true);
+        require(stopped.errors == 0, "stopped session emitted transfer failure");
+        require("peer".equals(stopped.connected), "stopped failure mutated connection state");
+
+        PayloadEffects restarted = new PayloadEffects();
+        restarted.update(1, "peer", true);
+        require(restarted.errors == 0, "old-generation failure reached reused endpoint");
+        require("peer".equals(restarted.connected), "old-generation failure changed current owner");
+
+        PayloadEffects absent = new PayloadEffects();
+        absent.update(3, null, true);
+        require(absent.errors == 0, "null endpoint matched active peer");
+        absent.connected = null;
+        absent.update(3, null, true);
+        absent.update(3, "peer", true);
+        require(absent.errors == 0, "unowned failure emitted from idle state");
+    }
+
     public static void main(String[] args) {
         oldCallbacksCannotTouchNewSession();
         currentSessionRulesRemain();
@@ -364,6 +422,7 @@ public final class ConnectionCallbackGateCheck {
         disconnectsOnlyAffectOwnedEndpoints();
         duplicateResultsPreserveEstablishedConnection();
         repeatedInitiationPreservesEstablishedConnection();
+        payloadFailuresOnlyReportForActiveOwner();
         System.out.println("ConnectionCallbackGate JVM checks passed: " + checks);
     }
 }

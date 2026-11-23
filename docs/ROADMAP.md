@@ -189,3 +189,8 @@ Source now ignores initiation callbacks for the current running connected Androi
 ### 21 November 2026: complete established-peer initiation validation
 
 [PR #44](https://github.com/austugal/lantern/pull/44) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/44743330055), including Android APK/emulator, both iOS builds, 168 Flutter tests and 110 JVM callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/44743329849). It merged on 21 November as `008645ebcb65aa29dd86349045450234b2a033d7`, with tree `01673487e41531f51baa71b0d9b5f058af046d22` identical to validated head `0d7f5a03cf444901265ca0333ecf8bb029a205e8`. Main release publication and physical validation remain separate. Full same-peer attempt isolation remains open. See [integration evidence](DEVELOPMENT-2026-11-21.md).
+
+
+### 22 November 2026: transfer-error ownership
+
+Android transfer-failure notices now require the current running discovery generation and connected endpoint, matching data admission. This prevents unrelated or cleared-peer errors from overwriting the visible session error. Current-peer failures and existing send/receipt deadlines remain. Same-peer attempt identity, queued-event fencing and payload-to-message correlation remain open. See [development evidence](DEVELOPMENT-2026-11-22.md); native PR validation is separate from local synthetic checks.
