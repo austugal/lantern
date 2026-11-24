@@ -199,3 +199,8 @@ Android transfer-failure notices now require the current running discovery gener
 ### 23 November 2026: complete transfer-error ownership validation
 
 [PR #46](https://github.com/austugal/lantern/pull/46) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/45026204865), including Android APK/emulator, both iOS builds, 168 Flutter tests and 124 JVM callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/45026204867). It merged on 23 November as `60efb9a279a0984b85281d52f57a990c7fa34c36`, with tree `a5b8adf2434bbf4e169fa12cec7c4793c6d8bfdb` identical to validated head `b805b01d35a6d5e6a1745dd6b9f206dc97f83ae6`. Main publication and physical validation remain separate. Same-peer attempt identity and queued-event fencing remain open. See [integration evidence](DEVELOPMENT-2026-11-23.md).
+
+
+### 24 November 2026: main release validation recovery
+
+The main mobile and desktop workflows were blocked when their macOS jobs could not acquire GitHub-hosted runners. Retrying only those jobs on the unchanged validated merge restores the existing release gates without a source workaround or weaker checks. Both retries and publication passed on 24 November, producing validated [mobile](https://github.com/austugal/lantern/releases/tag/mobile-preview-60efb9a279a0) and [desktop](https://github.com/austugal/lantern/releases/tag/desktop-preview-60efb9a279a0) previews. The iOS simulator and unsigned device builds both passed. The previous working releases and pinned physical-test baseline remain preserved. See [failure and recovery evidence](DEVELOPMENT-2026-11-24.md). Broader attempt isolation and physical-device reliability remain open.

@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 24 November 2026 — main release validation recovery
+
+[Mobile attempt 1](https://github.com/austugal/lantern/actions/runs/45181646746/attempts/1) passed Android APK/emulator and Flutter checks but could not acquire a hosted iOS runner. The desktop macOS job failed for the same capacity reason. Only the cancelled jobs were retried, on unchanged `60efb9a279a0984b85281d52f57a990c7fa34c36`; successful checks were retained. Both retries and publication passed on 24 November, producing validated [mobile](https://github.com/austugal/lantern/releases/tag/mobile-preview-60efb9a279a0) and [desktop](https://github.com/austugal/lantern/releases/tag/desktop-preview-60efb9a279a0) previews. The iOS simulator and unsigned device builds both passed.
+
+Main logs confirm 168 Flutter tests, 124 callback checks, 33 strict-decoder checks, the inbox fixture, all 13 installed-APK scenarios and two native integration fixtures passed. Main Python CI passed, including 136 tests. This is automated validation, not physical-device radio evidence. The pinned 6 November baseline remains unchanged. See [recovery evidence](../../docs/DEVELOPMENT-2026-11-24.md).
+
 ## 23 November 2026 — transfer-error ownership validated and merged
 
 [PR #46](https://github.com/austugal/lantern/pull/46) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/45026204865), including Android APK/emulator, both iOS builds, 168 Flutter tests and 124 JVM callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/45026204867). It merged on 23 November as `60efb9a279a0984b85281d52f57a990c7fa34c36`, with tree `a5b8adf2434bbf4e169fa12cec7c4793c6d8bfdb` identical to validated head `b805b01d35a6d5e6a1745dd6b9f206dc97f83ae6`.
