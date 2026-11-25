@@ -80,7 +80,7 @@ Photo and voice messages use the same nearby connection, with or without interne
 
 Messages, coordinates, trails and waypoints are not saved as permanent history. Mobile trails and waypoints remain in memory until cleared or the app closes; desktop locking clears session data and timers. A recipient can still copy or screenshot information.
 
-Android rejects malformed packet text and filters specific stale or unrelated connection callbacks and transfer-error notices. These fixes reduce specific reconnection failures, but [same-peer retry isolation](mobile/docs/ANDROID-ATTEMPT-ISOLATION-2026-11-17.md) and events already queued for delivery to the app still need coordinated work. Automated build and emulator results do not establish physical radio reliability. See [verification](mobile/docs/VERIFICATION.md).
+Android rejects malformed packet text and filters specific stale or unrelated connection callbacks and transfer-error notices. These fixes reduce specific reconnection failures, but [same-peer retry isolation](mobile/docs/ANDROID-ATTEMPT-ISOLATION-2026-11-17.md) and events already queued for delivery to the app still need coordinated work. A bounded rejected-peer ledger is implemented as a standalone component for that integration; the phone adapter does not use it yet. Automated build and emulator results do not establish physical radio reliability. See [verification](mobile/docs/VERIFICATION.md).
 
 ## How hotels and other industries could use it
 
