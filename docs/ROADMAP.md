@@ -209,3 +209,8 @@ The main mobile and desktop workflows were blocked when their macOS jobs could n
 ### 25 November 2026: bounded rejected-peer policy component
 
 Implemented the attempt-isolation design's standalone rejected-endpoint ledger: at most 100 identifiers, no eviction, permanent closure at capacity, and bounded identifier storage. A new instance belongs to a new discovery generation. JVM regression coverage is part of Android CI. The phone adapter does not use this component yet; coordinated admission, generation retirement, Flutter event fencing and explicit restart UX remain required. See [development evidence](DEVELOPMENT-2026-11-25.md).
+
+
+### 26 November 2026: complete rejected-ledger validation
+
+[PR #49](https://github.com/austugal/lantern/pull/49) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/45621012507), including Android APK/emulator, both iOS builds, 168 Flutter tests, 77 rejected-ledger assertions and 124 callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/45621012467). It merged on 26 November as `441b27b8636b99566b201c871ebe0bd146f55203`, with tree `d322149a6d0c30ebcf94cff4be520c8035259671` identical to validated head `bb91ecf2962d99590af570338f045d231147fc8c`. Main publication remains separate. The ledger is not used by the phone adapter; full attempt isolation remains open. See [integration evidence](DEVELOPMENT-2026-11-26.md).

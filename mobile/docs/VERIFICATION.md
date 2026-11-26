@@ -1,5 +1,11 @@
 # Mobile verification record
 
+## 26 November 2026 — rejected-ledger component validated and merged
+
+[PR #49](https://github.com/austugal/lantern/pull/49) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/45621012507), including Android APK/emulator, both iOS builds, 168 Flutter tests, 77 rejected-ledger assertions and 124 callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/45621012467). It merged on 26 November as `441b27b8636b99566b201c871ebe0bd146f55203`, with tree `d322149a6d0c30ebcf94cff4be520c8035259671` identical to validated head `bb91ecf2962d99590af570338f045d231147fc8c`.
+
+The ledger is not integrated into MainActivity. Main publication and physical validation remain separate; working previews and the pinned baseline are preserved. See [integration evidence](../../docs/DEVELOPMENT-2026-11-26.md).
+
 ## 25 November 2026 — rejected-endpoint ledger component
 
 The standalone ledger bounds rejected-peer storage and closes admission at capacity without eviction. It is not integrated into MainActivity and does not change phone connection behavior. 77 local JVM assertions and 136 Python tests passed; a delayed-closure mutation failed as expected. JVM regression checks are added to Android CI; new native PR builds are a separate gate. See [development evidence](../../docs/DEVELOPMENT-2026-11-25.md).
