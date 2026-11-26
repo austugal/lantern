@@ -204,3 +204,8 @@ Android transfer-failure notices now require the current running discovery gener
 ### 24 November 2026: main release validation recovery
 
 The main mobile and desktop workflows were blocked when their macOS jobs could not acquire GitHub-hosted runners. Retrying only those jobs on the unchanged validated merge restores the existing release gates without a source workaround or weaker checks. Both retries and publication passed on 24 November, producing validated [mobile](https://github.com/austugal/lantern/releases/tag/mobile-preview-60efb9a279a0) and [desktop](https://github.com/austugal/lantern/releases/tag/desktop-preview-60efb9a279a0) previews. The iOS simulator and unsigned device builds both passed. The previous working releases and pinned physical-test baseline remain preserved. See [failure and recovery evidence](DEVELOPMENT-2026-11-24.md). Broader attempt isolation and physical-device reliability remain open.
+
+
+### 25 November 2026: bounded rejected-peer policy component
+
+Implemented the attempt-isolation design's standalone rejected-endpoint ledger: at most 100 identifiers, no eviction, permanent closure at capacity, and bounded identifier storage. A new instance belongs to a new discovery generation. JVM regression coverage is part of Android CI. The phone adapter does not use this component yet; coordinated admission, generation retirement, Flutter event fencing and explicit restart UX remain required. See [development evidence](DEVELOPMENT-2026-11-25.md).

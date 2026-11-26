@@ -1,5 +1,9 @@
 # Mobile verification record
 
+## 25 November 2026 — rejected-endpoint ledger component
+
+The standalone ledger bounds rejected-peer storage and closes admission at capacity without eviction. It is not integrated into MainActivity and does not change phone connection behavior. 77 local JVM assertions and 136 Python tests passed; a delayed-closure mutation failed as expected. JVM regression checks are added to Android CI; new native PR builds are a separate gate. See [development evidence](../../docs/DEVELOPMENT-2026-11-25.md).
+
 ## 24 November 2026 — main release validation recovery
 
 [Mobile attempt 1](https://github.com/austugal/lantern/actions/runs/45181646746/attempts/1) passed Android APK/emulator and Flutter checks but could not acquire a hosted iOS runner. The desktop macOS job failed for the same capacity reason. Only the cancelled jobs were retried, on unchanged `60efb9a279a0984b85281d52f57a990c7fa34c36`; successful checks were retained. Both retries and publication passed on 24 November, producing validated [mobile](https://github.com/austugal/lantern/releases/tag/mobile-preview-60efb9a279a0) and [desktop](https://github.com/austugal/lantern/releases/tag/desktop-preview-60efb9a279a0) previews. The iOS simulator and unsigned device builds both passed.

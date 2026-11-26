@@ -1,6 +1,6 @@
 # Android attempt isolation contract — 17 November 2026
 
-Status: reviewed design gate. The 18 November change implements the duplicate-result rule for an established connection. The 20 November source change additionally ignores initiation callbacks for an already connected owner; it does not handle duplicate pending initiation or registration collisions; see [verification](VERIFICATION.md). The coordinated retirement/fencing design below is not implemented or hardware-validated. The app still permits retries within discovery; the known same-peer ambiguity remains present.
+Status: reviewed design gate. The 18 November change implements the duplicate-result rule for an established connection. The 20 November source change additionally ignores initiation callbacks for an already connected owner; it does not handle duplicate pending initiation or registration collisions; see [verification](VERIFICATION.md). The 25 November change adds a standalone rejected-endpoint ledger with JVM checks, not yet used by the adapter. The coordinated retirement/fencing design below is not implemented or hardware-validated. The app still permits retries within discovery; the known same-peer ambiguity remains present.
 
 ## Evidence and failure model
 
