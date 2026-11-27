@@ -3,7 +3,7 @@
 set -euo pipefail
 mkdir -p build/emulator-evidence
 # First test the exact downloaded APK before Flutter rebuilds a test application.
-# Collect both results even when one fails, so one CI run retains all diagnostics.
+# Collect all results even when one fails, so one CI run retains all diagnostics.
 smoke_status=0
 python3 tool/android_smoke.py build/emulator-apk/app-debug.apk build/emulator-evidence \
   || smoke_status=$?
@@ -11,14 +11,22 @@ python3 tool/android_smoke.py build/emulator-apk/app-debug.apk build/emulator-ev
 cleanup_status=0
 adb uninstall org.austugal.lantern > build/emulator-evidence/uninstall.txt 2>&1 \
   || cleanup_status=$?
+# Exercise native activity stop/start admission before Flutter integration fixtures.
+lifecycle_status=0
+if flutter build apk --debug; then
+  (cd android && ./gradlew connectedDebugAndroidTest) \
+    > build/emulator-evidence/lifecycle-instrumentation.txt 2>&1 || lifecycle_status=$?
+else
+  lifecycle_status=$?
+fi
 # Native browser/saved-reading fixture supplied by integration_test.
 # pipefail ensures a failed native integration test fails the publication gate.
 webview_status=0
 flutter test integration_test/web_capture_test.dart -d emulator-5554 --reporter expanded \
   2>&1 | tee build/emulator-evidence/webview-integration.txt || webview_status=$?
-printf '{"apk_smoke_exit":%s,"webview_integration_exit":%s,"uninstall_exit":%s}\n' \
-  "$smoke_status" "$webview_status" "$cleanup_status" > build/emulator-evidence/check-exits.json
-if (( smoke_status != 0 || webview_status != 0 || cleanup_status != 0 )); then
-  echo "Emulator checks failed: APK smoke=$smoke_status; WebView fixture=$webview_status; uninstall=$cleanup_status"
+printf '{"apk_smoke_exit":%s,"webview_integration_exit":%s,"uninstall_exit":%s,"lifecycle_exit":%s}\n' \
+  "$smoke_status" "$webview_status" "$cleanup_status" "$lifecycle_status" > build/emulator-evidence/check-exits.json
+if (( smoke_status != 0 || webview_status != 0 || cleanup_status != 0 || lifecycle_status != 0 )); then
+  echo "Emulator checks failed: APK smoke=$smoke_status; WebView fixture=$webview_status; uninstall=$cleanup_status; lifecycle=$lifecycle_status"
   exit 1
 fi

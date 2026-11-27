@@ -43,7 +43,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
     private var torchPermissionPending = false
     private var notificationPermissionResult: MethodChannel.Result? = null
     private var torchCamera: String? = null
-    private var foreground = true
+    private var foreground = false
     private val notificationChannel = "lantern_messages"
     private val service = "org.austugal.lantern.v1"
     private val compassSensors by lazy { getSystemService(SensorManager::class.java) }
@@ -98,6 +98,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         val id = call.argument<String>("id") ?: ""
         when (call.method) {
             "start" -> {
+                if (!foreground) { result.error("state", "Keep Lantern open to discover people", null); return }
                 if (permissionBusy()) { result.error("busy", "A permission request is already open", null); return }
                 shutdown()
                 displayName = (call.argument<String>("name") ?: "").trim().take(24)
@@ -174,6 +175,7 @@ class MainActivity : FlutterActivity(), EventChannel.StreamHandler {
         else start(result)
     }
     private fun start(result: MethodChannel.Result) {
+        if (!foreground) { result.error("state", "Keep Lantern open to discover people", null); return }
         val epoch = ++generation
         running = true
         client.startAdvertising(displayName, service, lifecycle(epoch), AdvertisingOptions.Builder().setStrategy(Strategy.P2P_POINT_TO_POINT).build())

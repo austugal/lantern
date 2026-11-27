@@ -1,5 +1,9 @@
 # Mobile verification record
 
+## 27 November 2026 — foreground start boundary
+
+The 26 November [mobile](https://github.com/austugal/lantern/releases/tag/mobile-preview-441b27b8636b) and [desktop](https://github.com/austugal/lantern/releases/tag/desktop-preview-441b27b8636b) previews passed publication. The next source change rejects Android discovery-start calls while the native activity is stopped, before permission or SDK effects. New instrumentation and Android/iOS PR checks remain validation gates; no physical lifecycle result is claimed. See [development evidence](../../docs/DEVELOPMENT-2026-11-27.md).
+
 ## 26 November 2026 — rejected-ledger component validated and merged
 
 [PR #49](https://github.com/austugal/lantern/pull/49) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/45621012507), including Android APK/emulator, both iOS builds, 168 Flutter tests, 77 rejected-ledger assertions and 124 callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/45621012467). It merged on 26 November as `441b27b8636b99566b201c871ebe0bd146f55203`, with tree `d322149a6d0c30ebcf94cff4be520c8035259671` identical to validated head `bb91ecf2962d99590af570338f045d231147fc8c`.
