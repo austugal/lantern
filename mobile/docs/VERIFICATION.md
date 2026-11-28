@@ -1,5 +1,9 @@
 # Mobile verification record
 
+## 28 November 2026 — lifecycle instrumentation dependency repair
+
+[PR #51 mobile run](https://github.com/austugal/lantern/actions/runs/46007265911) passed Android APK, both iOS builds and Flutter checks. The downloaded-APK smoke and existing Flutter native fixtures passed, but lifecycle instrumentation failed during dependency resolution before tests ran. No lifecycle pass is claimed. The repair preserves the gate and working releases; see [diagnosis and verification](../../docs/DEVELOPMENT-2026-11-28.md).
+
 ## 27 November 2026 — foreground start boundary
 
 The 26 November [mobile](https://github.com/austugal/lantern/releases/tag/mobile-preview-441b27b8636b) and [desktop](https://github.com/austugal/lantern/releases/tag/desktop-preview-441b27b8636b) previews passed publication. The next source change rejects Android discovery-start calls while the native activity is stopped, before permission or SDK effects. New instrumentation and Android/iOS PR checks remain validation gates; no physical lifecycle result is claimed. See [development evidence](../../docs/DEVELOPMENT-2026-11-27.md).

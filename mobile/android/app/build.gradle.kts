@@ -24,7 +24,17 @@ android {
 flutter { source = "../.." }
 dependencies {
     implementation("com.google.android.gms:play-services-nearby:19.3.0")
-    androidTestImplementation("androidx.test:core:1.7.0")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test:runner:1.7.0")
+    // Flutter integration_test exposes older AndroidX Test libraries to the app.
+    // AGP resolves instrumentation consistently with the tested debug variant,
+    // so both classpaths must select the same test libraries and transitives.
+    // Keep this alignment out of releaseImplementation.
+    val androidTestLibraries = listOf(
+        "androidx.test:core:1.7.0",
+        "androidx.test.ext:junit:1.3.0",
+        "androidx.test:runner:1.7.0",
+    )
+    androidTestLibraries.forEach {
+        add("debugImplementation", it)
+        add("androidTestImplementation", it)
+    }
 }

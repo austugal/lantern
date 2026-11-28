@@ -15,7 +15,7 @@ adb uninstall org.austugal.lantern > build/emulator-evidence/uninstall.txt 2>&1 
 lifecycle_status=0
 if flutter build apk --debug; then
   (cd android && ./gradlew connectedDebugAndroidTest) \
-    > build/emulator-evidence/lifecycle-instrumentation.txt 2>&1 || lifecycle_status=$?
+    2>&1 | tee build/emulator-evidence/lifecycle-instrumentation.txt || lifecycle_status=$?
 else
   lifecycle_status=$?
 fi
