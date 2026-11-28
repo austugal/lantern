@@ -214,3 +214,13 @@ Implemented the attempt-isolation design's standalone rejected-endpoint ledger: 
 ### 26 November 2026: complete rejected-ledger validation
 
 [PR #49](https://github.com/austugal/lantern/pull/49) passed [mobile CI](https://github.com/austugal/lantern/actions/runs/45621012507), including Android APK/emulator, both iOS builds, 168 Flutter tests, 77 rejected-ledger assertions and 124 callback checks, plus [Python CI](https://github.com/austugal/lantern/actions/runs/45621012467). It merged on 26 November as `441b27b8636b99566b201c871ebe0bd146f55203`, with tree `d322149a6d0c30ebcf94cff4be520c8035259671` identical to validated head `bb91ecf2962d99590af570338f045d231147fc8c`. Main publication remains separate. The ledger is not used by the phone adapter; full attempt isolation remains open. See [integration evidence](DEVELOPMENT-2026-11-26.md).
+
+
+### 27 November 2026: native foreground discovery admission
+
+Add a native visible-activity check before discovery-start side effects, both at the method-channel entry and final SDK start boundary. This closes an admission gap for a call delivered after `onStop`; it does not add background execution. A real-activity instrumentation regression is added to the emulator gate. Native build/test validation remains required. See [development evidence](DEVELOPMENT-2026-11-27.md).
+
+
+### 28 November 2026: repair lifecycle instrumentation build
+
+PR #51 passed Android APK, iOS, Flutter and existing emulator fixtures, but its new lifecycle test APK could not resolve conflicting AndroidX runner versions. Repair the debug/test dependency alignment without weakening assertions or altering transport behavior. Keep the PR unmerged until the new lifecycle gate passes. See [repair evidence](DEVELOPMENT-2026-11-28.md).
